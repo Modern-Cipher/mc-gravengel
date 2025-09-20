@@ -1,0 +1,197 @@
+File Tree: mc-gravengel
+Generated on: 9/20/2025, 7:14:32 AM
+Root path: c:\xampp\htdocs\mc-gravengel
+
+────────────────────────────────────────────────────────────────────────────────
+├── app/
+│   ├── config/
+│   │   └── config.php
+│   ├── controllers/
+│   │   ├── AdminController.php
+│   │   ├── AuthController.php
+│   │   ├── MapsController.php
+│   │   ├── PagesController.php
+│   │   ├── StaffController.php
+│   │   ├── UserController.php.txt
+│   │   └── UsersController.php
+│   ├── helpers/
+│   │   ├── Email.php
+│   │   └── url_helper.php
+│   ├── libraries/
+│   │   ├── Controller.php
+│   │   ├── Core.php
+│   │   └── Database.php
+│   ├── models/
+│   │   ├── Map.php
+│   │   └── User.php
+│   ├── views/
+│   │   ├── admin/
+│   │   │   ├── cemetery_map.php
+│   │   │   ├── index.php
+│   │   │   ├── profile.php
+│   │   │   └── user_accounts.php
+│   │   ├── emails/
+│   │   │   ├── reset_password.php
+│   │   │   └── welcome_staff.php
+│   │   ├── includes/
+│   │   │   ├── admin_footer.php
+│   │   │   ├── admin_header.php
+│   │   │   ├── footer.php
+│   │   │   ├── header.php
+│   │   │   ├── header_min.php
+│   │   │   ├── navbar_main.php
+│   │   │   ├── navbar_map.php
+│   │   │   ├── staff_footer.php.txt
+│   │   │   └── staff_header.php
+│   │   ├── maps/
+│   │   │   ├── index copy.php
+│   │   │   ├── index.php
+│   │   │   └── manage.php
+│   │   ├── pages/
+│   │   │   └── index.php
+│   │   ├── staff/
+│   │   │   ├── cemetery_map.php
+│   │   │   ├── index.php
+│   │   │   └── profile.php
+│   │   └── users/
+│   │       ├── force_change.php
+│   │       ├── forgot.php
+│   │       ├── login.php
+│   │       └── reset_password.php
+│   └── bootstrap.php
+├── public/
+│   ├── css/
+│   │   ├── admin.css
+│   │   ├── admin_theme.css
+│   │   ├── login.css
+│   │   ├── map-styles copy.css
+│   │   ├── map-styles.css
+│   │   ├── profile.css
+│   │   └── style.css
+│   ├── img/
+│   │   ├── profiles/
+│   │   │   └── cemeteryMap_73469a.png
+│   │   ├── G.png
+│   │   ├── althea.png
+│   │   ├── bg.png
+│   │   ├── bglogo.png
+│   │   ├── bwlogo.png
+│   │   ├── cemeteryMap.png
+│   │   ├── full-logo.png
+│   │   ├── ggs.png
+│   │   ├── gravengel.png
+│   │   ├── juana.png
+│   │   ├── orion.png
+│   │   ├── ppclogo.png
+│   │   ├── seal.png
+│   │   └── trivera.png
+│   ├── js/
+│   │   ├── admin.js
+│   │   ├── admin_map.js
+│   │   ├── login.js
+│   │   ├── main.js
+│   │   ├── map copy.js
+│   │   ├── map.js
+│   │   ├── profile.js
+│   │   ├── staff_profile.js
+│   │   └── user_accounts.js
+│   ├── .htaccess
+│   └── index.php
+├── vendor/
+│   ├── composer/
+│   │   ├── ClassLoader.php
+│   │   ├── InstalledVersions.php
+│   │   ├── LICENSE
+│   │   ├── autoload_classmap.php
+│   │   ├── autoload_namespaces.php
+│   │   ├── autoload_psr4.php
+│   │   ├── autoload_real.php
+│   │   ├── autoload_static.php
+│   │   ├── installed.json
+│   │   ├── installed.php
+│   │   └── platform_check.php
+│   ├── phpmailer/
+│   │   └── phpmailer/
+│   │       ├── language/
+│   │       │   ├── phpmailer.lang-af.php
+│   │       │   ├── phpmailer.lang-ar.php
+│   │       │   ├── phpmailer.lang-as.php
+│   │       │   ├── phpmailer.lang-az.php
+│   │       │   ├── phpmailer.lang-ba.php
+│   │       │   ├── phpmailer.lang-be.php
+│   │       │   ├── phpmailer.lang-bg.php
+│   │       │   ├── phpmailer.lang-bn.php
+│   │       │   ├── phpmailer.lang-ca.php
+│   │       │   ├── phpmailer.lang-cs.php
+│   │       │   ├── phpmailer.lang-da.php
+│   │       │   ├── phpmailer.lang-de.php
+│   │       │   ├── phpmailer.lang-el.php
+│   │       │   ├── phpmailer.lang-eo.php
+│   │       │   ├── phpmailer.lang-es.php
+│   │       │   ├── phpmailer.lang-et.php
+│   │       │   ├── phpmailer.lang-fa.php
+│   │       │   ├── phpmailer.lang-fi.php
+│   │       │   ├── phpmailer.lang-fo.php
+│   │       │   ├── phpmailer.lang-fr.php
+│   │       │   ├── phpmailer.lang-gl.php
+│   │       │   ├── phpmailer.lang-he.php
+│   │       │   ├── phpmailer.lang-hi.php
+│   │       │   ├── phpmailer.lang-hr.php
+│   │       │   ├── phpmailer.lang-hu.php
+│   │       │   ├── phpmailer.lang-hy.php
+│   │       │   ├── phpmailer.lang-id.php
+│   │       │   ├── phpmailer.lang-it.php
+│   │       │   ├── phpmailer.lang-ja.php
+│   │       │   ├── phpmailer.lang-ka.php
+│   │       │   ├── phpmailer.lang-ko.php
+│   │       │   ├── phpmailer.lang-ku.php
+│   │       │   ├── phpmailer.lang-lt.php
+│   │       │   ├── phpmailer.lang-lv.php
+│   │       │   ├── phpmailer.lang-mg.php
+│   │       │   ├── phpmailer.lang-mn.php
+│   │       │   ├── phpmailer.lang-ms.php
+│   │       │   ├── phpmailer.lang-nb.php
+│   │       │   ├── phpmailer.lang-nl.php
+│   │       │   ├── phpmailer.lang-pl.php
+│   │       │   ├── phpmailer.lang-pt.php
+│   │       │   ├── phpmailer.lang-pt_br.php
+│   │       │   ├── phpmailer.lang-ro.php
+│   │       │   ├── phpmailer.lang-ru.php
+│   │       │   ├── phpmailer.lang-si.php
+│   │       │   ├── phpmailer.lang-sk.php
+│   │       │   ├── phpmailer.lang-sl.php
+│   │       │   ├── phpmailer.lang-sr.php
+│   │       │   ├── phpmailer.lang-sr_latn.php
+│   │       │   ├── phpmailer.lang-sv.php
+│   │       │   ├── phpmailer.lang-tl.php
+│   │       │   ├── phpmailer.lang-tr.php
+│   │       │   ├── phpmailer.lang-uk.php
+│   │       │   ├── phpmailer.lang-ur.php
+│   │       │   ├── phpmailer.lang-vi.php
+│   │       │   ├── phpmailer.lang-zh.php
+│   │       │   └── phpmailer.lang-zh_cn.php
+│   │       ├── src/
+│   │       │   ├── DSNConfigurator.php
+│   │       │   ├── Exception.php
+│   │       │   ├── OAuth.php
+│   │       │   ├── OAuthTokenProvider.php
+│   │       │   ├── PHPMailer.php
+│   │       │   ├── POP3.php
+│   │       │   └── SMTP.php
+│   │       ├── COMMITMENT
+│   │       ├── LICENSE
+│   │       ├── README.md
+│   │       ├── SECURITY.md
+│   │       ├── SMTPUTF8.md
+│   │       ├── VERSION
+│   │       ├── composer.json
+│   │       └── get_oauth_token.php
+│   └── autoload.php
+├── .htaccess
+├── composer.json
+├── composer.lock 🚫 (auto-hidden)
+├── filetree.txt
+└── hash_password.php
+
+────────────────────────────────────────────────────────────────────────────────
+Generated by FileTree Pro Extension

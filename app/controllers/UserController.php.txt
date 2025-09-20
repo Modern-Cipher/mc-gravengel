@@ -1,0 +1,108 @@
+<?php
+class UsersController extends Controller {
+    private $userModel;
+
+    public function __construct() {
+        $this->userModel = $this->model('User');
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        if (!isset($_SESSION['user']['id'])) {
+            header('Location: ' . URLROOT . '/auth/login');
+            exit;
+        }
+    }
+
+    // Function para ipakita ang profile page. 
+    // TANDAAN: Dapat ay may link sa sidebar mo papunta sa /users/profile
+    public function profile() {
+        $user = $this->userModel->findById($_SESSION['user']['id']);
+        $data = [
+            'title' => 'My Profile',
+            'user' => $user
+        ];
+        $this->view('users/profile', $data);
+    }
+    
+    // Function para i-handle ang pag-update ng profile details (AJAX)
+    public function updateDetails() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            $data = [
+                'id' => $_SESSION['user']['id'],
+                'first_name' => trim($_POST['first_name']),
+                'last_name' => trim($_POST['last_name']),
+                'email' => trim($_POST['email']),
+                'phone' => trim($_POST['phone']),
+                'address' => trim($_POST['address']),
+                'staff_id' => trim($_POST['staff_id']),
+                'designation' => trim($_POST['designation']),
+            ];
+
+            if ($this->userModel->updateProfile($data)) {
+                $_SESSION['user']['name'] = $data['first_name'] . ' ' . $data['last_name'];
+                echo json_encode(['success' => true, 'message' => 'Profile updated successfully.']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Something went wrong.']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+        }
+    }
+
+    // Function para i-handle ang change password (AJAX)
+    public function changePassword() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            
+            if (empty($_POST['current_password']) || empty($_POST['new_password']) || empty($_POST['confirm_password'])) {
+                 echo json_encode(['success' => false, 'message' => 'Please fill out all fields.']);
+                return;
+            }
+            if ($_POST['new_password'] !== $_POST['confirm_password']) {
+                echo json_encode(['success' => false, 'message' => 'New passwords do not match.']);
+                return;
+            }
+            
+            $data = [
+                'id' => $_SESSION['user']['id'],
+                'current_password' => $_POST['current_password'],
+                'new_password_hash' => password_hash($_POST['new_password'], PASSWORD_DEFAULT),
+            ];
+
+            if ($this->userModel->updatePassword($data)) {
+                echo json_encode(['success' => true, 'message' => 'Password changed successfully.']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Incorrect current password.']);
+            }
+        }
+    }
+
+    // Function para i-handle ang image upload (AJAX)
+    public function uploadImage() {
+        header('Content-Type: application/json');
+        if (isset($_FILES['profile_image'])) {
+            $target_dir = "img/profiles/";
+            if (!file_exists($target_dir)) {
+                mkdir($target_dir, 0755, true);
+            }
+            $file_extension = strtolower(pathinfo($_FILES["profile_image"]["name"], PATHINFO_EXTENSION));
+            $new_filename = 'user_' . $_SESSION['user']['id'] . '_' . time() . '.' . $file_extension;
+            $target_file = $target_dir . $new_filename;
+
+            if (move_uploaded_file($_FILES["profile_image"]["tmp_name"], $target_file)) {
+                if ($this->userModel->updateProfileImage($_SESSION['user']['id'], $new_filename)) {
+                    echo json_encode(['success' => true, 'message' => 'Image uploaded!', 'filepath' => URLROOT . '/' . $target_file]);
+                } else {
+                     echo json_encode(['success' => false, 'message' => 'Failed to update database.']);
+                }
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to upload file.']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'No file was uploaded.']);
+        }
+    }
+}

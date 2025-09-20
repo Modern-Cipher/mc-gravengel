@@ -1,0 +1,175 @@
+:root{
+  --maroon:#800000;
+  --dark-maroon:#5b0000;
+  --text:#eee;
+}
+
+/* ==== Base / anti-flash ==== */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:Poppins,system-ui,Segoe UI,Roboto,sans-serif;
+  color:var(--text);
+  background:#000;              /* dark base to avoid white flash */
+}
+
+/* ==== Top bar ==== */
+.login-topbar{
+  position:fixed; inset:0 0 auto 0; z-index:10;
+  background:linear-gradient(90deg,var(--dark-maroon),var(--maroon));
+  padding:1rem 0;
+}
+.topbar-inner{
+  height:100%; width:100%;
+  display:flex; align-items:center; justify-content:space-between;
+  padding-inline:20px;
+}
+
+/* Brand (clickable → home) */
+.topbar-brand{
+  display:inline-flex; align-items:center; gap:12px;
+  text-decoration:none;
+  color:#fff;
+}
+.topbar-brand img{height:50px; width:auto; display:block}
+.brand-title{
+  color:#fff; font-weight:600; letter-spacing:.5px;
+  font-size:clamp(14px,2.2vw,18px);
+  text-transform:uppercase; white-space:nowrap;
+}
+
+/* Back button – outlined white → filled on hover */
+.topbar-back-btn{
+  display:inline-block;
+  appearance:none; cursor:pointer;
+  background:transparent; color:#fff; border:2px solid #fff;
+  border-radius:10px; padding:10px 20px;
+  font-size:1.05rem; letter-spacing:.2px; font-weight:400; line-height:1;
+  transition:background .18s,color .18s,box-shadow .18s,transform .06s;
+  text-decoration:none !important;
+}
+.topbar-back-btn:hover,
+.topbar-back-btn:focus{
+  background:#fff; color:var(--maroon); outline:none;
+  box-shadow:0 0 0 3px rgba(255,255,255,.15);
+}
+.topbar-back-btn:active{ transform:translateY(1px); }
+
+/* ==== Hero + glass card ==== */
+.login-hero{
+  min-height:100vh;
+  padding-top:calc(50px + 2rem);
+  padding-bottom:64px;
+  background:url('../img/bg.png') center/cover no-repeat;
+  display:flex; align-items:center; position:relative;
+}
+.login-wrap{ width:100%; display:flex; justify-content:center; }
+.login-card{
+  width:min(560px,92vw);
+  background:rgba(255,255,255,.30);          /* ~30% glass */
+  -webkit-backdrop-filter:blur(12px);
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.35);
+  border-radius:16px;
+  padding:36px 32px 52px;
+  box-shadow:0 16px 36px rgba(0,0,0,.22);
+  text-align:left;
+}
+
+/* Title + brand image */
+.welcome-title{
+  margin:0 0 -12px; text-align:center;
+  font-weight:400; font-size:clamp(28px,3.6vw,36px); color:#fff;
+}
+.login-brand{ display:flex; justify-content:center; margin:0 0 50px; }
+.login-brand img{
+  width:clamp(300px,46vw,400px); height:auto;
+  filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 6px rgba(0,0,0,.35));
+}
+
+/* Flash (subtle, not jarring) */
+@keyframes flashIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.login-flash{
+  background:rgba(30,30,30,.55);
+  border:1px solid rgba(255,255,255,.25);
+  color:#fff; padding:12px 14px; border-radius:10px; margin:8px 0 16px;
+  box-shadow:0 6px 14px rgba(0,0,0,.18);
+  animation:flashIn .25s ease-out both;
+}
+
+/* Form */
+form{ display:flex; flex-direction:column; gap:16px; }
+label{ font-size:.95rem; font-weight:400; color:#fff; margin-bottom:6px; }
+input{
+  background:rgba(0,0,0,.35); color:#fff;
+  border:1.5px solid rgba(255,255,255,.55);
+  border-radius:12px; padding:12px 14px; font:inherit;
+  transition:border-color .2s,box-shadow .2s,background .2s;
+}
+input::placeholder{ color:rgba(255,255,255,.85); }
+input:focus{
+  border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.25);
+  outline:none; background:rgba(0,0,0,.30);
+}
+
+/* Password + eye */
+.password-field{ position:relative; display:flex; align-items:center; }
+.password-field input{ width:100%; padding-right:44px; }
+.toggle-pass{
+  position:absolute; right:8px;
+  width:36px; height:36px; border-radius:10px;
+  border:1px solid rgba(255,255,255,.65); background:rgba(255,255,255,.95);
+  cursor:pointer;
+}
+
+/* Forgot link */
+.login-actions{ display:flex; justify-content:flex-end; margin:8px 0 -2px; }
+.forgot-link{ color:#fff; text-decoration:none; font-weight:400; }
+.forgot-link:hover{ opacity:.9; text-decoration:none; }
+
+/* Primary CTA */
+.cta-button{
+  display:block; width:100%; text-align:center;
+  padding:16px 22px; border-radius:12px;
+  border:2px solid var(--maroon); background:var(--maroon); color:#fff;
+  font-size:1.1rem; letter-spacing:.3px; font-weight:400;
+  transition:.25s; box-shadow:0 6px 16px rgba(128,0,0,.18);
+}
+.cta-button:hover{ background:#fff; color:var(--maroon); }
+
+/* Caption */
+.login-caption{ margin:18px 0 0; text-align:center; color:#fff; font-weight:400; }
+
+/* Responsive tweaks */
+@media (max-width:480px){
+  .login-card{ padding:30px 22px 44px; }
+  .login-brand img{ width:min(82vw,360px); }
+  input{ padding:11px 12px; }
+  .welcome-title{ font-size:26px; }
+}
+@media (min-width:768px){
+  .topbar-back-btn{ font-size:1.1rem; }
+  .cta-button{ font-size:1.15rem; padding:16px 24px; }
+}
+
+/* ==== SMOOTH PAGE TRANSITION ==== */
+@keyframes fadeInPage {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* * I-a-apply natin ang fade-in animation sa body kapag nag-load ang page.
+ * Ang `forwards` ay para manatili itong visible pagkatapos ng animation.
+*/
+body {
+    animation: fadeInPage 0.5s ease-in-out forwards;
+}
+
+/* * Ito ang class na idadagdag natin gamit ang JavaScript
+ * para mag-fade out ang page bago lumipat.
+*/
+body.fade-out {
+    opacity: 0;
+    transition: opacity 0.4s ease-in-out;
+}

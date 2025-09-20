@@ -1,0 +1,13 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Unang Rule: Kung ang request ay para sa root URL (e.g., "http://localhost/mc-gravengel/"),
+    # i-rewrite ito agad papuntang public folder at huminto na.
+    RewriteRule ^$ public/ [L]
+
+    # Pangalawang Rule: Para sa lahat ng iba pang requests na HINDI totoong file o folder,
+    # i-rewrite din sila papuntang public folder.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
