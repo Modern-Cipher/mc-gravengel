@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 20, 2025 at 03:52 AM
+-- Generation Time: Oct 01, 2025 at 04:46 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -31,6 +31,7 @@ CREATE TABLE `burials` (
   `id` int(11) NOT NULL,
   `plot_id` int(11) NOT NULL,
   `burial_id` varchar(50) NOT NULL,
+  `transaction_id` varchar(32) DEFAULT NULL,
   `deceased_first_name` varchar(80) DEFAULT NULL,
   `deceased_middle_name` varchar(80) DEFAULT NULL,
   `deceased_last_name` varchar(80) DEFAULT NULL,
@@ -60,8 +61,9 @@ CREATE TABLE `burials` (
 -- Dumping data for table `burials`
 --
 
-INSERT INTO `burials` (`id`, `plot_id`, `burial_id`, `deceased_first_name`, `deceased_middle_name`, `deceased_last_name`, `deceased_suffix`, `age`, `sex`, `date_born`, `date_died`, `cause_of_death`, `grave_level`, `grave_type`, `interment_full_name`, `interment_relationship`, `interment_contact_number`, `interment_address`, `payment_amount`, `rental_date`, `expiry_date`, `requirements`, `is_active`, `created_by_user_id`, `updated_by_user_id`, `created_at`) VALUES
-(1, 543, 'B-001', 'minionm', 'm', 'minion', '', '60', 'male', '1954-12-20', '2025-09-20', 'test', 'gl', 'gt', 'ascas', 'ascasc', '09876543211', 'asfasf', 5000.00, '2025-09-20 00:00:00', '2025-09-20 00:00:00', 'Death Certificate with registry number, Barangay Indigency for Burial Assistance, Voter&#39;s ID, Cedula, Sulat Kahilingan', 1, 1, NULL, '2025-09-20 08:00:17');
+INSERT INTO `burials` (`id`, `plot_id`, `burial_id`, `transaction_id`, `deceased_first_name`, `deceased_middle_name`, `deceased_last_name`, `deceased_suffix`, `age`, `sex`, `date_born`, `date_died`, `cause_of_death`, `grave_level`, `grave_type`, `interment_full_name`, `interment_relationship`, `interment_contact_number`, `interment_address`, `payment_amount`, `rental_date`, `expiry_date`, `requirements`, `is_active`, `created_by_user_id`, `updated_by_user_id`, `created_at`) VALUES
+(14, 543, 'B-08089C', '20251001-217', 'Mark', 'C.', 'Santos', '', '30', 'female', '1995-10-25', '2025-10-01', 'Car Accident', 'Level 1', 'Apartment', 'Jenny Santos', 'Spouse', '0987 654 3211', '001 street, Brgy. Tabang, Plaridel, Bulacan, 5456', 5000.00, '2025-10-01 12:00:00', '2030-10-01 12:00:00', 'Death Certificate with registry number, Barangay Indigency for Burial Assistance, Voter&#039;s ID, Cedula, Sulat Kahilingan', 1, 1, NULL, '2025-10-01 21:57:21'),
+(15, 544, 'B-E4986A', '20251001-031', 'sdfsdf', 'f', 'dfdf', 'Sr.', '60', 'male', '1983-10-13', '2025-10-01', 'fdfsdf', 'Level 1', 'Apartment', 'mak', 'Spouse', '0987 654 3211', 'ghjghj, Brgy. Poblacion, Plaridel, Bulacan, 7575', 5000.00, '2025-10-02 12:00:00', '2030-10-02 12:00:00', 'Death Certificate with registry number, Barangay Indigency for Burial Assistance, Voter&#039;s ID, Cedula, Sulat Kahilingan', 1, 1, 1, '2025-10-01 22:18:27');
 
 -- --------------------------------------------------------
 
@@ -236,7 +238,7 @@ INSERT INTO `plots` (`id`, `map_block_id`, `plot_number`, `status`) VALUES
 (428, 2, '22', 'vacant'),
 (429, 2, '23', 'vacant'),
 (430, 2, '24', 'vacant'),
-(543, 1, 'Block-A001', 'occupied'),
+(543, 1, 'Block-A001', 'vacant'),
 (544, 1, 'Block-A002', 'vacant'),
 (545, 1, 'Block-A003', 'vacant'),
 (546, 1, 'Block-A004', 'vacant'),
@@ -428,7 +430,7 @@ CREATE TABLE `staff_details` (
 
 INSERT INTO `staff_details` (`id`, `user_id`, `staff_id`, `designation`) VALUES
 (1, 1, 'S-001', 'System Administrator'),
-(7, 7, 'S-002', 'Manager'),
+(7, 7, 'S-002', 'Manager Staff'),
 (8, 8, 'S-003', 'dev');
 
 -- --------------------------------------------------------
@@ -461,7 +463,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `role`, `first_name`, `last_name`, `sex`, `phone`, `address`, `profile_image`, `is_active`, `must_change_pwd`, `last_login_at`, `created_at`, `updated_at`) VALUES
-(1, 'admin', 'admin@example.com', '$2y$10$dHdP2hrbUX/zeM07zDeAc.UbTjYmrwUrX61aoTAE7BgGlTg28yKia', 'admin', 'Genesys', 'X', NULL, '', '', 'cemeteryMap_73469a.png', 1, 1, '2025-09-20 08:33:56', '2025-09-19 13:20:45', '2025-09-20 08:33:56'),
+(1, 'admin', 'admin@example.com', '$2y$10$dHdP2hrbUX/zeM07zDeAc.UbTjYmrwUrX61aoTAE7BgGlTg28yKia', 'admin', 'Genesys', 'X', NULL, '', '', 'cemeteryMap_73469a.png', 1, 1, '2025-10-01 22:28:53', '2025-09-19 13:20:45', '2025-10-01 22:28:53'),
 (7, 'minionm2', 'minionm219@gmail.com', '$2y$10$tYnRm1IMw43lY4ls/5W0SupIGDv0gEupjPZfGYoXN0nfu9C6tpx..', 'staff', 'minion', 'minion', NULL, '0987 654 3221', '', NULL, 1, 0, '2025-09-20 09:07:56', '2025-09-20 04:31:29', '2025-09-20 09:07:56'),
 (8, 'Orion', 'lovecano30@gmail.com', '$2y$10$cQ.ZuO8jQykPGmCmhY1mbuaL9AhdiRyh7HSjEVKnWQy/ODtm6y1P6', 'staff', 'Orion Seal', 'Cano', NULL, '0987 654 3765', NULL, NULL, 1, 1, NULL, '2025-09-20 09:17:55', '2025-09-20 09:17:55');
 
@@ -497,10 +499,15 @@ INSERT INTO `user_sessions` (`id`, `user_id`, `session_id`, `login_at`, `logout_
 (8, 1, 'des37cdf0ajp9fq9cuguh63n2u', '2025-09-20 04:48:52', '2025-09-20 05:56:09', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
 (9, 1, 'b33s5f9tigalmpd86c51prngv8', '2025-09-20 05:56:19', '2025-09-20 06:58:18', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
 (10, 1, '5q05479as317fvduivmf0ts9ro', '2025-09-20 06:59:02', '2025-09-20 08:31:05', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(11, 1, 'vmjldc67706v1vsvmlcpugmag6', '2025-09-20 08:33:56', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 1),
+(11, 1, 'vmjldc67706v1vsvmlcpugmag6', '2025-09-20 08:33:56', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
 (12, 7, 'qtaftii1o1sgm2smelfd6i38qv', '2025-09-20 08:44:24', '2025-09-20 08:44:31', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
 (13, 7, 'uv8dt8424mt9rqpeoq2700ukiv', '2025-09-20 09:02:07', '2025-09-20 09:04:33', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(14, 7, '4uurns34k73e0cbr4r8n28rali', '2025-09-20 09:07:56', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 1);
+(14, 7, '4uurns34k73e0cbr4r8n28rali', '2025-09-20 09:07:56', '2025-09-20 10:29:23', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(15, 1, 'ursbnjeo3gmvb8s2hhke8hir0e', '2025-09-20 10:55:35', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(16, 1, '5q3sk9f1jvtl0qmdk6t603g6e4', '2025-09-29 19:52:38', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(17, 1, 'bnd7qgahq43hpgd73m8suns3c6', '2025-09-30 14:59:04', '2025-10-01 22:03:54', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(18, 1, 'h3qvg1sepakuqjnqhts6eqeu00', '2025-10-01 22:04:15', '2025-10-01 22:27:53', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(19, 1, 'nvqokpene8hv1nip6kd47rvpj3', '2025-10-01 22:28:53', '2025-10-01 22:34:45', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0);
 
 --
 -- Indexes for dumped tables
@@ -512,6 +519,7 @@ INSERT INTO `user_sessions` (`id`, `user_id`, `session_id`, `login_at`, `logout_
 ALTER TABLE `burials`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `burial_id` (`burial_id`),
+  ADD UNIQUE KEY `uniq_transaction_id` (`transaction_id`),
   ADD KEY `plot_id` (`plot_id`),
   ADD KEY `created_by_user_id` (`created_by_user_id`),
   ADD KEY `updated_by_user_id` (`updated_by_user_id`);
@@ -577,7 +585,7 @@ ALTER TABLE `user_sessions`
 -- AUTO_INCREMENT for table `burials`
 --
 ALTER TABLE `burials`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `map_blocks`
@@ -619,7 +627,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `user_sessions`
 --
 ALTER TABLE `user_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- Constraints for dumped tables

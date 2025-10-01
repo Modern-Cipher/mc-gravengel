@@ -52,7 +52,7 @@ Root path: c:\xampp\htdocs\mc-gravengel
 │   │   │   ├── navbar_main.php
 │   │   │   ├── navbar_map.php
 │   │   │   ├── staff_footer.php.txt
-│   │   │   └── staff_header.php
+│   │   │   └── staff_header.php.
 │   │   ├── maps/
 │   │   │   ├── index copy.php
 │   │   │   ├── index.php
