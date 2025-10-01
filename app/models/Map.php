@@ -19,6 +19,7 @@ class Map {
         $block = $this->db->single();
 
         if($block && isset($block->id)){
+            // CHANGE: pick the "best burial" per plot (active first, else latest archived)
             $this->db->query('
                 SELECT 
                     p.*,
@@ -27,7 +28,16 @@ class Map {
                     b.deceased_middle_name,
                     b.deceased_last_name
                 FROM plots p 
-                LEFT JOIN burials b ON p.id = b.plot_id AND b.is_active = 1
+                LEFT JOIN burials b 
+                    ON b.burial_id = (
+                        SELECT bb.burial_id
+                        FROM burials bb
+                        WHERE bb.plot_id = p.id
+                        ORDER BY 
+                            bb.is_active DESC,   -- active first
+                            bb.burial_id DESC    -- then latest archived (by id)
+                        LIMIT 1
+                    )
                 WHERE p.map_block_id = :block_id 
                 ORDER BY p.id ASC
             ');

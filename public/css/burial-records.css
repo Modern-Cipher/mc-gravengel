@@ -27,3 +27,7 @@
     font-size: 0.9rem;
     padding: 8px 15px;
 }
+/* append-only */
+@media (max-width: 768px){
+  .modal .modal-body{ max-height: 70vh; overflow: auto; }
+}

@@ -185,4 +185,109 @@ class User {
         $this->db->bind(':token', $token);
         return $this->db->execute();
     }
+
+    /**
+ * Partially update a staff user.
+ * - $changes may contain any of:
+ *   first_name, last_name, username, email, phone, staff_id, designation
+ * - Validates username/email/phone (same regex as front-end)
+ * - Checks duplicate username/email (excluding this $id)
+ * - Updates `users` table and upserts `staff_details`
+ * Returns: bool
+ */
+public function updateStaffUser(int $id, array $changes): bool {
+    if ($id <= 0) return false;
+
+    // ---- Normalize incoming values (trim only for provided keys) ----
+    $norm = function($v){ return trim((string)$v); };
+    $fields = ['first_name','last_name','username','email','phone','staff_id','designation'];
+    $c = [];
+    foreach ($fields as $f) {
+        if (array_key_exists($f, $changes)) {
+            $c[$f] = $norm($changes[$f]);
+        }
+    }
+    if (empty($c)) return true; // nothing to update
+
+    // ---- Server-side validation (mirror ng front-end rules) ----
+    if (isset($c['username']) && $c['username'] !== '' && !preg_match('/^[a-zA-Z0-9]+$/', $c['username'])) {
+        return false;
+    }
+    if (isset($c['email']) && $c['email'] !== '' && !preg_match('/^[^\s@]+@[^\s@]+\.[^\s@]+$/', $c['email'])) {
+        return false;
+    }
+    if (isset($c['phone']) && $c['phone'] !== '' && !preg_match('/^09\d{2} \d{3} \d{4}$/', $c['phone'])) {
+        return false;
+    }
+
+    // ---- Duplicate checks (exclude current user id) ----
+    if (isset($c['username']) && $c['username'] !== '') {
+        $this->db->query('SELECT id FROM users WHERE username = :u AND id <> :id LIMIT 1');
+        $this->db->bind(':u', $c['username']);
+        $this->db->bind(':id', $id);
+        if ($this->db->single()) return false;
+    }
+    if (isset($c['email']) && $c['email'] !== '') {
+        $this->db->query('SELECT id FROM users WHERE email = :e AND id <> :id LIMIT 1');
+        $this->db->bind(':e', $c['email']);
+        $this->db->bind(':id', $id);
+        if ($this->db->single()) return false;
+    }
+
+    // ---- Split to users vs staff_details fields ----
+    $userCols  = ['first_name','last_name','username','email','phone'];
+    $staffCols = ['staff_id','designation'];
+
+    // Build dynamic UPDATE for users
+    $userSets = [];
+    $binds    = [':id' => $id];
+    foreach ($userCols as $col) {
+        if (array_key_exists($col, $c)) {
+            $userSets[] = "$col = :$col";
+            $binds[":$col"] = $c[$col];
+        }
+    }
+
+    if (!empty($userSets)) {
+        $sql = 'UPDATE users SET '.implode(', ', $userSets).' WHERE id = :id';
+        $this->db->query($sql);
+        foreach ($binds as $k => $v) $this->db->bind($k, $v);
+        if (!$this->db->execute()) return false;
+    }
+
+    // Upsert staff_details only if at least one staff field is provided
+    $needStaff = false;
+    $staffData = [];
+    foreach ($staffCols as $col) {
+        if (array_key_exists($col, $c)) { $needStaff = true; $staffData[$col] = $c[$col]; }
+    }
+
+    if ($needStaff) {
+        // Check if staff_details row exists
+        $this->db->query('SELECT id FROM staff_details WHERE user_id = :id LIMIT 1');
+        $this->db->bind(':id', $id);
+        $row = $this->db->single();
+
+        if ($row) {
+            // UPDATE only provided fields
+            $sets = [];
+            foreach ($staffData as $k => $v) { $sets[] = "$k = :$k"; }
+            $this->db->query('UPDATE staff_details SET '.implode(', ', $sets).' WHERE user_id = :id');
+            foreach ($staffData as $k => $v) { $this->db->bind(":$k", $v); }
+            $this->db->bind(':id', $id);
+            if (!$this->db->execute()) return false;
+        } else {
+            // INSERT minimal row with provided fields
+            // Ensure both columns exist in bind even if one is missing
+            $this->db->query('INSERT INTO staff_details (user_id, staff_id, designation) VALUES (:user_id, :staff_id, :designation)');
+            $this->db->bind(':user_id', $id);
+            $this->db->bind(':staff_id',    $staffData['staff_id']    ?? null);
+            $this->db->bind(':designation', $staffData['designation'] ?? null);
+            if (!$this->db->execute()) return false;
+        }
+    }
+
+    return true;
+}
+
 }

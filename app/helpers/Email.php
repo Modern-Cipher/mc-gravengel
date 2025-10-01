@@ -11,13 +11,13 @@ class EmailHelper {
             $mail->isSMTP();
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'cano.orionseal.bsit@gmail.com'; // Iyong Gmail Email
+            $mail->Username   = 'cano.orionseal.bsit@gmail.com'; // Iyong Gmail Email REGISTEED MOBILE
             $mail->Password   = 'okwh qaex tsaa bfmr'; // Iyong App Password
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = 587;
 
             //Recipients
-            $mail->setFrom('mdctechservices@gmail.com', 'PLARIDEL PUBLIC CEMETERY');
+            $mail->setFrom('cano.orionseal.bsit@gmail.com', 'PLARIDEL PUBLIC CEMETERY');
             $mail->addAddress($recipient_email, $recipient_name);
 
             //Content
