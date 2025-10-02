@@ -290,4 +290,25 @@ public function updateStaffUser(int $id, array $changes): bool {
     return true;
 }
 
+    public function countStaffUsers(): int {
+        $this->db->query("SELECT COUNT(*) AS c FROM users WHERE role = 'staff'");
+        $r = $this->db->single();
+        return (int)($r->c ?? 0);
+    }
+
+    // app/models/User.php (add these methods)
+
+public function getAllActiveUserIds(): array {
+    $this->db->query("SELECT id FROM users WHERE is_active = 1");
+    $rows = $this->db->resultSet();
+    return array_map(fn($r) => (int)$r->id, $rows ?: []);
+}
+
+public function getAdminsEmails(): array {
+    $this->db->query("SELECT first_name AS name, email FROM users WHERE is_active = 1 AND role IN ('admin')");
+    return $this->db->resultSet() ?: [];
+}
+
+
+
 }

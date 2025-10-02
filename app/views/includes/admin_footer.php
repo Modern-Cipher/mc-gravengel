@@ -86,6 +86,7 @@
   });
 })();
 </script>
+<script src="<?php echo URLROOT; ?>/js/notifications.js?v=<?php echo time(); ?>"></script>
 
 
 

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 01, 2025 at 04:46 PM
+-- Generation Time: Oct 02, 2025 at 03:58 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -46,6 +46,7 @@ CREATE TABLE `burials` (
   `interment_full_name` varchar(255) DEFAULT NULL,
   `interment_relationship` varchar(100) DEFAULT NULL,
   `interment_contact_number` varchar(40) DEFAULT NULL,
+  `interment_email` varchar(150) DEFAULT NULL,
   `interment_address` varchar(255) DEFAULT NULL,
   `payment_amount` decimal(10,2) DEFAULT NULL,
   `rental_date` datetime DEFAULT NULL,
@@ -61,9 +62,10 @@ CREATE TABLE `burials` (
 -- Dumping data for table `burials`
 --
 
-INSERT INTO `burials` (`id`, `plot_id`, `burial_id`, `transaction_id`, `deceased_first_name`, `deceased_middle_name`, `deceased_last_name`, `deceased_suffix`, `age`, `sex`, `date_born`, `date_died`, `cause_of_death`, `grave_level`, `grave_type`, `interment_full_name`, `interment_relationship`, `interment_contact_number`, `interment_address`, `payment_amount`, `rental_date`, `expiry_date`, `requirements`, `is_active`, `created_by_user_id`, `updated_by_user_id`, `created_at`) VALUES
-(14, 543, 'B-08089C', '20251001-217', 'Mark', 'C.', 'Santos', '', '30', 'female', '1995-10-25', '2025-10-01', 'Car Accident', 'Level 1', 'Apartment', 'Jenny Santos', 'Spouse', '0987 654 3211', '001 street, Brgy. Tabang, Plaridel, Bulacan, 5456', 5000.00, '2025-10-01 12:00:00', '2030-10-01 12:00:00', 'Death Certificate with registry number, Barangay Indigency for Burial Assistance, Voter&#039;s ID, Cedula, Sulat Kahilingan', 1, 1, NULL, '2025-10-01 21:57:21'),
-(15, 544, 'B-E4986A', '20251001-031', 'sdfsdf', 'f', 'dfdf', 'Sr.', '60', 'male', '1983-10-13', '2025-10-01', 'fdfsdf', 'Level 1', 'Apartment', 'mak', 'Spouse', '0987 654 3211', 'ghjghj, Brgy. Poblacion, Plaridel, Bulacan, 7575', 5000.00, '2025-10-02 12:00:00', '2030-10-02 12:00:00', 'Death Certificate with registry number, Barangay Indigency for Burial Assistance, Voter&#039;s ID, Cedula, Sulat Kahilingan', 1, 1, 1, '2025-10-01 22:18:27');
+INSERT INTO `burials` (`id`, `plot_id`, `burial_id`, `transaction_id`, `deceased_first_name`, `deceased_middle_name`, `deceased_last_name`, `deceased_suffix`, `age`, `sex`, `date_born`, `date_died`, `cause_of_death`, `grave_level`, `grave_type`, `interment_full_name`, `interment_relationship`, `interment_contact_number`, `interment_email`, `interment_address`, `payment_amount`, `rental_date`, `expiry_date`, `requirements`, `is_active`, `created_by_user_id`, `updated_by_user_id`, `created_at`) VALUES
+(17, 544, 'B-933270', '20251001-485', 'cascas', 'asc', 'csacas', 'I', '60', 'male', '2012-04-11', '2025-10-02', 'cascasc', 'Level 1', 'Apartment', 'cascasc', 'Parent', '0987 654 3211', NULL, 'dfsgvdsfggdf, Brgy. Balaquid, Cabucgayan, Biliran, 3445', 5000.00, '2025-10-02 12:00:00', '2030-10-02 12:00:00', 'Death Certificate with registry number, Barangay Indigency for Burial Assistance', 1, 1, NULL, '2025-10-02 05:55:44'),
+(18, 543, 'B-90E339', '20251002-211', 'ascasc', 'ascasc', 'ascasc', 'Sr.', '33', 'male', '2025-10-02', '2025-10-01', 'accident', 'Level 1', 'Apartment', 'vdvsd', 'Child', '0987 654 3211', 'minion.new002@gmail.com', 'fsdgg, Brgy. Santa Cruz, Pamplona, Cagayan, 4543', 5000.00, '2025-10-02 12:00:00', '2030-10-02 12:00:00', 'Death Certificate with registry number, Barangay Indigency for Burial Assistance, Voter&#039;s ID, Cedula', 1, 1, NULL, '2025-10-02 06:15:08'),
+(20, 545, 'B-9E7ADF', '20251002-908', 'saca', 'm', 'scac', 'Sr.', '60', 'male', '2025-10-02', '2025-10-02', 'asc', 'Level 1', 'Apartment', 'sacas', 'Spouse', '0987 654 3212', 'mdctechservices@gmail.com', 'sadasd, Brgy. Minsuro, Manolo Fortich, Bukidnon, 6456', 5000.00, '2025-09-02 10:13:00', '2025-11-02 02:15:00', 'Death Certificate with registry number, Barangay Indigency for Burial Assistance, Voter&#039;s ID, Cedula, Sulat Kahilingan', 1, 1, NULL, '2025-10-02 07:44:51');
 
 -- --------------------------------------------------------
 
@@ -175,6 +177,83 @@ INSERT INTO `map_blocks` (`id`, `block_key`, `title`, `coords`, `offset_x`, `off
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `notifications`
+--
+
+CREATE TABLE `notifications` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `burial_id` varchar(32) DEFAULT NULL,
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `severity` enum('info','warning','danger') NOT NULL DEFAULT 'warning',
+  `due_date` date DEFAULT NULL,
+  `kind` varchar(64) NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `notifications`
+--
+
+INSERT INTO `notifications` (`id`, `burial_id`, `title`, `message`, `severity`, `due_date`, `kind`, `created_at`) VALUES
+(473, 'B-9E7ADF', 'Rental expires in 30 days', 'Grave Block-A (Block-A003) rental expires on Nov 02, 2025.', 'warning', '2025-11-02', 'expiry_30', '2025-10-02 17:05:15');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `notification_email_status`
+--
+
+CREATE TABLE `notification_email_status` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `notification_id` bigint(20) UNSIGNED NOT NULL,
+  `recipient_type` enum('admin','staff','interment') NOT NULL,
+  `recipient_email` varchar(255) NOT NULL,
+  `sent` tinyint(1) NOT NULL DEFAULT 0,
+  `last_attempt_at` datetime DEFAULT NULL,
+  `attempts` int(11) NOT NULL DEFAULT 0,
+  `last_error` text DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `notification_email_status`
+--
+
+INSERT INTO `notification_email_status` (`id`, `notification_id`, `recipient_type`, `recipient_email`, `sent`, `last_attempt_at`, `attempts`, `last_error`, `created_at`, `updated_at`) VALUES
+(403, 473, 'admin', 'menarddelacruz.basc@gmail.com', 1, '2025-10-02 17:05:21', 1, NULL, '2025-10-02 17:05:15', '2025-10-02 17:05:21'),
+(404, 473, 'staff', 'minionm219@gmail.com', 1, '2025-10-02 17:05:27', 1, NULL, '2025-10-02 17:05:15', '2025-10-02 17:05:27'),
+(405, 473, 'staff', 'lovecano30@gmail.com', 1, '2025-10-02 17:05:33', 1, NULL, '2025-10-02 17:05:15', '2025-10-02 17:05:33'),
+(407, 473, 'interment', 'mdctechservices@gmail.com', 1, '2025-10-02 17:05:39', 1, NULL, '2025-10-02 17:05:15', '2025-10-02 17:05:39');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `notification_user`
+--
+
+CREATE TABLE `notification_user` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `notification_id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` bigint(20) UNSIGNED NOT NULL,
+  `is_read` tinyint(1) NOT NULL DEFAULT 0,
+  `read_at` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `notification_user`
+--
+
+INSERT INTO `notification_user` (`id`, `notification_id`, `user_id`, `is_read`, `read_at`, `created_at`) VALUES
+(103, 473, 1, 0, NULL, '2025-10-02 17:05:15'),
+(104, 473, 7, 1, '2025-10-02 19:38:32', '2025-10-02 17:05:15'),
+(105, 473, 8, 0, NULL, '2025-10-02 17:05:15');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `password_resets`
 --
 
@@ -238,9 +317,9 @@ INSERT INTO `plots` (`id`, `map_block_id`, `plot_number`, `status`) VALUES
 (428, 2, '22', 'vacant'),
 (429, 2, '23', 'vacant'),
 (430, 2, '24', 'vacant'),
-(543, 1, 'Block-A001', 'vacant'),
-(544, 1, 'Block-A002', 'vacant'),
-(545, 1, 'Block-A003', 'vacant'),
+(543, 1, 'Block-A001', 'occupied'),
+(544, 1, 'Block-A002', 'occupied'),
+(545, 1, 'Block-A003', 'occupied'),
 (546, 1, 'Block-A004', 'vacant'),
 (547, 1, 'Block-A005', 'vacant'),
 (548, 1, 'Block-A006', 'vacant'),
@@ -431,7 +510,7 @@ CREATE TABLE `staff_details` (
 INSERT INTO `staff_details` (`id`, `user_id`, `staff_id`, `designation`) VALUES
 (1, 1, 'S-001', 'System Administrator'),
 (7, 7, 'S-002', 'Manager Staff'),
-(8, 8, 'S-003', 'dev');
+(8, 8, 'S-003', 'developer');
 
 -- --------------------------------------------------------
 
@@ -463,8 +542,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `role`, `first_name`, `last_name`, `sex`, `phone`, `address`, `profile_image`, `is_active`, `must_change_pwd`, `last_login_at`, `created_at`, `updated_at`) VALUES
-(1, 'admin', 'admin@example.com', '$2y$10$dHdP2hrbUX/zeM07zDeAc.UbTjYmrwUrX61aoTAE7BgGlTg28yKia', 'admin', 'Genesys', 'X', NULL, '', '', 'cemeteryMap_73469a.png', 1, 1, '2025-10-01 22:28:53', '2025-09-19 13:20:45', '2025-10-01 22:28:53'),
-(7, 'minionm2', 'minionm219@gmail.com', '$2y$10$tYnRm1IMw43lY4ls/5W0SupIGDv0gEupjPZfGYoXN0nfu9C6tpx..', 'staff', 'minion', 'minion', NULL, '0987 654 3221', '', NULL, 1, 0, '2025-09-20 09:07:56', '2025-09-20 04:31:29', '2025-09-20 09:07:56'),
+(1, 'admin', 'menarddelacruz.basc@gmail.com', '$2y$10$dHdP2hrbUX/zeM07zDeAc.UbTjYmrwUrX61aoTAE7BgGlTg28yKia', 'admin', 'Genesys', 'X', NULL, '', '', 'cemeteryMap_73469a.png', 1, 1, '2025-10-02 18:38:55', '2025-09-19 13:20:45', '2025-10-02 18:38:55'),
+(7, 'minionm2', 'minionm219@gmail.com', '$2y$10$dHdP2hrbUX/zeM07zDeAc.UbTjYmrwUrX61aoTAE7BgGlTg28yKia', 'staff', 'minion', 'minion', NULL, '0987 654 3221', '', NULL, 1, 0, '2025-10-02 17:52:57', '2025-09-20 04:31:29', '2025-10-02 17:52:57'),
 (8, 'Orion', 'lovecano30@gmail.com', '$2y$10$cQ.ZuO8jQykPGmCmhY1mbuaL9AhdiRyh7HSjEVKnWQy/ODtm6y1P6', 'staff', 'Orion Seal', 'Cano', NULL, '0987 654 3765', NULL, NULL, 1, 1, NULL, '2025-09-20 09:17:55', '2025-09-20 09:17:55');
 
 -- --------------------------------------------------------
@@ -507,7 +586,16 @@ INSERT INTO `user_sessions` (`id`, `user_id`, `session_id`, `login_at`, `logout_
 (16, 1, '5q3sk9f1jvtl0qmdk6t603g6e4', '2025-09-29 19:52:38', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
 (17, 1, 'bnd7qgahq43hpgd73m8suns3c6', '2025-09-30 14:59:04', '2025-10-01 22:03:54', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
 (18, 1, 'h3qvg1sepakuqjnqhts6eqeu00', '2025-10-01 22:04:15', '2025-10-01 22:27:53', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(19, 1, 'nvqokpene8hv1nip6kd47rvpj3', '2025-10-01 22:28:53', '2025-10-01 22:34:45', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0);
+(19, 1, 'nvqokpene8hv1nip6kd47rvpj3', '2025-10-01 22:28:53', '2025-10-01 22:34:45', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(20, 1, '5ofr0nva071vgnbskuvdcof4ld', '2025-10-02 05:18:28', '2025-10-02 13:36:15', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(21, 1, 'ebvumunglemin495o01s4egvtq', '2025-10-02 13:38:12', '2025-10-02 13:41:28', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(22, 1, '6v9knupl09pima25gcr22c6oti', '2025-10-02 13:42:21', '2025-10-02 15:28:24', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(23, 1, 't230ocvlshtchb989s1i5qs3m4', '2025-10-02 15:51:47', '2025-10-02 15:56:13', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(24, 1, 'q3o82j458mi80ch2a090egpc01', '2025-10-02 15:56:50', '2025-10-02 16:03:01', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(25, 1, 'ieqr37cb2pv6o35uouhv5bv546', '2025-10-02 16:08:16', '2025-10-02 16:31:11', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(26, 1, 'nk50rouakb10g4ds360n3gm79f', '2025-10-02 17:05:14', '2025-10-02 17:51:30', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(27, 7, 'ku855b718nqj64cj2phjphcgs7', '2025-10-02 17:52:57', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 1),
+(28, 1, '62i7q5m76dn7f335817tp7oceg', '2025-10-02 18:38:55', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 1);
 
 --
 -- Indexes for dumped tables
@@ -522,7 +610,8 @@ ALTER TABLE `burials`
   ADD UNIQUE KEY `uniq_transaction_id` (`transaction_id`),
   ADD KEY `plot_id` (`plot_id`),
   ADD KEY `created_by_user_id` (`created_by_user_id`),
-  ADD KEY `updated_by_user_id` (`updated_by_user_id`);
+  ADD KEY `updated_by_user_id` (`updated_by_user_id`),
+  ADD KEY `idx_interment_email` (`interment_email`);
 
 --
 -- Indexes for table `map_blocks`
@@ -530,6 +619,31 @@ ALTER TABLE `burials`
 ALTER TABLE `map_blocks`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `block_key` (`block_key`);
+
+--
+-- Indexes for table `notifications`
+--
+ALTER TABLE `notifications`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_notif` (`kind`,`burial_id`,`due_date`),
+  ADD UNIQUE KEY `uniq_kind_burial_due` (`kind`,`burial_id`,`due_date`);
+
+--
+-- Indexes for table `notification_email_status`
+--
+ALTER TABLE `notification_email_status`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uniq_notif_recipient` (`notification_id`,`recipient_type`,`recipient_email`),
+  ADD KEY `idx_status_pending` (`sent`,`last_attempt_at`);
+
+--
+-- Indexes for table `notification_user`
+--
+ALTER TABLE `notification_user`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `notification_id` (`notification_id`),
+  ADD KEY `idx_user_isread` (`user_id`,`is_read`),
+  ADD KEY `idx_created` (`created_at`);
 
 --
 -- Indexes for table `password_resets`
@@ -585,13 +699,31 @@ ALTER TABLE `user_sessions`
 -- AUTO_INCREMENT for table `burials`
 --
 ALTER TABLE `burials`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `map_blocks`
 --
 ALTER TABLE `map_blocks`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=87;
+
+--
+-- AUTO_INCREMENT for table `notifications`
+--
+ALTER TABLE `notifications`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1556;
+
+--
+-- AUTO_INCREMENT for table `notification_email_status`
+--
+ALTER TABLE `notification_email_status`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3654;
+
+--
+-- AUTO_INCREMENT for table `notification_user`
+--
+ALTER TABLE `notification_user`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
 
 --
 -- AUTO_INCREMENT for table `password_resets`
@@ -627,7 +759,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `user_sessions`
 --
 ALTER TABLE `user_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- Constraints for dumped tables
@@ -640,6 +772,18 @@ ALTER TABLE `burials`
   ADD CONSTRAINT `burials_ibfk_1` FOREIGN KEY (`plot_id`) REFERENCES `plots` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `burials_ibfk_2` FOREIGN KEY (`created_by_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `burials_ibfk_3` FOREIGN KEY (`updated_by_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `notification_email_status`
+--
+ALTER TABLE `notification_email_status`
+  ADD CONSTRAINT `fk_nes_notif` FOREIGN KEY (`notification_id`) REFERENCES `notifications` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `notification_user`
+--
+ALTER TABLE `notification_user`
+  ADD CONSTRAINT `notification_user_ibfk_1` FOREIGN KEY (`notification_id`) REFERENCES `notifications` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `password_resets`

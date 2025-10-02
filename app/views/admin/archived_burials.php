@@ -51,7 +51,7 @@
 
     <div class="d-flex align-items-center">
       <input id="tableSearch" type="search" class="form-control form-control-sm search-input"
-             placeholder="Search name, burial id, plot…">
+             placeholder="Search name, burial id, plot, email…">
 
       <a href="<?= URLROOT ?>/admin/burialRecords"
          class="btn btn-secondary btn-sm ms-2 action-btn">
@@ -72,6 +72,7 @@
           <th>Age</th>
           <th>Sex</th>
           <th>Rental</th>
+          <th>IRH Email</th> <!-- NEW -->
           <th class="text-center">Action</th>
         </tr>
         </thead>
@@ -94,6 +95,9 @@
               $yearsTxt = '5 yr';
             }
             $expiryLabel = $fmtHuman($r->expiry_date ?? null);
+
+            $email = $r->interment_email ?? '';
+            $emailDisp = $email !== '' ? htmlspecialchars($email) : '<span class="text-muted">—</span>';
           ?>
           <tr data-burial-id="<?= htmlspecialchars($r->burial_id) ?>">
             <td><span class="badge badge-soft"><?= htmlspecialchars($r->plot_number ?? '') ?></span></td>
@@ -108,6 +112,7 @@
                 <span class="expiry-badge ms-2">expires <?= htmlspecialchars($expiryLabel) ?></span>
               <?php endif; ?>
             </td>
+            <td title="<?= htmlspecialchars($email) ?>"><?= $emailDisp ?></td>
             <td class="text-center actions">
               <i class="fas fa-eye i-view"    data-bs-toggle="tooltip" title="View"  data-action="view"></i>
               <i class="fas fa-print i-print" data-bs-toggle="tooltip" title="Print" data-action="print"></i>
@@ -117,7 +122,7 @@
           </tr>
           <?php endforeach; ?>
         <?php else: ?>
-          <tr><td colspan="8" class="text-center py-4 text-muted">No archived records.</td></tr>
+          <tr><td colspan="9" class="text-center py-4 text-muted">No archived records.</td></tr>
         <?php endif; ?>
         </tbody>
       </table>
@@ -232,6 +237,7 @@
         ${row('IRH', d.interment_full_name||'')}
         ${row('Relationship', d.interment_relationship||'')}
         ${row('Contact', d.interment_contact_number||'')}
+        ${row('Email', d.interment_email||'')}          <!-- NEW -->
         ${row('Address', d.interment_address||'')}
         ${row('Grave', (d.grave_level||'-')+' / '+(d.grave_type||'-'))}
         ${row('Cause of Death', d.cause_of_death||'')}

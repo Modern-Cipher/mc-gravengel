@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // tooltips on static icons
   $$('.fa-gear, [data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
 
-  // ---------- Activity Logs (view modal) ----------
+  // ---------- Activity Logs ----------
   async function loadActivity() {
     const params = new URLSearchParams({
       from: $('#act-from').value || '',
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ---------- Transaction Reports (view modal) ----------
+  // ---------- Transaction Reports ----------
   async function loadTransactions() {
     const params = new URLSearchParams({
       from: $('#trx-from').value || '',
@@ -172,8 +172,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const tbody = $('#tbl-transactions tbody');
     tbody.innerHTML = '';
 
+    // header has 16 columns incl actions
     if (!data.ok || !Array.isArray(data.rows) || data.rows.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="14" class="text-center text-muted">No data</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="16" class="text-center text-muted">No data</td></tr>`;
       $('#trx-count').textContent = '';
       return;
     }
@@ -189,6 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>${esc(row.interment_full_name) || '—'} <small class="text-muted">(${esc(row.interment_relationship) || '—'})</small></td>
         <td>${esc(row.interment_address) || '—'}</td>
         <td>${esc(row.interment_contact_number) || '—'}</td>
+        <td>${esc(row.interment_email) || '—'}</td> <!-- NEW email column -->
         <td class="text-end">₱ ${fmtMoney(row.payment_amount)}</td>
         <td>${esc(row.rental_date) || '—'}</td>
         <td>${esc(row.expiry_date) || '—'}</td>
@@ -273,6 +275,10 @@ document.addEventListener('DOMContentLoaded', () => {
               <div class="list-group-item d-flex justify-content-between align-items-start">
                 <div><i class="fa-solid fa-phone me-2"></i><strong>Contact</strong></div>
                 <div>${esc(o.interment_contact_number) || '—'}</div>
+              </div>
+              <div class="list-group-item d-flex justify-content-between align-items-start">
+                <div><i class="fa-solid fa-envelope me-2"></i><strong>Email</strong></div>
+                <div>${esc(o.interment_email) || '—'}</div>
               </div>
               <div class="list-group-item">
                 <div class="mb-1"><i class="fa-solid fa-cross me-2"></i><strong>Deceased</strong></div>

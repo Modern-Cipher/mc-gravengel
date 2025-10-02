@@ -1,4 +1,4 @@
-<?php require APPROOT . '/views/includes/admin_header.php'; ?>
+<?php require APPROOT . '/views/includes/staff_header.php'; ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <style>
@@ -28,10 +28,8 @@
               <label class="form-label">Plot (vacant only) <span class="text-danger">*</span></label>
               <select class="form-select" id="plot_id" name="plot_id" required>
                 <option value="">Select vacant plot</option>
-                <?php foreach($data['plots'] as $p): ?>
-                  <option value="<?= htmlspecialchars($p->id) ?>">
-                    <?= htmlspecialchars($p->plot_number) ?>
-                  </option>
+                <?php foreach($data['plots'] ?? [] as $p): ?>
+                  <option value="<?= htmlspecialchars($p->id) ?>"><?= htmlspecialchars($p->plot_number) ?></option>
                 <?php endforeach; ?>
               </select>
               <div class="invalid-feedback">Required.</div>
@@ -41,8 +39,7 @@
               <label class="form-label">Suffix</label>
               <div class="d-flex gap-2">
                 <select id="deceased_suffix" name="deceased_suffix" class="form-select">
-                  <option value="">(None)</option>
-                  <option>Jr.</option><option>Sr.</option>
+                  <option value="">(None)</option><option>Jr.</option><option>Sr.</option>
                   <option>I</option><option>II</option><option>III</option><option>IV</option><option>V</option><option>VI</option>
                   <option>CPA</option><option>PhD</option>
                   <option value="OTHER">Other (specify)</option>
@@ -72,9 +69,7 @@
             </div>
             <div class="col-md-2">
               <label class="form-label">Sex</label>
-              <select id="sex" name="sex" class="form-select">
-                <option value="">Select</option><option>male</option><option>female</option><option>other</option>
-              </select>
+              <select id="sex" name="sex" class="form-select"><option value="">Select</option><option>male</option><option>female</option><option>other</option></select>
             </div>
 
             <div class="col-md-4">
@@ -90,15 +85,13 @@
             <div class="col-md-6">
               <label class="form-label">Grave Level</label>
               <select id="grave_level" name="grave_level" class="form-select">
-                <option value="">Select</option>
-                <option>Ground</option><option>Level 1</option><option>Level 2</option><option>Level 3</option><option>Columbarium</option>
+                <option value="">Select</option><option>Ground</option><option>Level 1</option><option>Level 2</option><option>Level 3</option><option>Columbarium</option>
               </select>
             </div>
             <div class="col-md-6">
               <label class="form-label">Grave Type</label>
               <select id="grave_type" name="grave_type" class="form-select">
-                <option value="">Select</option>
-                <option>Apartment</option><option>Family Lot</option><option>Garden Lot</option><option>Urn (Columbarium)</option>
+                <option value="">Select</option><option>Apartment</option><option>Family Lot</option><option>Garden Lot</option><option>Urn (Columbarium)</option>
               </select>
             </div>
 
@@ -110,7 +103,7 @@
         </form>
       </div>
       <div class="modal-footer wizard-actions">
-        <a href="<?= URLROOT ?>/admin/burialRecords" class="btn btn-outline-secondary">Cancel</a>
+        <a href="<?= URLROOT ?>/staff/burialRecords" class="btn btn-outline-secondary">Cancel</a>
         <button class="btn btn-primary" id="toStep2">Next</button>
       </div>
     </div>
@@ -133,9 +126,7 @@
             <div class="col-md-6">
               <label class="form-label">Relationship <span class="text-danger">*</span></label>
               <select id="interment_relationship" name="interment_relationship" class="form-select" required>
-                <option value="">Select</option>
-                <option>Spouse</option><option>Parent</option><option>Child</option>
-                <option>Sibling</option><option>Relative</option><option>Other</option>
+                <option value="">Select</option><option>Spouse</option><option>Parent</option><option>Child</option><option>Sibling</option><option>Relative</option><option>Other</option>
               </select>
               <div class="invalid-feedback">Required.</div>
             </div>
@@ -146,65 +137,29 @@
               <div class="invalid-feedback">Enter a valid PH mobile number.</div>
             </div>
 
-            <!-- NEW: Interment Email (optional) -->
             <div class="col-md-6">
               <label class="form-label">Email <small class="text-muted">(optional)</small></label>
-              <input
-                type="email"
-                id="interment_email"
-                name="interment_email"
-                class="form-control"
-                maxlength="150"
-                placeholder="name@example.com">
+              <input type="email" id="interment_email" name="interment_email" class="form-control" maxlength="150" placeholder="name@example.com">
               <div class="invalid-feedback">Please enter a valid email address (max 150 chars).</div>
             </div>
 
             <div class="col-12"><hr class="my-2"></div>
 
-            <!-- Address -->
-            <div class="col-md-3">
-              <label class="form-label">Province</label>
-              <select id="addr_province" class="form-select"><option value="">Select</option></select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">City/Municipality</label>
-              <select id="addr_city" class="form-select" disabled><option value="">Select</option></select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Barangay</label>
-              <select id="addr_brgy" class="form-select" disabled><option value="">Select</option></select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">ZIP</label>
-              <input type="text" id="addr_zip" class="form-control" maxlength="4" inputmode="numeric" placeholder="e.g. 3004">
-            </div>
-            <div class="col-12">
-              <label class="form-label">House/Lot &amp; Street / Subdivision</label>
-              <input type="text" id="addr_line" class="form-control" placeholder="House no., Street, Subdivision">
-            </div>
+            <div class="col-md-3"><label class="form-label">Province</label><select id="addr_province" class="form-select"><option value="">Select</option></select></div>
+            <div class="col-md-3"><label class="form-label">City/Municipality</label><select id="addr_city" class="form-select" disabled><option value="">Select</option></select></div>
+            <div class="col-md-3"><label class="form-label">Barangay</label><select id="addr_brgy" class="form-select" disabled><option value="">Select</option></select></div>
+            <div class="col-md-3"><label class="form-label">ZIP</label><input type="text" id="addr_zip" class="form-control" maxlength="4" inputmode="numeric" placeholder="e.g. 3004"></div>
+            <div class="col-12"><label class="form-label">House/Lot &amp; Street / Subdivision</label><input type="text" id="addr_line" class="form-control" placeholder="House no., Street, Subdivision"></div>
             <input type="hidden" id="interment_address" name="interment_address">
 
             <div class="col-12"><hr class="my-2"></div>
 
-            <!-- Payment / Rental -->
-            <div class="col-md-4">
-              <label class="form-label">Payment Amount <span class="text-danger">*</span></label>
-              <input type="number" min="0" step="0.01" id="payment_amount" name="payment_amount" class="form-control" required>
-              <div class="invalid-feedback">Required.</div>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Rental Date &amp; Time</label>
-              <input type="text" id="rental_date" name="rental_date" class="form-control" placeholder="Wed-October 01, 2025 at 7:44 AM">
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Expiry (auto +5 yrs)</label>
-              <input type="text" id="expiry_date_display" class="form-control" disabled>
-              <input type="hidden" id="expiry_date" name="expiry_date">
-            </div>
+            <div class="col-md-4"><label class="form-label">Payment Amount <span class="text-danger">*</span></label><input type="number" min="0" step="0.01" id="payment_amount" name="payment_amount" class="form-control" required><div class="invalid-feedback">Required.</div></div>
+            <div class="col-md-4"><label class="form-label">Rental Date &amp; Time</label><input type="text" id="rental_date" name="rental_date" class="form-control" placeholder="Wed-October 01, 2025 at 7:44 AM"></div>
+            <div class="col-md-4"><label class="form-label">Expiry (auto +5 yrs)</label><input type="text" id="expiry_date_display" class="form-control" disabled><input type="hidden" id="expiry_date" name="expiry_date"></div>
 
             <div class="col-12"><hr class="my-2"></div>
 
-            <!-- Requirements -->
             <div class="col-12">
               <label class="form-label">Requirements</label>
               <div class="row">
@@ -232,16 +187,14 @@
   </div>
 </div>
 
-<!-- Step 3: Summary (print button) -->
+<!-- Step 3 -->
 <div class="modal fade modal-wizard" id="step3" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header"><h5 class="modal-title">Burial Form</h5></div>
       <div class="modal-body">
         <div class="row">
-          <div class="col-md-8">
-            <div id="summaryFields" class="border rounded p-3 bg-light"></div>
-          </div>
+          <div class="col-md-8"><div id="summaryFields" class="border rounded p-3 bg-light"></div></div>
           <div class="col-md-4 text-center">
             <img id="qr1" class="qr-box mb-2" alt="QR">
             <div class="small text-muted">Scan for Burial ID</div>
@@ -257,7 +210,7 @@
   </div>
 </div>
 
-<!-- Step 4: Contract (print button) -->
+<!-- Step 4 -->
 <div class="modal fade modal-wizard" id="step4" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
@@ -277,7 +230,7 @@
   </div>
 </div>
 
-<!-- Step 5: QR Ticket (print button) -->
+<!-- Step 5 -->
 <div class="modal fade modal-wizard" id="step5" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
@@ -300,210 +253,127 @@
   </div>
 </div>
 
-<?php require APPROOT . '/views/includes/admin_footer.php'; ?>
+<?php require APPROOT . '/views/includes/staff_footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 (function(){
-  // Modals
-  const m1 = new bootstrap.Modal(document.getElementById('step1'));
-  const m2 = new bootstrap.Modal(document.getElementById('step2'));
-  const m3 = new bootstrap.Modal(document.getElementById('step3'));
-  const m4 = new bootstrap.Modal(document.getElementById('step4'));
-  const m5 = new bootstrap.Modal(document.getElementById('step5'));
-  m1.show();
+  const m1=new bootstrap.Modal('#step1'), m2=new bootstrap.Modal('#step2'), m3=new bootstrap.Modal('#step3'), m4=new bootstrap.Modal('#step4'), m5=new bootstrap.Modal('#step5'); m1.show();
+  const $=id=>document.getElementById(id);
 
-  const byId = id => document.getElementById(id);
-
-  // Flatpickr
-  const fpBorn = flatpickr("#date_born",{altInput:true,altFormat:"D-M-d, Y",dateFormat:"Y-m-d"});
-  const fpDied = flatpickr("#date_died",{altInput:true,altFormat:"D-M-d, Y",dateFormat:"Y-m-d"});
-  const fpRent = flatpickr("#rental_date",{
-    enableTime:true, enableSeconds:true, time_24hr:false,
-    altInput:true, altFormat:"D-F d, Y 'at' h:i K",
-    dateFormat:"Y-m-d H:i:S",
-    onChange: function(sel){
-      const disp = byId('expiry_date_display'), hid=byId('expiry_date');
+  const fpBorn=flatpickr("#date_born",{altInput:true,altFormat:"D-M-d, Y",dateFormat:"Y-m-d"});
+  const fpDied=flatpickr("#date_died",{altInput:true,altFormat:"D-M-d, Y",dateFormat:"Y-m-d"});
+  flatpickr("#rental_date",{
+    enableTime:true, enableSeconds:true, time_24hr:false, altInput:true, altFormat:"D-F d, Y 'at' h:i K", dateFormat:"Y-m-d H:i:S",
+    onChange(sel){
+      const disp=$('expiry_date_display'), hid=$('expiry_date');
       if(!sel.length){ disp.value=''; hid.value=''; return; }
-      const start = sel[0]; const exp = new Date(start); exp.setFullYear(exp.getFullYear()+5);
+      const start=sel[0], exp=new Date(start); exp.setFullYear(exp.getFullYear()+5);
       hid.value = flatpickr.formatDate(exp,"Y-m-d H:i:S");
-      disp.value = flatpickr.formatDate(exp,"D-F d, Y 'at' h:i K");
+      disp.value= flatpickr.formatDate(exp,"D-F d, Y 'at' h:i K");
     }
   });
 
-  // suffix other
-  const suf = byId('deceased_suffix'), sufOther = byId('suffix_other');
-  suf.addEventListener('change',()=>{ const on = suf.value==='OTHER'; sufOther.classList.toggle('d-none',!on); if(!on) sufOther.value=''; });
+  const suf=$('deceased_suffix'), sufOther=$('suffix_other');
+  suf.addEventListener('change',()=>{ const on=suf.value==='OTHER'; sufOther.classList.toggle('d-none',!on); if(!on) sufOther.value=''; });
 
-  // phone mask
-  const phone = byId('interment_contact_number');
-  phone.addEventListener('input', e=>{
-    let d = e.target.value.replace(/\D/g,'').slice(0,11);
-    let out = d.length<=4?d : d.length<=7? d.slice(0,4)+' '+d.slice(4) : d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7);
-    e.target.value = out;
-  });
-  const isPH = v => /^09\d{2}\s\d{3}\s\d{4}$/.test(v.trim());
+  const phone=$('interment_contact_number');
+  phone.addEventListener('input', e=>{ let d=e.target.value.replace(/\D/g,'').slice(0,11); e.target.value = d.length<=4?d : d.length<=7? d.slice(0,4)+' '+d.slice(4) : d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7); });
+  const isPH=v=>/^09\d{2}\s\d{3}\s\d{4}$/.test(v.trim());
+  function isEmail(v){ if(!v) return true; if(v.length>150) return false; return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
-  // simple email check (HTML5 email + length <= 150)
-  function isEmail(v){
-    if(!v) return true; // optional
-    if(v.length > 150) return false;
-    // rely on browser's email input type for most checks; add minimal regex fallback
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-  }
+  const bakeAddress=()=>{ const parts=[$('addr_line').value.trim(), $('addr_brgy').value ? 'Brgy. '+$('addr_brgy').selectedOptions[0].text : '', $('addr_city').value ? $('addr_city').selectedOptions[0].text : '', $('addr_province').value ? $('addr_province').selectedOptions[0].text : '', $('addr_zip').value.trim()].filter(Boolean); $('interment_address').value = parts.join(', '); };
+  const collectReqs=()=>{ $('requirements').value = Array.from(document.querySelectorAll('.req:checked')).map(c=>c.value).join(', '); };
 
-  // address compose
-  function bakeAddress(){
-    const parts = [
-      byId('addr_line').value.trim(),
-      byId('addr_brgy').value ? 'Brgy. '+byId('addr_brgy').selectedOptions[0].text : '',
-      byId('addr_city').value ? byId('addr_city').selectedOptions[0].text : '',
-      byId('addr_province').value ? byId('addr_province').selectedOptions[0].text : '',
-      byId('addr_zip').value.trim()
-    ].filter(Boolean);
-    byId('interment_address').value = parts.join(', ');
-  }
-  function collectReqs(){
-    const vals = Array.from(document.querySelectorAll('.req:checked')).map(c=>c.value);
-    byId('requirements').value = vals.join(', ');
-  }
+  function v1(){ let ok=true; ['plot_id','deceased_first_name','deceased_last_name','date_died'].forEach(id=>{ const el=$(id); if(!el.value){ el.classList.add('is-invalid'); ok=false; } else el.classList.remove('is-invalid'); }); if(suf.value==='OTHER' && !sufOther.value.trim()){ sufOther.classList.add('is-invalid'); ok=false; } else sufOther.classList.remove('is-invalid'); return ok; }
+  function v2(){ let ok=true; ['interment_full_name','interment_relationship','payment_amount'].forEach(id=>{ const el=$(id); if(!el.value){ el.classList.add('is-invalid'); ok=false; } else el.classList.remove('is-invalid'); }); if(phone.value && !isPH(phone.value)){ phone.classList.add('is-invalid'); ok=false; } else phone.classList.remove('is-invalid'); const em=$('interment_email'); const ev=em.value.trim(); if(ev && !isEmail(ev)){ em.classList.add('is-invalid'); ok=false; } else em.classList.remove('is-invalid'); collectReqs(); bakeAddress(); return ok; }
 
-  // validate
-  function v1(){
-    let ok=true; ['plot_id','deceased_first_name','deceased_last_name','date_died'].forEach(id=>{
-      const el=byId(id); if(!el.value){ el.classList.add('is-invalid'); ok=false; } else el.classList.remove('is-invalid');
-    });
-    if(suf.value==='OTHER' && !sufOther.value.trim()){ sufOther.classList.add('is-invalid'); ok=false; } else sufOther.classList.remove('is-invalid');
-    return ok;
-  }
-  function v2(){
-    let ok=true; ['interment_full_name','interment_relationship','payment_amount'].forEach(id=>{
-      const el=byId(id); if(!el.value){ el.classList.add('is-invalid'); ok=false; } else el.classList.remove('is-invalid');
-    });
-    if(phone.value && !isPH(phone.value)){ phone.classList.add('is-invalid'); ok=false; } else phone.classList.remove('is-invalid');
+  $('toStep2').onclick=()=>{ if(!v1()) return; m1.hide(); m2.show(); };
+  $('backTo1').onclick=()=>{ m2.hide(); m1.show(); };
 
-    // NEW: email validation
-    const emailEl = byId('interment_email');
-    const emailVal = emailEl.value.trim();
-    if(emailVal && !isEmail(emailVal)){
-      emailEl.classList.add('is-invalid'); ok=false;
-    } else {
-      emailEl.classList.remove('is-invalid');
-    }
-
-    collectReqs(); bakeAddress();
-    return ok;
-  }
-
-  // Step nav
-  byId('toStep2').onclick = ()=>{ if(!v1())return; m1.hide(); m2.show(); };
-  byId('backTo1').onclick = ()=>{ m2.hide(); m1.show(); };
-
-  // state for create/update
-  let savedBurialId = '', savedTxn = '';
-
-  byId('submitBurial').onclick = async ()=>{
+  let savedBurialId='', savedTxn='';
+  $('submitBurial').onclick = async ()=>{
     if(!v2()) return;
-
     const payload = {
-      burial_id: savedBurialId, // empty on first save (CREATE); filled on subsequent saves (UPDATE)
-      plot_id: byId('plot_id').value,
-      deceased_first_name: byId('deceased_first_name').value.trim(),
-      deceased_middle_name: byId('deceased_middle_name').value.trim(),
-      deceased_last_name: byId('deceased_last_name').value.trim(),
+      burial_id: savedBurialId,
+      plot_id: $('plot_id').value,
+      deceased_first_name: $('deceased_first_name').value.trim(),
+      deceased_middle_name: $('deceased_middle_name').value.trim(),
+      deceased_last_name: $('deceased_last_name').value.trim(),
       deceased_suffix: (suf.value==='OTHER'?sufOther.value.trim():suf.value),
-      age: byId('age').value.trim(),
-      sex: byId('sex').value,
-      date_born: byId('date_born').value,
-      date_died: byId('date_died').value,
-      cause_of_death: byId('cause_of_death').value.trim(),
-      grave_level: byId('grave_level').value,
-      grave_type: byId('grave_type').value,
-      interment_full_name: byId('interment_full_name').value.trim(),
-      interment_relationship: byId('interment_relationship').value,
+      age: $('age').value.trim(),
+      sex: $('sex').value,
+      date_born: $('date_born').value,
+      date_died: $('date_died').value,
+      cause_of_death: $('cause_of_death').value.trim(),
+      grave_level: $('grave_level').value,
+      grave_type: $('grave_type').value,
+      interment_full_name: $('interment_full_name').value.trim(),
+      interment_relationship: $('interment_relationship').value,
       interment_contact_number: phone.value.trim(),
-      interment_address: byId('interment_address').value.trim(),
-      interment_email: byId('interment_email').value.trim(), // NEW in payload
-      payment_amount: byId('payment_amount').value,
-      rental_date: byId('rental_date').value, // Y-m-d H:i:S
-      expiry_date: byId('expiry_date').value, // Y-m-d H:i:S
-      requirements: byId('requirements').value
+      interment_address: $('interment_address').value.trim(),
+      interment_email: $('interment_email').value.trim(),
+      payment_amount: $('payment_amount').value,
+      rental_date: $('rental_date').value,
+      expiry_date: $('expiry_date').value,
+      requirements: $('requirements').value
     };
 
-    const resp = await fetch('<?= URLROOT ?>/admin/addBurial', {
-      method:'POST',
-      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    // IMPORTANT: STAFF save endpoint
+    const resp = await fetch('<?= URLROOT ?>/staff/saveBurial', {
+      method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
       body: new URLSearchParams(payload).toString()
     }).then(r=>r.json()).catch(()=>({ok:false}));
 
-    if(!resp.ok){ alert(resp.message || 'Save failed'); return; }
+    if(!resp.ok){ Swal.fire({icon:'error',title: resp.msg || 'Save failed'}); return; }
 
+    // If your save returns ids, set them here:
     savedBurialId = resp.burial_id || savedBurialId;
     savedTxn      = resp.transaction_id || savedTxn;
 
-    // Fill Step3 summary
-    const sum = document.getElementById('summaryFields');
+    const sum = $('summaryFields');
     sum.innerHTML = `
       <div class="row g-2">
-        <div class="col-6"><strong>Plot ID:</strong> ${byId('plot_id').selectedOptions[0].text}</div>
-        <div class="col-6"><strong>Burial ID:</strong> ${savedBurialId}</div>
-        <div class="col-6"><strong>First Name:</strong> ${byId('deceased_first_name').value}</div>
-        <div class="col-6"><strong>Relationship:</strong> ${byId('interment_relationship').value}</div>
-        <div class="col-6"><strong>Middle Name:</strong> ${byId('deceased_middle_name').value}</div>
-        <div class="col-6"><strong>Contact:</strong> ${byId('interment_contact_number').value}</div>
-        <div class="col-12"><strong>Email:</strong> ${byId('interment_email').value || '-'}</div>
-        <div class="col-12"><strong>Address:</strong> ${byId('interment_address').value}</div>
-        <div class="col-6"><strong>Payment Amount:</strong> ${Number(byId('payment_amount').value).toLocaleString()}</div>
-        <div class="col-6"><strong>Rental Date:</strong> ${byId('rental_date').value ? flatpickr.formatDate(new Date(byId('rental_date').value),"D-F d, Y 'at' h:i K"):''}</div>
-        <div class="col-6"><strong>Expiry Date:</strong> ${byId('expiry_date').value ? flatpickr.formatDate(new Date(byId('expiry_date').value),"D-F d, Y 'at' h:i K"):''}</div>
-        <div class="col-12"><strong>Grave Level & Type:</strong> ${byId('grave_level').value || '-'} / ${byId('grave_type').value || '-'}</div>
-        <div class="col-12"><strong>Requirements:</strong> ${byId('requirements').value || '-'}</div>
+        <div class="col-6"><strong>Plot ID:</strong> ${$('plot_id').selectedOptions[0]?.text || ''}</div>
+        <div class="col-6"><strong>Burial ID:</strong> ${savedBurialId || '-'}</div>
+        <div class="col-6"><strong>First Name:</strong> ${$('deceased_first_name').value}</div>
+        <div class="col-6"><strong>Relationship:</strong> ${$('interment_relationship').value}</div>
+        <div class="col-6"><strong>Middle Name:</strong> ${$('deceased_middle_name').value}</div>
+        <div class="col-6"><strong>Contact:</strong> ${$('interment_contact_number').value}</div>
+        <div class="col-12"><strong>Email:</strong> ${$('interment_email').value || '-'}</div>
+        <div class="col-12"><strong>Address:</strong> ${$('interment_address').value}</div>
+        <div class="col-6"><strong>Payment Amount:</strong> ${Number($('payment_amount').value||0).toLocaleString()}</div>
+        <div class="col-6"><strong>Rental Date:</strong> ${$('rental_date').value ? flatpickr.formatDate(new Date($('rental_date').value),"D-F d, Y 'at' h:i K"):''}</div>
+        <div class="col-6"><strong>Expiry Date:</strong> ${$('expiry_date').value ? flatpickr.formatDate(new Date($('expiry_date').value),"D-F d, Y 'at' h:i K"):''}</div>
+        <div class="col-12"><strong>Grave Level & Type:</strong> ${$('grave_level').value || '-'} / ${$('grave_type').value || '-'}</div>
+        <div class="col-12"><strong>Requirements:</strong> ${$('requirements').value || '-'}</div>
       </div>
     `;
 
-    // QR images
-    const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(savedBurialId);
-    document.getElementById('qr1').src = qrUrl;
-    document.getElementById('qr2').src = qrUrl;
-    document.getElementById('qrBurial').innerText = savedBurialId;
-    document.getElementById('qrTxn').innerText = savedTxn;
-
-    // Contract name
-    document.getElementById('contractName').innerText = byId('interment_full_name').value;
+    const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(savedBurialId||'');
+    $('qr1').src = qrUrl; $('qr2').src = qrUrl;
+    $('qrBurial').innerText = savedBurialId || '-'; $('qrTxn').innerText = savedTxn || '-';
+    $('contractName').innerText = $('interment_full_name').value;
 
     m2.hide(); m3.show();
   };
 
-  // Step3 buttons
-  byId('s3Prev').onclick = ()=>{ m3.hide(); m2.show(); };
-  byId('toStep4').onclick = ()=>{ m3.hide(); m4.show(); };
+  $('s3Prev').onclick = ()=>{ m3.hide(); m2.show(); };
+  $('toStep4').onclick= ()=>{ m3.hide(); m4.show(); };
+  $('s4Prev').onclick = ()=>{ m4.hide(); m3.show(); };
+  $('toStep5').onclick= ()=>{ m4.hide(); m5.show(); };
+  $('s5Prev').onclick = ()=>{ m5.hide(); m4.show(); };
 
-  // Step4 buttons
-  byId('s4Prev').onclick = ()=>{ m4.hide(); m3.show(); };
-  byId('toStep5').onclick = ()=>{ m4.hide(); m5.show(); };
+  // Printers still under admin (shared)
+  $('printForm').onclick     = ()=> window.open('<?= URLROOT ?>/admin/printBurialForm/'+encodeURIComponent(savedBurialId||'')+'?autoprint=1','_blank');
+  $('printContract').onclick = ()=> window.open('<?= URLROOT ?>/admin/printContract/'+encodeURIComponent(savedBurialId||'')+'?autoprint=1','_blank');
+  $('printQr').onclick       = ()=> window.open('<?= URLROOT ?>/admin/printQrTicket/'+encodeURIComponent(savedBurialId||'')+'?autoprint=1','_blank');
 
-  // Step5 back
-  byId('s5Prev').onclick = ()=>{ m5.hide(); m4.show(); };
+  $('finishBtn').onclick = ()=>{ Swal.fire({icon:'success',title:'Burial added successfully',timer:1400,showConfirmButton:false}).then(()=>{ window.location = '<?= URLROOT ?>/staff/burialRecords'; }); };
 
-  // PRINT buttons (auto-print & close via ?autoprint=1)
-  byId('printForm').onclick     = ()=> window.open('<?= URLROOT ?>/admin/printBurialForm/'+encodeURIComponent(savedBurialId)+'?autoprint=1','_blank');
-  byId('printContract').onclick = ()=> window.open('<?= URLROOT ?>/admin/printContract/'+encodeURIComponent(savedBurialId)+'?autoprint=1','_blank');
-  byId('printQr').onclick       = ()=> window.open('<?= URLROOT ?>/admin/printQrTicket/'+encodeURIComponent(savedBurialId)+'?autoprint=1','_blank');
-
-  // Finish with SweetAlert then redirect
-  byId('finishBtn').onclick = ()=>{
-    Swal.fire({
-      icon: 'success',
-      title: 'Burial added successfully',
-      timer: 1400,
-      showConfirmButton: false
-    }).then(()=>{ window.location = '<?= URLROOT ?>/admin/burialRecords'; });
-  };
-
-  /* PSGC cascading */
-  const api='https://psgc.gitlab.io/api';
-  const selProv=byId('addr_province'), selCity=byId('addr_city'), selBrgy=byId('addr_brgy');
-  function fill(sel,list,ph='Select'){ sel.innerHTML=`<option value="">${ph}</option>`; list.forEach(x=>{const o=document.createElement('option');o.value=x.code||x.id||x.name;o.textContent=x.name;sel.appendChild(o);}); }
+  // PSGC
+  const api='https://psgc.gitlab.io/api', selProv=$('addr_province'), selCity=$('addr_city'), selBrgy=$('addr_brgy');
+  const fill=(sel,list,ph='Select')=>{ sel.innerHTML=`<option value="">${ph}</option>`; list.forEach(x=>{const o=document.createElement('option');o.value=x.code||x.id||x.name;o.textContent=x.name;sel.appendChild(o);}); };
   fetch(`${api}/provinces/`).then(r=>r.json()).then(list=>{ list.sort((a,b)=>a.name.localeCompare(b.name)); fill(selProv,list); });
   selProv.addEventListener('change',()=>{ selCity.disabled=true; selBrgy.disabled=true; fill(selCity,[]); fill(selBrgy,[]); const c=selProv.value; if(!c)return; fetch(`${api}/provinces/${c}/cities-municipalities/`).then(r=>r.json()).then(list=>{ list.sort((a,b)=>a.name.localeCompare(b.name)); fill(selCity,list); selCity.disabled=false; }); });
   selCity.addEventListener('change',()=>{ selBrgy.disabled=true; fill(selBrgy,[]); const c=selCity.value; if(!c)return; fetch(`${api}/cities-municipalities/${c}/barangays/`).then(r=>r.json()).then(list=>{ list.sort((a,b)=>a.name.localeCompare(b.name)); fill(selBrgy,list); selBrgy.disabled=false; }); });

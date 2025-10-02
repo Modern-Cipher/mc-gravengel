@@ -9,9 +9,9 @@ if (file_exists(APPROOT . '/views/includes/admin_header.php')) {
 <style>
   :root{
     --g-maroon:#7b1d1d;
-     --footer-h:120px;
+    --footer-h:120px;
   }
-    .logs-page.avoid-footer-overlap{
+  .logs-page.avoid-footer-overlap{
     /* Always keep space for the footer + a little breathing room */
     padding-bottom: calc(var(--footer-h) + 24px);
   }
@@ -143,7 +143,7 @@ if (file_exists(APPROOT . '/views/includes/admin_header.php')) {
         </div>
         <div class="col-md-3">
           <label class="form-label">Search</label>
-          <input type="text" id="trx-search" class="form-control form-control-sm" placeholder="Search transaction / name / plot / contact">
+          <input type="text" id="trx-search" class="form-control form-control-sm" placeholder="Search transaction / name / plot / contact / email">
         </div>
         <div class="col-md-3 d-grid d-md-block">
           <button id="trx-filter" class="btn btn-primary btn-sm"><i class="fa-solid fa-filter"></i> Apply</button>
@@ -162,6 +162,7 @@ if (file_exists(APPROOT . '/views/includes/admin_header.php')) {
               <th style="min-width:210px">Interment Right</th>
               <th style="min-width:260px">Address</th>
               <th>Contact</th>
+              <th>Email</th> <!-- NEW -->
               <th class="text-end">Payment</th>
               <th>Rental Date &amp; Time</th>
               <th>Expiry Date</th>
@@ -192,7 +193,6 @@ if (file_exists(APPROOT . '/views/includes/admin_header.php')) {
     window.addEventListener('resize', setFooterSpace, {passive:true});
   })();
 </script>
-
 
 <script>window.URLROOT = "<?= URLROOT ?>";</script>
 <script src="<?= URLROOT ?>/public/js/logs_reports.js?v=<?= time() ?>"></script>

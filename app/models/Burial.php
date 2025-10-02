@@ -9,11 +9,11 @@ class Burial {
         $this->db = new Database;
     }
 
-    /* ============================
-       FETCH / LIST
-       ============================ */
+    /* =========================================
+       LISTS / FETCH
+       ========================================= */
 
-    // EXISTING: Active list only (kept as-is, using is_active = 1)
+    // Active burials (is_active = 1)
     public function getAllBurialRecords() {
         $this->db->query("
             SELECT b.*,
@@ -28,7 +28,7 @@ class Burial {
         return $this->db->resultSet();
     }
 
-    // NEW: Archived list (is_active = 0) – used by Archived page
+    // Archived burials (is_active = 0)
     public function getAllBurialRecordsArchived() {
         $this->db->query("
             SELECT b.*,
@@ -43,8 +43,7 @@ class Burial {
         return $this->db->resultSet();
     }
 
-    // EXISTING (OLD): find active by burial_id (kept for compatibility)
-    // NOTE: ito yung dati mong may is_active = 1
+    // Active only by burial_id (kept for compatibility)
     public function findByBurialId($burial_id) {
         $this->db->query("
             SELECT b.*,
@@ -60,7 +59,7 @@ class Burial {
         return $this->db->single();
     }
 
-    // NEW: find ANY (active or archived) by burial_id – para gumana View/Print sa archived
+    // ANY (active or archived) by burial_id – ginagamit sa view/print/details
     public function findAnyByBurialId($burial_id) {
         $this->db->query("
             SELECT b.*,
@@ -76,19 +75,7 @@ class Burial {
         return $this->db->single();
     }
 
-    public function deleteByBurialId($burial_id){
-        $this->db->query("DELETE FROM burials WHERE burial_id = :bid");
-        $this->db->bind(':bid', $burial_id);
-        return $this->db->execute();
-    }
-
-    public function markPlotVacant($plot_id){
-        $this->db->query("UPDATE plots SET status = 'vacant' WHERE id = :pid");
-        $this->db->bind(':pid', $plot_id);
-        return $this->db->execute();
-    }
-
-    // Vacant plots (dropdown)
+    // 👉 Needed by AdminController->addBurial() (GET branch)
     public function getVacantPlotsFromPlots() {
         $this->db->query("
             SELECT p.id,
@@ -102,9 +89,9 @@ class Burial {
         return $this->db->resultSet();
     }
 
-    /* ============================
+    /* =========================================
        CREATE / UPDATE
-       ============================ */
+       ========================================= */
 
     public function create($d) {
         // Generate readable IDs
@@ -119,7 +106,7 @@ class Burial {
                 deceased_first_name, deceased_middle_name, deceased_last_name, deceased_suffix,
                 age, sex, date_born, date_died, cause_of_death,
                 grave_level, grave_type,
-                interment_full_name, interment_relationship, interment_contact_number, interment_address,
+                interment_full_name, interment_relationship, interment_contact_number, interment_address, interment_email,
                 payment_amount, rental_date, expiry_date,
                 requirements, created_by_user_id, is_active
             ) VALUES (
@@ -127,7 +114,7 @@ class Burial {
                 :dfn, :dmn, :dln, :dsuf,
                 :age, :sex, :born, :died, :cod,
                 :glevel, :gtype,
-                :ir_name, :ir_rel, :ir_contact, :ir_address,
+                :ir_name, :ir_rel, :ir_contact, :ir_address, :ir_email,
                 :pay, :rent, :exp,
                 :reqs, :created_by, 1
             )
@@ -156,6 +143,11 @@ class Burial {
         $this->db->bind(':ir_contact', $d['interment_contact_number'] ?? null);
         $this->db->bind(':ir_address', $d['interment_address'] ?? null);
 
+        // NEW: email (NULL kung empty string)
+        $email = isset($d['interment_email']) ? trim((string)$d['interment_email']) : null;
+        $email = ($email === '') ? null : $email;
+        $this->db->bind(':ir_email', $email);
+
         $this->db->bind(':pay',  $d['payment_amount'] ?? 0);
         $this->db->bind(':rent', $d['rental_date'] ?: null);
         $this->db->bind(':exp',  $d['expiry_date'] ?: null);
@@ -165,6 +157,11 @@ class Burial {
 
         $ok = $this->db->execute();
         if (!$ok) return false;
+
+        // Mark plot occupied on CREATE
+        $this->db->query("UPDATE plots SET status = 'occupied' WHERE id = :pid");
+        $this->db->bind(':pid', (int)$d['plot_id']);
+        $this->db->execute();
 
         return [
             'insert_id'      => $this->db->lastInsertId(),
@@ -191,6 +188,7 @@ class Burial {
                 interment_relationship = :interment_relationship,
                 interment_contact_number = :interment_contact_number,
                 interment_address    = :interment_address,
+                interment_email      = :interment_email,
                 payment_amount       = :payment_amount,
                 rental_date          = :rental_date,
                 expiry_date          = :expiry_date,
@@ -215,6 +213,12 @@ class Burial {
         $this->db->bind(':interment_relationship',  $data['interment_relationship'] ?? null);
         $this->db->bind(':interment_contact_number',$data['interment_contact_number'] ?? null);
         $this->db->bind(':interment_address',       $data['interment_address'] ?? null);
+
+        // NEW: email (NULL kung empty string)
+        $uEmail = isset($data['interment_email']) ? trim((string)$data['interment_email']) : null;
+        $uEmail = ($uEmail === '') ? null : $uEmail;
+        $this->db->bind(':interment_email', $uEmail);
+
         $this->db->bind(':payment_amount', $data['payment_amount'] ?? 0);
         $this->db->bind(':rental_date',   $data['rental_date'] ?: null);
         $this->db->bind(':expiry_date',   $data['expiry_date'] ?: null);
@@ -224,9 +228,9 @@ class Burial {
         return $this->db->execute();
     }
 
-    /* ============================
-       ARCHIVE / RESTORE (is_active)
-       ============================ */
+    /* =========================================
+       ARCHIVE / RESTORE / DELETE
+       ========================================= */
 
     // Flip is_active 0/1 by burial_id
     public function setActiveFlagByBurialId(string $burial_id, int $flag) {
@@ -235,12 +239,144 @@ class Burial {
         $this->db->bind(':bid', $burial_id);
         return $this->db->execute();
     }
+    public function archiveByBurialId(string $burial_id) { return $this->setActiveFlagByBurialId($burial_id, 0); }
+    public function restoreByBurialId(string $burial_id) { return $this->setActiveFlagByBurialId($burial_id, 1); }
 
-    public function archiveByBurialId(string $burial_id) {
-        return $this->setActiveFlagByBurialId($burial_id, 0);
+    // DELETE burial record; (optional) free the plot
+    public function deleteByBurialId($burial_id){
+        // get plot first
+        $this->db->query("SELECT plot_id FROM burials WHERE burial_id = :bid LIMIT 1");
+        $this->db->bind(':bid', $burial_id);
+        $row = $this->db->single();
+        $plotId = $row->plot_id ?? null;
+
+        // delete
+        $this->db->query("DELETE FROM burials WHERE burial_id = :bid");
+        $this->db->bind(':bid', $burial_id);
+        $ok = $this->db->execute();
+
+        // free plot only after delete (NOT on archive)
+        if ($ok && $plotId) {
+            $this->db->query("UPDATE plots SET status = 'vacant' WHERE id = :pid");
+            $this->db->bind(':pid', (int)$plotId);
+            $this->db->execute();
+        }
+        return $ok;
     }
 
-    public function restoreByBurialId(string $burial_id) {
-        return $this->setActiveFlagByBurialId($burial_id, 1);
+    /* =========================================
+       DASHBOARD COUNTS
+       ========================================= */
+
+    // Active burials count
+    public function countActive(): int {
+        $this->db->query("SELECT COUNT(*) AS c FROM burials WHERE is_active = 1");
+        $r = $this->db->single();
+        return (int)($r->c ?? 0);
+    }
+
+    // Expired rentals count (active only with expiry_date < today)
+    public function countExpired(): int {
+        $this->db->query("
+            SELECT COUNT(*) AS c
+            FROM burials
+            WHERE is_active = 1
+              AND expiry_date IS NOT NULL
+              AND DATE(expiry_date) < CURDATE()
+        ");
+        $r = $this->db->single();
+        return (int)($r->c ?? 0);
+    }
+
+    // Today's transactions count — gamit ang rental_date
+    public function countTodayTransactions(): int {
+        $this->db->query("
+            SELECT COUNT(*) AS c
+            FROM burials
+            WHERE DATE(rental_date) = CURDATE()
+        ");
+        $r = $this->db->single();
+        return (int)($r->c ?? 0);
+    }
+
+    /* =========================================
+       CALENDAR EVENTS (EXPIRY)
+       ========================================= */
+
+    public function getExpiryEventsInRange(string $from, string $to) {
+        $this->db->query("
+            SELECT
+                b.burial_id,
+                b.expiry_date,
+                b.interment_full_name,
+                b.deceased_first_name,
+                b.deceased_last_name,
+                b.grave_level,
+                b.grave_type,
+                mb.title        AS block_title,
+                p.plot_number
+            FROM burials b
+            JOIN plots p       ON p.id = b.plot_id
+            JOIN map_blocks mb ON mb.id = p.map_block_id
+            WHERE b.is_active = 1
+              AND b.expiry_date IS NOT NULL
+              AND DATE(b.expiry_date) BETWEEN :dfrom AND :dto
+            ORDER BY b.expiry_date ASC
+        ");
+        $this->db->bind(':dfrom', $from);
+        $this->db->bind(':dto',   $to);
+        return $this->db->resultSet();
+    }
+
+    /* =========================================
+       NOTIFICATIONS QUERIES
+       ========================================= */
+
+    /**
+     * 30-day warning, time-aware (exactly N*24 hours from now).
+     * Returns active burials with plot and block info.
+     */
+    public function getExpiringWithinDays(int $days = 30) {
+        $this->db->query("
+            SELECT 
+                b.burial_id,
+                b.interment_full_name,
+                b.interment_email,
+                b.expiry_date,
+                mb.title       AS block_title,
+                p.plot_number
+            FROM burials b
+            JOIN plots p       ON p.id = b.plot_id
+            JOIN map_blocks mb ON mb.id = p.map_block_id
+            WHERE b.is_active = 1
+              AND b.expiry_date IS NOT NULL
+              AND TIMESTAMPDIFF(DAY, NOW(), b.expiry_date) = :days
+            ORDER BY b.expiry_date ASC
+        ");
+        $this->db->bind(':days', $days);
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Expired today (date-based), active burials only.
+     */
+    public function getExpiredToday() {
+        $this->db->query("
+            SELECT 
+                b.burial_id,
+                b.interment_full_name,
+                b.interment_email,
+                b.expiry_date,
+                mb.title       AS block_title,
+                p.plot_number
+            FROM burials b
+            JOIN plots p       ON p.id = b.plot_id
+            JOIN map_blocks mb ON mb.id = p.map_block_id
+            WHERE b.is_active = 1
+              AND b.expiry_date IS NOT NULL
+              AND DATE(b.expiry_date) = CURDATE()
+            ORDER BY b.expiry_date ASC
+        ");
+        return $this->db->resultSet();
     }
 }

@@ -1,5 +1,5 @@
 File Tree: mc-gravengel
-Generated on: 10/1/2025, 5:28:07 PM
+Generated on: 10/2/2025, 7:59:39 AM
 Root path: c:\xampp\htdocs\mc-gravengel
 
 ────────────────────────────────────────────────────────────────────────────────
@@ -34,7 +34,9 @@ Root path: c:\xampp\htdocs\mc-gravengel
 │   │   │   ├── archived_burials.php
 │   │   │   ├── burial_records.php
 │   │   │   ├── cemetery_map.php
+│   │   │   ├── contact_us.php
 │   │   │   ├── index.php
+│   │   │   ├── logs_reports.php
 │   │   │   ├── print_burial_form.php
 │   │   │   ├── print_contract.php
 │   │   │   ├── print_qr_ticket.php
@@ -52,7 +54,7 @@ Root path: c:\xampp\htdocs\mc-gravengel
 │   │   │   ├── navbar_main.php
 │   │   │   ├── navbar_map.php
 │   │   │   ├── staff_footer.php.txt
-│   │   │   └── staff_header.php.
+│   │   │   └── staff_header.php
 │   │   ├── maps/
 │   │   │   ├── index copy.php
 │   │   │   ├── index.php
@@ -82,8 +84,10 @@ Root path: c:\xampp\htdocs\mc-gravengel
 │   ├── img/
 │   │   ├── profiles/
 │   │   │   └── cemeteryMap_73469a.png
+│   │   ├── Althea.png
 │   │   ├── G.png
-│   │   ├── althea.png
+│   │   ├── Juana.png
+│   │   ├── Orion.png
 │   │   ├── bg.png
 │   │   ├── bglogo.png
 │   │   ├── bwlogo.png
@@ -91,16 +95,16 @@ Root path: c:\xampp\htdocs\mc-gravengel
 │   │   ├── full-logo.png
 │   │   ├── ggs.png
 │   │   ├── gravengel.png
-│   │   ├── juana.png
-│   │   ├── orion.png
 │   │   ├── ppclogo.png
 │   │   ├── seal.png
+│   │   ├── tri.png
 │   │   └── trivera.png
 │   ├── js/
 │   │   ├── admin.js
 │   │   ├── admin_map.js
 │   │   ├── burial-records.js
 │   │   ├── login.js
+│   │   ├── logs_reports.js
 │   │   ├── main.js
 │   │   ├── map copy.js
 │   │   ├── map.js

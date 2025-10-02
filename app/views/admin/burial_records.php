@@ -71,7 +71,7 @@
 
     <div class="d-flex align-items-center">
       <input id="tableSearch" type="search" class="form-control form-control-sm search-input"
-             placeholder="Search name, burial id, plot…">
+             placeholder="Search name, burial id, plot, email…">
 
       <!-- Add Burial now opens TOS modal first -->
       <button id="addBurialBtn" type="button"
@@ -104,6 +104,7 @@
             <th>Age</th>
             <th>Sex</th>
             <th>Rental</th>
+            <th>IRH Email</th> <!-- NEW -->
             <th class="text-center">Action</th>
           </tr>
         </thead>
@@ -130,6 +131,9 @@
                 $yearsTxt = '5 yr';
               }
               $expiryLabel = $fmtHuman($r->expiry_date ?? null);
+
+              $email = $r->interment_email ?? '';
+              $emailDisp = $email !== '' ? htmlspecialchars($email) : '<span class="text-muted">—</span>';
             ?>
             <tr data-burial-id="<?= htmlspecialchars($r->burial_id) ?>">
               <td><span class="badge badge-soft"><?= htmlspecialchars($r->plot_number ?? '') ?></span></td>
@@ -144,6 +148,7 @@
                   <span class="expiry-badge ms-2">expires <?= htmlspecialchars($expiryLabel) ?></span>
                 <?php endif; ?>
               </td>
+              <td title="<?= htmlspecialchars($email) ?>"><?= $emailDisp ?></td>
               <td class="text-center actions">
                 <i class="fas fa-eye i-view"           data-bs-toggle="tooltip" title="View"    data-action="view"></i>
                 <i class="fas fa-print i-print"        data-bs-toggle="tooltip" title="Print"   data-action="print"></i>
@@ -156,7 +161,7 @@
             </tr>
           <?php endforeach; ?>
         <?php else: ?>
-          <tr><td colspan="8" class="text-center py-4 text-muted">No burial records found.</td></tr>
+          <tr><td colspan="9" class="text-center py-4 text-muted">No burial records found.</td></tr>
         <?php endif; ?>
         </tbody>
       </table>
@@ -229,7 +234,10 @@
               <input type="text" class="form-control form-control-sm" name="grave_type" id="e_type">
             </div>
           </div>
-          <div class="col-12"><label class="form-label">Address</label><input type="text" class="form-control form-control-sm" name="interment_address" id="e_addr"></div>
+          <div class="col-md-6"><label class="form-label">Address</label><input type="text" class="form-control form-control-sm" name="interment_address" id="e_addr"></div>
+          <!-- NEW: Email -->
+          <div class="col-md-6"><label class="form-label">Email</label><input type="email" class="form-control form-control-sm" name="interment_email" id="e_email" maxlength="150" placeholder="name@example.com"></div>
+
           <div class="col-12"><label class="form-label">Cause of Death</label><input type="text" class="form-control form-control-sm" name="cause_of_death" id="e_cod"></div>
         </form>
       </div>
@@ -364,6 +372,7 @@
         ${row('IRH', d.interment_full_name||'')}
         ${row('Relationship', d.interment_relationship||'')}
         ${row('Contact', d.interment_contact_number||'')}
+        ${row('Email', d.interment_email||'')}            <!-- NEW -->
         ${row('Address', d.interment_address||'')}
         ${row('Grave', (d.grave_level||'-')+' / '+(d.grave_type||'-'))}
         ${row('Cause of Death', d.cause_of_death||'')}
@@ -391,15 +400,29 @@
     e('e_lvl').value = d.grave_level||'';
     e('e_type').value = d.grave_type||'';
     e('e_cod').value = d.cause_of_death||'';
+    e('e_email').value = d.interment_email || '';   // NEW
     editModal.show();
   }
 
   document.getElementById('saveEdit').addEventListener('click', async ()=>{
     const form = document.getElementById('editForm');
+
+    // quick front-end email validation (optional field)
+    const emailEl = document.getElementById('e_email');
+    const email = emailEl.value.trim();
+    if (email && (email.length > 150 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+      emailEl.classList.add('is-invalid');
+      toast('Please enter a valid email (max 150 chars).','error');
+      return;
+    } else {
+      emailEl.classList.remove('is-invalid');
+    }
+
     const payload = new URLSearchParams(new FormData(form)).toString();
-    const resp = await fetch('<?= URLROOT ?>/admin/updateBurial', {
+    const resp = await fetch('<?= URLROOT ?>/admin/addBurial', {
       method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:payload
     }).then(r=>r.json()).catch(()=>({ok:false}));
+
     if(resp.ok){ editModal.hide(); toast('Saved','success'); setTimeout(()=>location.reload(),500); }
     else{ toast(resp.message||'Save failed','error'); }
   });
