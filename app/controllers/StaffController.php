@@ -965,4 +965,110 @@ class StaffController extends Controller
             echo json_encode(['success' => false, 'message' => 'Unexpected error. Please check server logs.']);
         }
     }
+
+
+
+    // Pang-kuha ng recent activity ng staff
+    public function myActivity() {
+        header('Content-Type: application/json');
+        $user_id = (int)$_SESSION['user']['id'];
+
+        $db = new Database();
+        $parts = [];
+
+        // Magdagdag dito ng mga queries para sa activity ng staff, katulad ng sa AdminController
+        // Halimbawa:
+        $parts[] = "
+          SELECT
+            us.login_at AS ts,
+            'Logged in to the system' AS action_text,
+            'login' AS kind
+          FROM user_sessions us
+          WHERE us.user_id = :user_id AND us.login_at IS NOT NULL
+        ";
+
+        // Maaari kang magdagdag ng iba pang activities tulad ng pag-add ng records, etc.
+
+        $sql  = "SELECT * FROM (".implode(" UNION ALL ", $parts).") X WHERE DATE(X.ts) = CURDATE() ORDER BY X.ts DESC LIMIT 50";
+
+        $db->query($sql);
+        $db->bind(':user_id', $user_id);
+
+        try {
+            $rows = $db->resultSet();
+            echo json_encode(['ok'=>true, 'rows'=>$rows]);
+        } catch (Exception $e) {
+            error_log("Staff myActivity Error: " . $e->getMessage());
+            echo json_encode(['ok'=>false, 'rows' => [], 'message' => 'A database error occurred.']);
+        }
+    }
+
+
+    // Idagdag itong function sa loob ng StaffController class
+
+public function printRenewalHistory()
+{
+    $history = $this->renewalModel->getRenewalHistory();
+    $data = [
+        'title' => 'Renewal History Report',
+        'history' => $history
+    ];
+    $this->view('staff/print_renewals', $data);
+}
+
+
+// app/controllers/StaffController.php
+
+// Idagdag itong dalawang functions sa loob ng "class StaffController"
+
+    /**
+     * Endpoint para sa data ng rental status chart.
+     */
+    public function getDashboardChartData() {
+        header('Content-Type: application/json');
+        
+        if (!method_exists($this->burialModel, 'countNewRentalsThisMonth')) {
+            echo json_encode(['ok' => false, 'message' => 'Required model methods are missing.']);
+            return;
+        }
+
+        try {
+            $data = [
+                'new_rentals'   => $this->burialModel->countNewRentalsThisMonth(),
+                'expiring_soon' => $this->burialModel->countExpiringSoon(30),
+                'total_expired' => $this->burialModel->countAllExpired()
+            ];
+            echo json_encode(['ok' => true, 'data' => $data]);
+        } catch (Exception $e) {
+            echo json_encode(['ok' => false, 'message' => 'Failed to fetch chart data.']);
+        }
+    }
+
+    /**
+     * Endpoint para sa data ng financial chart.
+     */
+    public function getFinancialChartData() {
+        header('Content-Type: application/json');
+
+        if (!method_exists($this->burialModel, 'getDailyTransactionTotals')) {
+            echo json_encode(['ok' => false, 'message' => 'Required model method is missing.']);
+            return;
+        }
+
+        try {
+            $dailyData = $this->burialModel->getDailyTransactionTotals(7);
+            
+            $labels = array_map(function($date) {
+                return date('M d', strtotime($date));
+            }, array_keys($dailyData));
+
+            $data = array_values($dailyData);
+
+            echo json_encode(['ok' => true, 'labels' => $labels, 'data' => $data]);
+        } catch (Exception $e) {
+            echo json_encode(['ok' => false, 'message' => 'Failed to fetch financial data.']);
+        }
+    }
+
+
 }

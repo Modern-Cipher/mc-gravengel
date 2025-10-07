@@ -17,6 +17,97 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   })();
 
+
+
+    // ---------- RENTAL STATUS WAVE CHART ----------
+  (async function loadRentalChart() {
+    const ctx = document.getElementById('rentalChart');
+    if (!ctx) return;
+    try {
+        // TANDAAN: Nakaturo sa /staff/getDashboardChartData
+        const response = await fetch(`${window.URLROOT}/staff/getDashboardChartData`);
+        const result = await response.json();
+        if (result.ok) {
+            new Chart(ctx, {
+                type: 'line', 
+                data: {
+                    labels: ['New Rentals (This Month)', 'Expiring Soon (Next 30 Days)', 'Total Expired'],
+                    datasets: [{
+                        label: 'Number of Records',
+                        data: [result.data.new_rentals, result.data.expiring_soon, result.data.total_expired],
+                        fill: true,
+                        backgroundColor: 'rgba(123, 30, 40, 0.2)',
+                        borderColor: 'rgb(123, 30, 40)',
+                        tension: 0.4,
+                        pointBackgroundColor: 'rgb(123, 30, 40)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(123, 30, 40)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+        }
+    } catch(err) { console.error('Error fetching rental chart data:', err); }
+  })();
+
+  // ---------- FINANCIAL CHART ----------
+  (async function loadFinancialChart() {
+    const ctx = document.getElementById('financialChart');
+    if (!ctx) return;
+    try {
+        // TANDAAN: Nakaturo sa /staff/getFinancialChartData
+        const response = await fetch(`${window.URLROOT}/staff/getFinancialChartData`);
+        const result = await response.json();
+        if (result.ok) {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: result.labels,
+                    datasets: [{
+                        label: 'Total Pesos',
+                        data: result.data,
+                        fill: false,
+                        borderColor: 'rgb(123, 30, 40)',
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) { return '₱ ' + value.toLocaleString(); }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed.y !== null) { label += '₱ ' + context.parsed.y.toLocaleString(); }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    } catch(err) { console.error('Error fetching financial chart data:', err); }
+  })();
+
+
+
   // ---------- CALENDAR (Rental Expiry only) ----------
   const calendarEl = document.getElementById('calendar-container');
   if (calendarEl) {

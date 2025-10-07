@@ -403,5 +403,108 @@ public function findPublicByBurialId($burialId) {
 
 
 
+// app/models/Burial.php
+
+// Idagdag mo itong tatlong functions sa loob ng "class Burial"
+
+    /**
+     * [BAGONG FUNCTION] Kinukuha ang bilang ng mga bagong rental ngayong buwan.
+     */
+    public function countNewRentalsThisMonth(): int {
+        $this->db->query("
+            SELECT COUNT(*) AS count 
+            FROM burials 
+            WHERE YEAR(rental_date) = YEAR(CURDATE()) 
+              AND MONTH(rental_date) = MONTH(CURDATE())
+              AND is_active = 1
+        ");
+        $row = $this->db->single();
+        return (int)($row->count ?? 0);
+    }
+
+    /**
+     * [BAGONG FUNCTION] Kinukuha ang bilang ng mga rental na mag-e-expire sa susunod na X na araw.
+     */
+    public function countExpiringSoon(int $days = 30): int {
+        $this->db->query("
+            SELECT COUNT(*) AS count 
+            FROM burials 
+            WHERE is_active = 1 
+              AND expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL :days DAY)
+        ");
+        $this->db->bind(':days', $days);
+        $row = $this->db->single();
+        return (int)($row->count ?? 0);
+    }
+
+    /**
+     * [BAGONG FUNCTION] Kinukuha ang bilang ng lahat ng expired rentals na active pa.
+     */
+    public function countAllExpired(): int {
+        $this->db->query("
+            SELECT COUNT(*) AS count 
+            FROM burials 
+            WHERE is_active = 1 
+              AND expiry_date < CURDATE()
+        ");
+        $row = $this->db->single();
+        return (int)($row->count ?? 0);
+    }
+
+
+
+    // app/models/Burial.php
+
+// Idagdag mo itong bagong function sa loob ng "class Burial"
+
+    /**
+     * [BAGONG FUNCTION] Kinukuha ang total na transaction amount sa bawat araw
+     * para sa nakaraang 'X' na araw, pinagsasama ang burials at renewals.
+     */
+    public function getDailyTransactionTotals(int $days = 7): array {
+        // Gumagawa ng listahan ng mga petsa para sa nakaraang 7 araw
+        $dateList = [];
+        for ($i = 0; $i < $days; $i++) {
+            $dateList[] = date('Y-m-d', strtotime("-$i days"));
+        }
+        $dateList = array_reverse($dateList); // Ayusin mula sa pinakaluma hanggang sa pinakabago
+
+        // Query para kunin ang total sa bawat araw
+        $this->db->query("
+            SELECT
+                CAST(transaction_date AS DATE) as 'date',
+                SUM(amount) as 'total'
+            FROM (
+                -- Kinukuha ang mga bayad mula sa bagong burials
+                SELECT rental_date as transaction_date, payment_amount as amount
+                FROM burials
+                WHERE rental_date >= :start_date
+
+                UNION ALL
+
+                -- Kinukuha ang mga bayad mula sa renewals
+                SELECT payment_date as transaction_date, payment_amount as amount
+                FROM renewals
+                WHERE payment_date >= :start_date
+            ) AS transactions
+            GROUP BY CAST(transaction_date AS DATE)
+        ");
+        
+        $this->db->bind(':start_date', date('Y-m-d', strtotime("-$days days")));
+        $results = $this->db->resultSet();
+
+        // I-mapa ang resulta sa listahan ng mga petsa para masigurong may value ang bawat araw (kahit zero)
+        $dailyTotals = [];
+        $resultMap = [];
+        foreach ($results as $row) {
+            $resultMap[$row->date] = (float)$row->total;
+        }
+
+        foreach ($dateList as $date) {
+            $dailyTotals[$date] = $resultMap[$date] ?? 0;
+        }
+
+        return $dailyTotals;
+    }
     
 }

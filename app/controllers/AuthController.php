@@ -24,26 +24,19 @@ class AuthController extends Controller
         header('Content-Type: application/json');
         $id = trim($_POST['identifier'] ?? '');
         $pw = (string)($_POST['password'] ?? '');
-
         if (empty($id) || empty($pw)) {
             echo json_encode(['ok' => false, 'msg' => 'Username and password are required.']); return;
         }
-
         $user = $this->userModel->findByUsernameOrEmail($id);
-
         if ($user && password_verify($pw, $user->password_hash) && (int)$user->is_active === 1) {
             session_regenerate_id(true);
-            $currentSessionId = session_id();
-
             $_SESSION['user'] = [
                 'id' => (int)$user->id, 'role' => $user->role,
                 'name' => trim($user->first_name . ' ' . $user->last_name),
                 'must_change_pwd' => (int)$user->must_change_pwd,
-                'session_id' => $currentSessionId
+                'session_id' => session_id()
             ];
-
-            $this->userModel->openSession((int)$user->id, $currentSessionId, $_SERVER['REMOTE_ADDR'] ?? '', $_SERVER['HTTP_USER_AGENT'] ?? '');
-
+            $this->userModel->openSession((int)$user->id, session_id(), $_SERVER['REMOTE_ADDR'] ?? '', $_SERVER['HTTP_USER_AGENT'] ?? '');
             echo json_encode(['ok' => true, 'redirect' => $this->roleUrl($user->role)]);
         } else {
             http_response_code(401);
@@ -65,49 +58,65 @@ class AuthController extends Controller
         $this->view('users/forgot', ['title' => 'Forgot Password · Gravengel']);
     }
 
-    // NEW: Handle forgot password form submission
-    public function requestReset() {
-        header('Content-Type: application/json');
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            echo json_encode(['ok' => false, 'msg' => 'Invalid request method.']); return;
-        }
-        
-        $email = trim($_POST['email'] ?? '');
-        $user = $this->userModel->getUserByEmail($email);
+// Nasa loob ng class AuthController
 
-        if (!$user) {
-            echo json_encode(['ok' => true, 'msg' => 'If an account exists with that email, a password reset link has been sent.']);
-            return;
-        }
-
-        $token = $this->userModel->createPasswordResetToken($user->id);
-        $reset_link = URLROOT . '/auth/resetPassword?token=' . $token;
-
-        $emailHelper = new EmailHelper();
-        $email_data = ['full_name' => $user->first_name . ' ' . $user->last_name, 'reset_link' => $reset_link];
-        $email_body = $this->view('emails/reset_password', $email_data, true);
-
-        if ($emailHelper->sendEmail($user->email, $email_data['full_name'], 'Password Reset Request', $email_body)) {
-             echo json_encode(['ok' => true, 'msg' => 'Password reset link has been sent to your email.']);
-        } else {
-             echo json_encode(['ok' => false, 'msg' => 'Failed to send reset link. Please try again later.']);
-        }
+public function requestReset() {
+    header('Content-Type: application/json');
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        echo json_encode(['ok' => false, 'msg' => 'Invalid request method.']); return;
     }
     
-    // NEW: Handles the reset password form
+    $email = trim($_POST['email'] ?? '');
+    $user = $this->userModel->getUserByEmail($email);
+
+    if (!$user) {
+        echo json_encode(['ok' => true, 'msg' => 'If an account with that email exists, a password reset link has been sent.']);
+        return;
+    }
+
+    $token = $this->userModel->createPasswordResetToken($user->id);
+    $reset_link = URLROOT . '/auth/resetPassword?token=' . $token;
+
+    // Use EmailHelper
+    $emailHelper = new EmailHelper();
+    $email_data = [
+        'full_name' => $user->first_name . ' ' . $user->last_name, 
+        'reset_link' => $reset_link,
+        'message' => 'We received a request to reset the password for your account. Click the button below to continue.'
+    ];
+    
+    // --- ITO ANG BINAGO ---
+    // Tinanggal ang ['data' => ... ] para direktang maipasa ang $email_data.
+    $email_body = $this->view('emails/universal_email', $email_data, true);
+
+    if ($emailHelper->sendEmail($user->email, $email_data['full_name'], 'Password Reset Request', $email_body)) {
+         echo json_encode(['ok' => true, 'msg' => 'A password reset link has been sent to your email.']);
+    } else {
+         echo json_encode(['ok' => false, 'msg' => 'Failed to send reset link. Please try again later.']);
+    }
+}
+    
     public function resetPassword() {
         $token = $_GET['token'] ?? '';
+        if (empty($token)) {
+            die('Invalid password reset link: Token is missing.');
+        }
         $user = $this->userModel->validatePasswordResetToken($token);
-
         if (!$user) {
-            die('Invalid or expired password reset token.');
+            die('Invalid or expired password reset token. Please request a new one.');
         }
 
-        $data = ['title' => 'Reset Password · Gravengel', 'user' => $user, 'token' => $token];
-        $this->view('users/reset_password', $data);
+        $data = [
+            'title' => 'Reset Your Password', 
+            'token' => $token,
+            'user' => $user, // Pass the entire user object
+            'full_name' => trim($user->first_name . ' ' . $user->last_name)
+        ];
+        
+        // Use the UNIVERSAL reset form
+        $this->view('users/universal_reset_form', $data);
     }
     
-    // NEW: Handles the new password submission
     public function doResetPassword() {
         header('Content-Type: application/json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -122,6 +131,9 @@ class AuthController extends Controller
         if ($new_password !== $confirm_password) {
             echo json_encode(['ok' => false, 'msg' => 'Passwords do not match.']); return;
         }
+        if (strlen($new_password) < 6) {
+            echo json_encode(['ok' => false, 'msg' => 'Password must be at least 6 characters.']); return;
+        }
         
         $user = $this->userModel->validatePasswordResetToken($token, $user_id);
         if (!$user) {
@@ -135,27 +147,6 @@ class AuthController extends Controller
         } else {
             echo json_encode(['ok' => false, 'msg' => 'Failed to reset password.']);
         }
-    }
-
-    public function checkSession() {
-        header('Content-Type: application/json');
-        if (empty($_SESSION['user']['id'])) {
-            echo json_encode(['is_valid' => false]); die();
-        }
-        $dbSession = $this->userModel->getActiveSessionId($_SESSION['user']['id']);
-        if ($dbSession !== $_SESSION['user']['session_id']) {
-            echo json_encode(['is_valid' => false]);
-        } else {
-            echo json_encode(['is_valid' => true]);
-        }
-        die();
-    }
-    
-    public function force_change() {
-        if (empty($_SESSION['user'])) {
-            header('Location: ' . URLROOT . '/auth/login'); exit;
-        }
-        $this->view('users/force_change', ['title' => 'Change Password · Gravengel']);
     }
 
     private function roleUrl($role) {

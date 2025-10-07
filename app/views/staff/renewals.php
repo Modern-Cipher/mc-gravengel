@@ -75,43 +75,46 @@
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-header">
-      <h5 class="mb-0"><i class="fas fa-history me-2"></i>Renewal History</h5>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Renewal History</h5>
+        <a href="<?= URLROOT ?>/staff/printRenewalHistory" target="_blank" class="btn btn-sm btn-secondary">
+            <i class="fas fa-print me-1"></i> Generate Report
+        </a>
     </div>
     <div class="card-body">
-      <div class="table-wrapper">
-        <table class="table table-striped">
-          <thead>
-            <tr>
-              <th>Transaction ID</th>
-              <th>Payment Date</th>
-              <th>Amount</th>
-              <th>Payer Name</th>
-              <th>New Expiry</th>
-              <th>Processed By</th>
-              <th>Receipt Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php if (empty($data['history'])): ?>
-              <tr><td colspan="7" class="text-center text-muted">No renewal history found.</td></tr>
-            <?php else: foreach($data['history'] as $item): ?>
-              <tr>
-                <td><?= htmlspecialchars($item->transaction_id ?? '') ?></td>
-                <td><?= date('M d, Y', strtotime($item->payment_date)) ?></td>
-                <td>₱ <?= number_format($item->payment_amount ?? 0, 2) ?></td>
-                <td><?= htmlspecialchars($item->payer_name ?? 'N/A') ?></td>
-                <td><?= date('M d, Y', strtotime($item->new_expiry_date)) ?></td>
-                <td><?= htmlspecialchars($item->processed_by ?? '') ?></td>
-                <td><?= htmlspecialchars($item->receipt_email_status ?? 'N/A') ?></td>
-              </tr>
-            <?php endforeach; endif; ?>
-          </tbody>
-        </table>
-      </div>
+        <div class="table-wrapper">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>Payment Date</th>
+                        <th>Amount</th>
+                        <th>Payer Name</th>
+                        <th>New Expiry</th>
+                        <th>Processed By</th>
+                        <th>Receipt Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($data['history'])): ?>
+                        <tr><td colspan="7" class="text-center text-muted">No renewal history found.</td></tr>
+                    <?php else: foreach($data['history'] as $item): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($item->transaction_id ?? '') ?></td>
+                            <td><?= date('M d, Y', strtotime($item->payment_date)) ?></td>
+                            <td>₱ <?= number_format($item->payment_amount ?? 0, 2) ?></td>
+                            <td><?= htmlspecialchars($item->payer_name ?? 'N/A') ?></td>
+                            <td><?= date('M d, Y', strtotime($item->new_expiry_date)) ?></td>
+                            <td><?= htmlspecialchars($item->processed_by ?? '') ?></td>
+                            <td><?= htmlspecialchars($item->receipt_email_status ?? 'N/A') ?></td>
+                        </tr>
+                    <?php endforeach; endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
-  </div>
+</div>
 </div>
 
 <!-- Modal -->

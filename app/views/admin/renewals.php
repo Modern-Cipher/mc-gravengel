@@ -7,11 +7,9 @@
     .badge { font-size: 0.8em; }
     .copy-btn i { pointer-events: none; }
 
-    /*
-    =========================================
+    /* =========================================
      1. MAROON THEME VARIABLES
-    =========================================
-    */
+     ========================================= */
     :root {
       --g-maroon: #800000;
       --g-maroon-rgb: 128, 0, 0;
@@ -27,71 +25,22 @@
       --bs-btn-focus-shadow-rgb: var(--g-maroon-rgb);
     }
 
-    /*
-    =========================================
+    /* =========================================
      2. MODAL MAROON THEME STYLES
-    =========================================
-    */
-
-    /* Modal Sizing */
+     ========================================= */
     .modal { padding-top: var(--header-h, 56px); }
     .modal-dialog { width: 95vw; max-width: 900px; margin-top: 1rem; margin-bottom: 1rem; }
     .modal-body { max-height: calc(85vh - 200px); overflow-y: auto; }
-    
-    /* Modal Content Border */
-    .modal-content {
-        border: 2px solid var(--g-maroon-dark);
-        border-radius: 0.5rem;
-    }
-
-    /* Modal Header */
-    .modal-header {
-        background-color: var(--g-maroon) !important;
-        color: #fff;
-        border-bottom: 2px solid var(--g-maroon-dark);
-    }
-
-    /* Modal Body Elements */
-    .modal-body hr {
-        border-top: 1px solid var(--bs-primary-border-subtle);
-    }
-    .modal-body .input-group-text {
-        background-color: var(--bs-primary-bg-subtle);
-        border-color: var(--bs-primary-border-subtle);
-        font-weight: 500;
-        color: var(--g-maroon-dark);
-    }
-    .modal-body h6 {
-        color: var(--g-maroon-dark);
-        font-weight: bold;
-    }
-    
-    /* Modal Footer */
-    .modal-footer {
-        background-color: var(--bs-primary-bg-subtle);
-        border-top: 1px solid var(--bs-primary-border-subtle);
-    }
-
-    /* Primary Button (Confirm) */
-    .btn-primary {
-        background-color: var(--g-maroon);
-        border-color: var(--g-maroon);
-    }
-    .btn-primary:hover {
-        background-color: var(--g-maroon-dark);
-        border-color: var(--g-maroon-dark);
-    }
-
-    /* Secondary Button (Cancel) */
-    .modal-footer .btn-secondary {
-        background-color: #fff;
-        border-color: var(--g-maroon);
-        color: var(--g-maroon);
-    }
-    .modal-footer .btn-secondary:hover {
-        background-color: var(--g-maroon);
-        color: #fff;
-    }
+    .modal-content { border: 2px solid var(--g-maroon-dark); border-radius: 0.5rem; }
+    .modal-header { background-color: var(--g-maroon) !important; color: #fff; border-bottom: 2px solid var(--g-maroon-dark); }
+    .modal-body hr { border-top: 1px solid var(--bs-primary-border-subtle); }
+    .modal-body .input-group-text { background-color: var(--bs-primary-bg-subtle); border-color: var(--bs-primary-border-subtle); font-weight: 500; color: var(--g-maroon-dark); }
+    .modal-body h6 { color: var(--g-maroon-dark); font-weight: bold; }
+    .modal-footer { background-color: var(--bs-primary-bg-subtle); border-top: 1px solid var(--bs-primary-border-subtle); }
+    .btn-primary { background-color: var(--g-maroon); border-color: var(--g-maroon); }
+    .btn-primary:hover { background-color: var(--g-maroon-dark); border-color: var(--g-maroon-dark); }
+    .modal-footer .btn-secondary { background-color: #fff; border-color: var(--g-maroon); color: var(--g-maroon); }
+    .modal-footer .btn-secondary:hover { background-color: var(--g-maroon); color: #fff; }
 </style>
 
 <div class="container-fluid py-4">
@@ -122,45 +71,46 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-history me-2"></i>Renewal History</h5>
-        </div>
-        <div class="card-body">
-            <div class="table-wrapper">
-                <table class="table table-striped">
-                    <thead>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Renewal History</h5>
+        <a href="<?= URLROOT ?>/admin/printRenewalHistory" target="_blank" class="btn btn-sm btn-secondary">
+            <i class="fas fa-print me-1"></i> Generate Report
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-wrapper">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>Payment Date</th>
+                        <th>Amount</th>
+                        <th>Payer Name</th>
+                        <th>New Expiry</th>
+                        <th>Processed By</th>
+                        <th>Receipt Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($data['history'])): ?>
+                        <tr><td colspan="7" class="text-center text-muted">No renewal history found.</td></tr>
+                    <?php else: foreach($data['history'] as $item): ?>
                         <tr>
-                            <th>Transaction ID</th>
-                            <th>Payment Date</th>
-                            <th>Amount</th>
-                            <th>Payer Name</th>
-                            <th>New Expiry</th>
-                            <th>Processed By</th>
-                            <th>Receipt Status</th>
+                            <td><?= htmlspecialchars($item->transaction_id ?? '') ?></td>
+                            <td><?= date('M d, Y', strtotime($item->payment_date)) ?></td>
+                            <td>₱ <?= number_format($item->payment_amount ?? 0, 2) ?></td>
+                            <td><?= htmlspecialchars($item->payer_name ?? 'N/A') ?></td>
+                            <td><?= date('M d, Y', strtotime($item->new_expiry_date)) ?></td>
+                            <td><?= htmlspecialchars($item->processed_by ?? '') ?></td>
+                            <td><?= htmlspecialchars($item->receipt_email_status ?? 'N/A') ?></td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($data['history'])): ?>
-                            <tr><td colspan="7" class="text-center text-muted">No renewal history found.</td></tr>
-                        <?php else: ?>
-                            <?php foreach($data['history'] as $item): ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($item->transaction_id ?? '') ?></td>
-                                    <td><?= date('M d, Y', strtotime($item->payment_date)) ?></td>
-                                    <td>₱ <?= number_format($item->payment_amount ?? 0, 2) ?></td>
-                                    <td><?= htmlspecialchars($item->payer_name ?? 'N/A') ?></td>
-                                    <td><?= date('M d, Y', strtotime($item->new_expiry_date)) ?></td>
-                                    <td><?= htmlspecialchars($item->processed_by ?? '') ?></td>
-                                    <td><?= htmlspecialchars($item->receipt_email_status ?? 'N/A') ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
+                    <?php endforeach; endif; ?>
+                </tbody>
+            </table>
         </div>
     </div>
+</div>
 </div>
 
 <div class="modal fade" id="renewalModal" tabindex="-1">
@@ -234,16 +184,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const paymentDateInput = document.getElementById('payment_date');
     const renewalTableBody = document.getElementById('for-renewal-table');
 
-    // --- BAGONG CODE: SWEETALERT MAROON THEME ---
     const themedSwal = Swal.mixin({
         customClass: {
-            confirmButton: 'btn btn-primary mx-2', // Gagamitin nito ang maroon style ng .btn-primary
+            confirmButton: 'btn btn-primary mx-2',
             denyButton: 'btn btn-info mx-2',
-            cancelButton: 'btn btn-secondary mx-2' // Gagamitin nito ang custom style ng .btn-secondary sa modal
+            cancelButton: 'btn btn-secondary mx-2'
         },
-        buttonsStyling: false // Mahalaga ito para gumana ang customClass
+        buttonsStyling: false
     });
-    // --- END NG BAGONG CODE ---
 
     const e = (str) => { if (str === null || str === undefined) return ''; const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }; return String(str).replace(/[&<>"']/g, (m) => map[m]); };
     const formatDate = (dateString) => { if (!dateString) return ''; const date = new Date(dateString); return isNaN(date) ? '' : date.toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }); };
@@ -340,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const handleFormSubmit = async (url, formData) => {
-        themedSwal.fire({ // Pinalitan ng themedSwal
+        themedSwal.fire({
             title: 'Processing...',
             html: 'Please wait while the transaction is being saved.',
             allowOutsideClick: false,
@@ -356,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (result.ok) {
                 if (url.includes('processRenewal')) {
-                    themedSwal.fire({ // Pinalitan ng themedSwal
+                    themedSwal.fire({
                         icon: 'success',
                         title: 'Renewal Successful!',
                         html: `Transaction has been processed.<br>Email Status: <strong>${result.email_status || 'N/A'}</strong>`,
@@ -373,17 +321,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                 } else {
-                    themedSwal.fire({ // Pinalitan ng themedSwal
+                    themedSwal.fire({
                         icon: 'success',
                         title: 'Action Successful!',
                         html: `${result.message}<br>Email Status: <strong>${result.email_status || 'N/A'}</strong>`,
                     }).then(() => location.reload());
                 }
             } else {
-                themedSwal.fire('Error', result.message || 'An error occurred.', 'error'); // Pinalitan ng themedSwal
+                themedSwal.fire('Error', result.message || 'An error occurred.', 'error');
             }
         } catch (error) {
-            themedSwal.fire('Network Error', 'Could not connect to the server. Please try again.', 'error'); // Pinalitan ng themedSwal
+            themedSwal.fire('Network Error', 'Could not connect to the server. Please try again.', 'error');
         }
     };
 
@@ -395,22 +343,23 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('vacateBtn').addEventListener('click', async () => {
         const burialId = document.getElementById('modal_burial_id').value;
         const deceasedName = document.getElementById('modal_deceased_name').textContent;
-        const result = await themedSwal.fire({ // Pinalitan ng themedSwal
+        const result = await themedSwal.fire({
             title: 'Are you sure?',
             text: `This will archive the record for ${deceasedName} and mark their plot as vacant. This action cannot be undone.`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Yes, vacate the plot!',
-            // Inayos para gumamit ng class para sa kulay
             customClass: {
-                confirmButton: 'btn btn-danger mx-2', // Pula para sa delikadong action
+                confirmButton: 'btn btn-danger mx-2',
                 cancelButton: 'btn btn-secondary mx-2'
             }
         });
         if (result.isConfirmed) {
             const formData = new FormData();
             formData.append('burial_id', burialId);
-            handleFormSubmit('<?= URLROOT ?>/admin/processVacate', new FormData(formData));
+            // --- ITO ANG INAYOS ---
+            // Tinanggal ang sobrang 'new FormData()'
+            handleFormSubmit('<?= URLROOT ?>/admin/processVacate', formData);
         }
     });
 

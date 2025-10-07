@@ -64,7 +64,7 @@ if (file_exists(APPROOT . '/views/includes/staff_header.php')) {
 
 <div class="container-fluid py-3 logs-page">
   <div class="d-flex justify-content-between align-items-center mb-3 logs-toolbar">
-    <h4 class="mb-0"><i class="fa-solid fa-clipboard-list"></i> Logs & Reports (Staff)</h4>
+    <h4 class="mb-0">Logs & Reports (Staff)</h4>
     <button id="btn-print" class="btn btn-outline-primary btn-sm" data-bs-toggle="tooltip" title="Print current tab">
       <i class="fa-solid fa-print me-1"></i>Generate Report
     </button>

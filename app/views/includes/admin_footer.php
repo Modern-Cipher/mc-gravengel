@@ -89,6 +89,6 @@
 <script src="<?php echo URLROOT; ?>/js/notifications.js?v=<?php echo time(); ?>"></script>
 
 
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>

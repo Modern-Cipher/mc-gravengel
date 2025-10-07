@@ -1,210 +1,195 @@
-
+// public/js/staff_profile.js — STAFF (single save, preview rollback, today's activity)
 document.addEventListener('DOMContentLoaded', () => {
-  const editDetailsForm   = document.getElementById('editDetailsForm');
-  const changePasswordForm= document.getElementById('changePasswordForm');
-  const imageUploadForm   = document.getElementById('imageUploadForm');
-  const modalAvatarWrapper= document.getElementById('modal-avatar-wrapper');
+  const MAROON = getComputedStyle(document.documentElement).getPropertyValue('--maroon') || '#7b1d1d';
 
-  const editSaveBtn       = document.getElementById('edit-save-btn');
-  const passwordUpdateBtn = document.getElementById('password-update-btn');
-  const uploadImageBtn    = document.getElementById('upload-image-btn');
+  const profileForm        = document.getElementById('profileForm');
+  const saveBtn            = document.getElementById('edit-save-btn');
 
-  // ---------- helpers ----------
-  const getUserId = (form) =>
-    document.getElementById('edit-user-id')?.value ||
-    form?.querySelector('input[name="id"]')?.value ||
-    '';
+  const changePasswordForm = document.getElementById('changePasswordForm');
+  const passwordUpdateBtn  = document.getElementById('password-update-btn');
 
-  const withLoadingBtn = (btn, labelWhenLoading, fn) => {
-    if (!btn) return fn(); // fallback kung walang trigger button
-    const original = btn.innerHTML;
-    btn.innerHTML = labelWhenLoading;
-    btn.disabled = true;
-    return Promise.resolve()
-      .then(fn)
-      .finally(() => {
-        btn.innerHTML = original;
-        btn.disabled = false;
-      });
-  };
+  const imageInput         = document.getElementById('imageUploadInput');
+  const modalAvatarWrap    = document.getElementById('modal-avatar-wrapper');
+  let   modalAvatarImg     = document.getElementById('modal-profile-image');
+  const mainAvatarImg      = document.getElementById('main-avatar');
 
-  const parseSmart = async (resp) => {
+  const modalEl            = document.getElementById('editProfileModal');
+  const bsModal            = modalEl ? new bootstrap.Modal(modalEl) : null;
+
+  const actList            = document.getElementById('my-activity-list');
+  const actCount           = document.getElementById('act-count');
+  const resetRecentBtn     = document.getElementById('reset-recent-btn');
+
+  let originalAvatarSrc = modalAvatarImg && modalAvatarImg.tagName === 'IMG' ? modalAvatarImg.src : (mainAvatarImg?.src || null);
+  let savedOnce = false;
+
+  // sweetalert helpers
+  const waitDlg = (t, h) => Swal.fire({title:t, html:h, allowOutsideClick:false, showConfirmButton:false, willOpen:()=>Swal.showLoading(), heightAuto:false});
+  const okDlg   = (t, m) => Swal.fire({icon:'success', title:t||'Success', html:m||'Done', confirmButtonColor: MAROON});
+  const errDlg  = (m)   => Swal.fire({icon:'error', title:'Error', html:m||'Something went wrong.', confirmButtonColor: MAROON});
+
+  const toJSON = async (resp) => {
     const ct = resp.headers.get('content-type') || '';
     if (ct.includes('application/json')) return await resp.json();
-    // may mga backend na nagre-redirect / nagbabalik ng HTML
-    const text = await resp.text();
-    try { return JSON.parse(text); } catch { return { redirected: resp.redirected, ok: resp.ok, raw: text }; }
+    const txt = await resp.text(); try { return JSON.parse(txt); } catch { return { ok: resp.ok }; }
   };
 
-  const showLoading = (title='Please wait...', html='Processing...') =>
-    Swal.fire({ title, html, allowOutsideClick:false, showConfirmButton:false, willOpen:()=>Swal.showLoading(), heightAuto:false });
+  const withBtn = (btn, label, task) => {
+    const old = btn.innerHTML; btn.disabled = true; btn.innerHTML = label;
+    return Promise.resolve(task()).finally(()=>{ btn.disabled = false; btn.innerHTML = old; });
+  };
 
-  const toastError = (msg='An unexpected error occurred. Please try again.') =>
-    Swal.fire('Error', msg, 'error');
+  // instant preview (no upload yet)
+  imageInput?.addEventListener('change', function(){
+    const f = this.files?.[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = (ev) => {
+      if (modalAvatarImg && modalAvatarImg.tagName === 'IMG') {
+        modalAvatarImg.src = ev.target.result;
+      } else if (modalAvatarWrap) {
+        modalAvatarWrap.innerHTML = `<img src="${ev.target.result}" id="modal-profile-image" alt="Profile Image" class="profile-avatar">`;
+        modalAvatarImg = document.getElementById('modal-profile-image');
+      }
+    };
+    rd.readAsDataURL(f);
+  });
 
-  const toastSuccess = (title='Success!', msg='Done!') =>
-    Swal.fire(title, msg, 'success');
-
-  // ---------- generic handler ----------
-  async function handleFormSubmission({ form, triggerBtn, url, successMessage, reloadOnSuccess=true, validate }) {
-    if (!form) return;
-
-    // optional validations (e.g., require user id)
-    if (typeof validate === 'function') {
-      const v = validate();
-      if (v !== true) { toastError(v || 'Validation failed.'); return; }
+  // if user closes modal without saving, restore original preview
+  modalEl?.addEventListener('hidden.bs.modal', () => {
+    if (savedOnce) return; // keep new one after save
+    if (originalAvatarSrc) {
+      if (modalAvatarImg && modalAvatarImg.tagName === 'IMG') modalAvatarImg.src = originalAvatarSrc;
+      if (mainAvatarImg) mainAvatarImg.src = originalAvatarSrc;
+      imageInput.value = ''; // discard chosen file
     }
+  });
 
-    await withLoadingBtn(triggerBtn, `
-      <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...
-    `, async () => {
-      showLoading('Saving changes...', 'Please wait...');
-      try {
-        const resp = await fetch(url, { method:'POST', body:new FormData(form) });
-        if (!resp.ok) { Swal.close(); return toastError('Server error while saving.'); }
+  // SAVE (details + image together)
+  saveBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (!profileForm) return;
 
-        const result = await parseSmart(resp);
-
+    const fd = new FormData(profileForm);
+    
+    withBtn(saveBtn, `<span class="spinner-border spinner-border-sm"></span> Saving...`, async () => {
+      waitDlg('Saving changes...', 'Please wait');
+      try{
+        const res  = await fetch(`${window.URLROOT}/users/updateProfile`, { method:'POST', body: fd });
+        const json = await toJSON(res);
         Swal.close();
-        // expected JSON: { success: boolean, message?: string, redirect?: string }
-        if (result?.success) {
-          await toastSuccess('Success!', successMessage || 'Saved.');
-          if (reloadOnSuccess) {
-            if (result.redirect) { window.location.href = result.redirect; }
-            else { window.location.reload(); }
-          }
-        } else if (result?.redirected) {
-          // fallback: kung HTML redirect ang bumalik
-          window.location.reload();
+
+        if (json?.success){
+          if (json.filepath && mainAvatarImg) mainAvatarImg.src = json.filepath;
+          originalAvatarSrc = mainAvatarImg?.src || originalAvatarSrc;
+          savedOnce = true;
+          await okDlg('Profile updated!', json?.message || 'Your changes have been saved.');
+          location.reload();
         } else {
-          toastError(result?.message || 'Failed to save changes.');
+          errDlg(json?.message || 'Failed to save profile.');
         }
-      } catch (err) {
-        console.error('Submission Error:', err);
+      }catch(err){
         Swal.close();
-        toastError();
+        console.error("Save Error:", err);
+        errDlg('A network or server error occurred while saving.');
       }
     });
-  }
+  });
 
-  // ---------- Edit Details ----------
-  if (editSaveBtn && editDetailsForm) {
-    editSaveBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      handleFormSubmission({
-        form: editDetailsForm,
-        triggerBtn: editSaveBtn,
-        url: `${window.URLROOT}/users/updateDetails`,
-        successMessage: 'Profile updated successfully!',
-        reloadOnSuccess: true,
-        validate: () => {
-          const id = getUserId(editDetailsForm);
-          if (!id) return 'User ID is missing. Cannot save changes.';
-          return true;
+  // Change password
+  changePasswordForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const np = changePasswordForm.new_password.value.trim();
+    const cp = changePasswordForm.confirm_password.value.trim();
+    if (np.length < 6) return errDlg('New password must be at least 6 characters.');
+    if (np !== cp)     return errDlg('New password and confirm do not match.');
+
+    withBtn(passwordUpdateBtn, `<span class="spinner-border spinner-border-sm"></span> Updating...`, async () => {
+      waitDlg('Updating password...', 'Please wait');
+      try{
+        const fd = new FormData(changePasswordForm);
+        const res  = await fetch(`${window.URLROOT}/users/changePassword`, { method:'POST', body: fd });
+        const json = await toJSON(res);
+        Swal.close();
+        if (json?.success){
+          okDlg('Password changed!', json?.message || 'Use your new password next login.');
+          changePasswordForm.reset();
+        } else {
+          errDlg(json?.message || 'Unable to change password.');
         }
+      }catch(err){
+        Swal.close();
+        console.error("Password Change Error:", err);
+        errDlg('A network or server error occurred while changing password.');
+      }
+    });
+  });
+
+  // Recent activity for TODAY only
+  async function loadToday(){
+    if (!actList) return;
+    try{
+      // *** MAHALAGA: Binago ang URL mula sa /admin/ patungong /staff/ ***
+      const res  = await fetch(`${window.URLROOT}/staff/myActivity?scope=today&limit=50`);
+      const json = await toJSON(res);
+      const rows = Array.isArray(json?.rows) ? json.rows : [];
+      actList.innerHTML = '';
+
+      if (!rows.length){
+        actList.innerHTML = `<li class="activity-item text-muted">No activity recorded today.</li>`;
+        actCount.textContent = '0 records';
+        return;
+      }
+      rows.forEach(r=>{
+        const li = document.createElement('li');
+        li.className = 'activity-item';
+        li.innerHTML = `${(r.action_text || r.kind || 'Activity')}<br><small class="text-muted">${formatDT(r.ts)}</small>`;
+        actList.appendChild(li);
       });
-    });
+      actCount.textContent = `${rows.length} record(s)`;
+    }catch(err){
+      actList.innerHTML = `<li class="activity-item text-danger">Failed to load activity.</li>`;
+      actCount.textContent = '';
+      console.error("Activity Load Error:", err);
+    }
   }
+  loadToday();
 
-  // ---------- Change Password ----------
-  if (passwordUpdateBtn && changePasswordForm) {
-    passwordUpdateBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-
-      // light client-side validation
-      const newPass = changePasswordForm.querySelector('#new_password, #new-password')?.value || '';
-      const confPass= changePasswordForm.querySelector('#confirm_password, #confirm-password')?.value || '';
-      if (newPass.length < 6) return toastError('New password must be at least 6 characters.');
-      if (newPass !== confPass) return toastError('Passwords do not match.');
-
-      handleFormSubmission({
-        form: changePasswordForm,
-        triggerBtn: passwordUpdateBtn,
-        url: `${window.URLROOT}/users/changePassword`,
-        successMessage: 'Password changed successfully!',
-        reloadOnSuccess: false
+  function formatDT(s){
+    if (!s) return '—';
+    try {
+      const d = new Date(s.replace(' ', 'T'));
+      return d.toLocaleString('en-US', {
+        month: 'short', day: 'numeric',
+        hour: 'numeric', minute: '2-digit', hour12: true
       });
-    });
+    } catch {
+      return s;
+    }
   }
 
-  // ---------- Upload Image ----------
-  if (uploadImageBtn && imageUploadForm) {
-    uploadImageBtn.addEventListener('click', async (e) => {
-      e.preventDefault();
-
-      const id = getUserId(imageUploadForm);
-      if (!id) return toastError('User ID is missing. Cannot upload image.');
-
-      await withLoadingBtn(uploadImageBtn, `
-        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uploading...
-      `, async () => {
-        showLoading('Uploading image...', 'Please wait...');
-        try {
-          const resp = await fetch(`${window.URLROOT}/users/uploadImage`, { method:'POST', body:new FormData(imageUploadForm) });
-          if (!resp.ok) { Swal.close(); return toastError('Server error while uploading.'); }
-
-          const result = await parseSmart(resp);
-
-          Swal.close();
-          if (result?.success) {
-            await toastSuccess('Success!', result?.message || 'Image uploaded successfully!');
-            // live update ng avatar (page-safe)
-            const profileAvatar = document.querySelector('.profile-avatar-container.zoomable img.profile-avatar');
-            if (profileAvatar && result?.filepath) profileAvatar.src = result.filepath;
-
-            const modalProfileImage = document.getElementById('modal-profile-image');
-            if (modalProfileImage) {
-              if (modalProfileImage.tagName === 'IMG' && result?.filepath) {
-                modalProfileImage.src = result.filepath;
-              } else if (modalAvatarWrapper && result?.filepath) {
-                modalAvatarWrapper.innerHTML =
-                  `<img src="${result.filepath}" id="modal-profile-image" alt="Profile Image" class="profile-avatar">`;
-              }
-            }
-          } else if (result?.redirected) {
-            window.location.reload();
-          } else {
-            toastError(result?.message || 'Failed to upload image.');
-          }
-        } catch (err) {
-          console.error('Image Upload Error:', err);
-          Swal.close();
-          toastError();
-        }
-      });
+  // Reload visible list
+  resetRecentBtn?.addEventListener('click', async () => {
+    const q = await Swal.fire({
+      icon: 'question',
+      title: 'Reload Recent Activity?',
+      html: 'This will just refresh the list of today\'s activities.',
+      showCancelButton: true,
+      confirmButtonText: 'Reload',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: MAROON
     });
-  }
+    if (!q.isConfirmed) return;
+    loadToday();
+  });
 
-  // ---------- Image Preview (client-side) ----------
-  const imageUploadInput = document.getElementById('imageUploadInput');
-  if (imageUploadInput) {
-    imageUploadInput.addEventListener('change', function () {
-      const file = this.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const modalProfileImage = document.getElementById('modal-profile-image');
-        if (modalProfileImage && modalProfileImage.tagName === 'IMG') {
-          modalProfileImage.src = e.target.result;
-        } else if (modalAvatarWrapper) {
-          modalAvatarWrapper.innerHTML =
-            `<img src="${e.target.result}" id="modal-profile-image" alt="Profile Image" class="profile-avatar">`;
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  // ---------- Zoom-in (main avatar) ----------
-  const mainAvatarContainer = document.querySelector('.profile-avatar-container.zoomable');
-  mainAvatarContainer?.addEventListener('click', function () {
-    const image = this.querySelector('img.profile-avatar');
-    if (!image) return;
+  // Zoom main avatar
+  document.querySelector('.profile-avatar-container.zoomable')?.addEventListener('click', function(){
+    const img = this.querySelector('img.profile-avatar');
+    if (!img) return;
     Swal.fire({
       title: 'Profile Picture',
-      imageUrl: image.src,
-      imageAlt: 'Profile Picture',
-      imageHeight: 400,
+      imageUrl: img.src,
+      imageHeight: 420,
       showCloseButton: true,
       confirmButtonText: 'Close',
       confirmButtonColor: '#6c757d',

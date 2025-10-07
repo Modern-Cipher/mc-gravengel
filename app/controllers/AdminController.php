@@ -7,6 +7,7 @@ class AdminController extends Controller
     private $mapModel;
     private $burialModel;
     private $renewalModel;
+    private $auditModel; // IDAGDAG ITO
     
     
 
@@ -21,6 +22,7 @@ class AdminController extends Controller
         $this->mapModel    = $this->model('Map');
         $this->burialModel = $this->model('Burial');
         $this->renewalModel = $this->model('Renewal');
+         $this->auditModel   = $this->model('Audit'); // IDAGDAG ITO
 
         $currentMethod = $this->params[0] ?? 'dashboard';
         if (($_SESSION['user']['role'] ?? '') !== 'admin' &&
@@ -98,108 +100,97 @@ class AdminController extends Controller
     }
 
     /* =================== USERS =================== */
-    public function addStaff()
+     public function addStaff()
     {
         header('Content-Type: application/json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST'){
-            echo json_encode(['success'=>false,'message'=>'Invalid request method.']); return;
+            echo json_encode(['success'=>false, 'message'=>'Invalid request method.']); return;
         }
 
         $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+        
+        // Auto-generate Staff ID: S-<YYMM>-<XXX> (e.g., S-2510-123)
+        $staff_id = 'S-' . date('ym') . '-' . str_pad(rand(0, 999), 3, '0', STR_PAD_LEFT);
+
         $data = [
             'first_name'  => trim($_POST['first_name'] ?? ''),
             'last_name'   => trim($_POST['last_name'] ?? ''),
             'username'    => trim($_POST['username'] ?? ''),
             'email'       => trim($_POST['email'] ?? ''),
             'phone'       => trim($_POST['phone'] ?? ''),
-            'staff_id'    => trim($_POST['staff_id'] ?? ''),
+            'staff_id'    => $staff_id, // Use the auto-generated ID
             'designation' => trim($_POST['designation'] ?? ''),
         ];
 
-        if (in_array('', [$data['first_name'],$data['last_name'],$data['username'],$data['email'],$data['staff_id'],$data['designation']], true)){
-            echo json_encode(['success'=>false,'message'=>'Please fill in all required fields.']); return;
+        if (in_array('', [$data['first_name'], $data['last_name'], $data['username'], $data['email']], true)){
+            echo json_encode(['success'=>false, 'message'=>'Please fill in all required fields.']); return;
         }
         if ($this->userModel->findByUsernameOrEmail($data['username'])) {
-            echo json_encode(['success'=>false,'message'=>'Username or email is already taken.']); return;
+            echo json_encode(['success'=>false, 'message'=>'Username is already taken.']); return;
+        }
+        if ($this->userModel->findByUsernameOrEmail($data['email'])) {
+            echo json_encode(['success'=>false, 'message'=>'Email is already in use.']); return;
         }
 
-        $temp_password           = substr(bin2hex(random_bytes(8)), 0, 16);
+        $temp_password           = substr(bin2hex(random_bytes(8)), 0, 12);
         $data['password_hash']   = password_hash($temp_password, PASSWORD_DEFAULT);
         $data['must_change_pwd'] = 1;
 
         $user_id = $this->userModel->addStaffUser($data);
         if ($user_id) {
-            $emailHelper = new EmailHelper();
-            $email_data  = ['full_name'=>$data['first_name'].' '.$data['last_name'], 'temp_password'=>$temp_password];
-            $body        = $this->view('emails/welcome_staff', $email_data, true);
-            $ok          = $emailHelper->sendEmail($data['email'], $email_data['full_name'], 'Welcome to Plaridel Public Cemetery System!', $body);
-
-            echo json_encode($ok===true
-                ? ['success'=>true,'message'=>'Staff account created and welcome email sent!','temp_password'=>$temp_password,'user'=>$email_data]
-                : ['success'=>false,'message'=>'Account created, but failed to send welcome email. '.$ok]
-            );
+            // Walang welcome email na kailangan dito, kaya tinanggal ang email logic.
+            echo json_encode([
+                'success' => true,
+                'message' => 'Staff account created successfully!',
+                'user' => ['full_name' => $data['first_name'].' '.$data['last_name']],
+                'temp_password' => $temp_password
+            ]);
         } else {
-            echo json_encode(['success'=>false,'message'=>'Failed to create user account.']);
+            echo json_encode(['success'=>false, 'message'=>'Failed to create user account.']);
         }
     }
 
     // JSON diff update; no-op kung walang nabago
-    public function updateStaff()
+   public function updateStaff()
     {
         header('Content-Type: application/json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            echo json_encode(['success'=>false,'message'=>'Invalid request method.']); return;
+            echo json_encode(['success'=>false, 'message'=>'Invalid request method.']); return;
         }
 
         $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
         $id    = (int)($_POST['id'] ?? 0);
-        if ($id <= 0) { echo json_encode(['success'=>false,'message'=>'Missing user id.']); return; }
+        if ($id <= 0) { echo json_encode(['success'=>false, 'message'=>'Missing user id.']); return; }
 
         $current = $this->userModel->findById($id);
-        if (!$current) { echo json_encode(['success'=>false,'message'=>'User not found.']); return; }
-
-        $incoming = [
-            'first_name'  => trim($_POST['first_name']  ?? ''),
-            'last_name'   => trim($_POST['last_name']   ?? ''),
-            'username'    => trim($_POST['username']    ?? ''),
-            'email'       => trim($_POST['email']       ?? ''),
-            'phone'       => trim($_POST['phone']       ?? ''),
-            'staff_id'    => trim($_POST['staff_id']    ?? ''),
-            'designation' => trim($_POST['designation'] ?? ''),
+        if (!$current) { echo json_encode(['success'=>false, 'message'=>'User not found.']); return; }
+        
+        // Data to be updated. Staff ID and username are excluded.
+        $changes = [
+            'first_name'  => trim($_POST['first_name'] ?? $current->first_name),
+            'last_name'   => trim($_POST['last_name'] ?? $current->last_name),
+            'email'       => trim($_POST['email'] ?? $current->email),
+            'phone'       => trim($_POST['phone'] ?? $current->phone),
+            'designation' => trim($_POST['designation'] ?? $current->designation),
         ];
-        $payload = [];
-        foreach ($incoming as $k => $v) if ($v !== '') $payload[$k] = $v;
 
-        $changes = [];
-        foreach ($payload as $k => $v) {
-            $old = isset($current->$k) ? (string)$current->$k : '';
-            if ($old !== $v) $changes[$k] = $v;
-        }
-        if (empty($changes)) { echo json_encode(['success'=>true,'message'=>'No changes detected.']); return; }
-
-        if (isset($changes['username']) || isset($changes['email'])) {
-            $check = $changes['username'] ?? $current->username;
-            $exists = $this->userModel->findByUsernameOrEmail($check);
-            if ($exists && (int)$exists->id !== $id) {
-                echo json_encode(['success'=>false,'message'=>'Username or email is already taken.']); return;
+        // Check for duplicate email on a different user
+        if ($changes['email'] !== $current->email) {
+            $existingUser = $this->userModel->findByUsernameOrEmail($changes['email']);
+            if ($existingUser && (int)$existingUser->id !== $id) {
+                echo json_encode(['success'=>false, 'message'=>'Email is already in use by another account.']); return;
             }
         }
+        
+        $ok = $this->userModel->updateStaffUser($id, $changes);
 
-        $ok = false;
-        if (method_exists($this->userModel, 'updateStaffUser')) {
-            $ok = (bool)$this->userModel->updateStaffUser($id, $changes);
-        } elseif (method_exists($this->userModel, 'update')) {
-            $changes['id'] = $id;
-            $ok = (bool)$this->userModel->update($changes);
-        } elseif (method_exists($this->userModel, 'updateById')) {
-            $ok = (bool)$this->userModel->updateById($id, $changes);
-        } else {
-            echo json_encode(['success'=>false,'message'=>'Update method not available in User model.']); return;
-        }
-
-        echo json_encode($ok ? ['success'=>true,'message'=>'User details updated.']
-                             : ['success'=>false,'message'=>'Failed to update user.']);
+        echo json_encode($ok 
+            ? ['success' => true, 'message' => 'User details updated successfully.']
+            : ['success' => false, 'message' => 'No changes were detected or the update failed.']
+        );
     }
+
+    
 
     /* =================== BURIALS =================== */
     public function burialRecords()
@@ -887,83 +878,393 @@ public function processVacate() {
     }
 
   
-  public function resetPassword()
+  // Nasa loob ng class AdminController
+
+public function resetPassword()
+{
+    header('Content-Type: application/json');
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        echo json_encode(['success' => false, 'message' => 'Invalid request method.']); return;
+    }
+
+    // Ensure only admins can perform this action
+    if ($_SESSION['user']['role'] !== 'admin') {
+        echo json_encode(['success' => false, 'message' => 'You are not authorized to perform this action.']); return;
+    }
+
+    $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+    $userId = (int)($_POST['user_id'] ?? 0);
+    $email  = trim($_POST['email'] ?? '');
+
+    if (!$userId || !$email) {
+        echo json_encode(['success' => false, 'message' => 'Missing user ID or email.']); return;
+    }
+
+    $user = $this->userModel->findById($userId);
+
+    if (!$user || strcasecmp($user->email, $email) !== 0) {
+        echo json_encode(['success' => false, 'message' => 'User not found or email does not match.']); return;
+    }
+
+    try {
+        $token = $this->userModel->createPasswordResetToken($userId);
+        if (!$token) {
+            throw new Exception("Could not create a reset token.");
+        }
+
+        $reset_link = URLROOT . '/auth/resetPassword?token=' . $token;
+        
+        $email_data = [
+            'full_name' => $user->first_name . ' ' . $user->last_name,
+            'reset_link' => $reset_link,
+            'message' => 'A system administrator has initiated a password reset for your account. Click the button below to set a new password.'
+        ];
+        
+        // --- ITO ANG BINAGO ---
+        // Tinanggal ang ['data' => ... ] para direktang maipasa ang $email_data.
+        $body = $this->view('emails/universal_email', $email_data, true);
+        $subject = 'Administrator-Initiated Password Reset';
+
+        $emailHelper = new EmailHelper();
+        $recipient_name = $user->first_name . ' ' . $user->last_name;
+        $sent = $emailHelper->sendEmail($user->email, $recipient_name, $subject, $body);
+
+        if ($sent !== true) {
+            error_log("Admin Reset Email Failed: " . $sent);
+            echo json_encode(['success' => false, 'message' => 'Failed to send the reset email. Please check system logs.']);
+        } else {
+            echo json_encode(['success' => true, 'message' => 'A password reset link has been sent to the user\'s email.']);
+        }
+
+    } catch (Exception $e) {
+        error_log("Admin Password Reset Error: " . $e->getMessage());
+        echo json_encode(['success' => false, 'message' => 'An unexpected error occurred. Please try again.']);
+    }
+}
+
+
+
+    public function myActivity()
     {
         header('Content-Type: application/json');
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            echo json_encode(['success' => false, 'message' => 'Invalid method']); return;
+        if (empty($_SESSION['user']['id'])) {
+            echo json_encode(['ok' => false, 'rows' => [], 'message' => 'Not authenticated.']);
+            return;
         }
-    
-        $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-        $userId = $_POST['user_id'] ?? null;
-        $email  = $_POST['email'] ?? null;
-    
-        if (!$userId || !$email) {
-            echo json_encode(['success' => false, 'message' => 'Missing parameters']); return;
-        }
-    
+        $user_id = (int)$_SESSION['user']['id'];
+        
+        $db = new Database();
+        $parts = [];
+
+        // Create Burial
+        $parts[] = "
+          SELECT
+            b.created_at AS ts,
+            CONCAT('Added Burial Record ', b.burial_id, ' for ', mb.title, ' — ', p.plot_number) AS action_text,
+            'create_burial' AS kind
+          FROM burials b
+          JOIN plots p ON p.id = b.plot_id
+          JOIN map_blocks mb ON mb.id = p.map_block_id
+          WHERE b.created_by_user_id = :user_id
+        ";
+
+        // Login
+        $parts[] = "
+          SELECT
+            us.login_at AS ts,
+            'Logged in to the system' AS action_text,
+            'login' AS kind
+          FROM user_sessions us
+          WHERE us.user_id = :user_id AND us.login_at IS NOT NULL
+        ";
+
+        // Logout
+        $parts[] = "
+          SELECT
+            us.logout_at AS ts,
+            'Logged out from the system' AS action_text,
+            'logout' AS kind
+          FROM user_sessions us
+          WHERE us.user_id = :user_id AND us.logout_at IS NOT NULL
+        ";
+        
+        // Process Renewal
+        $parts[] = "
+          SELECT
+            r.created_at AS ts,
+            CONCAT('Processed renewal for Burial ID ', r.burial_id) AS action_text,
+            'process_renewal' AS kind
+          FROM renewals r
+          WHERE r.processed_by_user_id = :user_id
+        ";
+        
+        $sql  = "SELECT * FROM (".implode(" UNION ALL ", $parts).") X WHERE DATE(X.ts) = CURDATE() ORDER BY X.ts DESC LIMIT 50";
+        
+        $db->query($sql);
+        $db->bind(':user_id', $user_id);
+        
         try {
-            $db = new Database(); 
-    
-            // 1. Fetch user to get name and ID
-            $db->query("SELECT id, email, first_name, last_name, role FROM users WHERE id = :id LIMIT 1");
-            $db->bind(':id', $userId);
-            $user = $db->single();
-    
-            // Validation: Check user, email, and ensure the role is 'staff'
-            if (!$user || strcasecmp($user->email, $email) !== 0 || $user->role !== 'staff') {
-                echo json_encode(['success' => false, 'message' => 'User not authorized for password reset.']); return;
-            }
-    
-            // 2. TOKEN GENERATION (RAW token)
-            $rawToken = bin2hex(random_bytes(32)); 
-            $expires  = (new DateTime('+2 hours', new DateTimeZone('Asia/Manila')))->format('Y-m-d H:i:s');
-            
-            // Delete old tokens
-            $db->query('DELETE FROM password_resets WHERE user_id = :user_id OR expires_at < NOW()');
-            $db->bind(':user_id', $userId);
-            $db->execute();
-            
-            // Insert the RAW token
-            $db->query('INSERT INTO password_resets (user_id, token, expires_at) VALUES (:u, :t, :e)');
-            $db->bind(':u', $userId);
-            $db->bind(':t', $rawToken); // RAW token
-            $db->bind(':e', $expires);
-            $db->execute();
-    
-            // 3. Set the final link
-            $reset_link = URLROOT . "/auth/resetPassword?token={$rawToken}"; 
-            
-            // 4. Prepare data for the RE-USED TEMPLATE (emails/reset_password)
-            $email_data_payload = [
-                // FIX: Gagamitin ang $user->first_name lang para maayos ang Undefined array key error.
-                'full_name'  => $user->first_name, 
-                'reset_link' => $reset_link,       
-            ];
-            
-            // Render the ORIGINAL emails/reset_password template
-            if (!class_exists('EmailHelper')) { 
-                require_once APPROOT . '/helpers/Email.php'; 
-            }
-            
-            // Ang template mo ay nangangailangan ng ['data' => $email_data_payload]
-            $body = $this->view('emails/reset_password', ['data' => $email_data_payload], true); 
-            $subject = 'Password Reset Request - Plaridel Public Cemetery System';
-    
-            $emailHelper = new EmailHelper();
-            $recipient_name = $user->first_name . ' ' . $user->last_name; 
-            $sent = $emailHelper->sendEmail($user->email, $recipient_name, $subject, $body);
-    
-            if ($sent !== true) {
-                error_log("Failed to send reset email: " . $sent);
-                echo json_encode(['success' => false, 'message' => 'Failed to send email. Mailer Error: ' . $sent]); return;
-            }
-    
-            echo json_encode(['success' => true, 'message' => 'A password reset link was emailed.']);
-    
-        } catch (Throwable $e) {
-            error_log("Unexpected resetPassword error: " . $e->getMessage());
-            echo json_encode(['success' => false, 'message' => 'Unexpected error. Please check server logs.']);
+            $rows = $db->resultSet();
+            echo json_encode(['ok'=>true, 'rows'=>$rows]);
+        } catch (Exception $e) {
+            error_log("myActivity Error: " . $e->getMessage());
+            echo json_encode(['ok'=>false, 'rows' => [], 'message' => 'A database error occurred.']);
         }
     }
+    
+    /**
+     * [NEW] Dummy endpoint para sa 'Reset List' button sa profile page.
+     */
+    public function resetMyActivity() 
+    {
+        header('Content-Type: application/json');
+        // Placeholder lang ito gaya ng kailangan ng iyong profile.js.
+        // Ang pag-return lang ng success ay sapat na para mag-reload ang data sa page.
+        echo json_encode(['success' => true]);
+    }
+
+
+    // Idagdag itong function sa loob ng AdminController class
+
+public function printRenewalHistory()
+{
+    $history = $this->renewalModel->getRenewalHistory();
+    $data = [
+        'title' => 'Renewal History Report',
+        'history' => $history
+    ];
+    $this->view('admin/print_renewals', $data);
+}
+
+    
+
+
+// app/controllers/AdminController.php
+
+// Idagdag mo itong bagong function sa loob ng "class AdminController"
+
+    /**
+     * [BAGONG FUNCTION] Endpoint para sa data ng dashboard chart.
+     */
+    public function getDashboardChartData() {
+        header('Content-Type: application/json');
+        
+        // Gamitin ang mga bagong methods mula sa Burial model
+        if (!method_exists($this->burialModel, 'countNewRentalsThisMonth')) {
+            echo json_encode(['ok' => false, 'message' => 'Required model methods are missing.']);
+            return;
+        }
+
+        try {
+            $data = [
+                'new_rentals'   => $this->burialModel->countNewRentalsThisMonth(),
+                'expiring_soon' => $this->burialModel->countExpiringSoon(30),
+                'total_expired' => $this->burialModel->countAllExpired()
+            ];
+            echo json_encode(['ok' => true, 'data' => $data]);
+        } catch (Exception $e) {
+            echo json_encode(['ok' => false, 'message' => 'Failed to fetch chart data.']);
+        }
+    }
+
+    // app/controllers/AdminController.php
+
+// Idagdag mo itong bagong function sa loob ng "class AdminController"
+
+    /**
+     * [BAGONG FUNCTION] Endpoint para sa data ng financial chart.
+     */
+    public function getFinancialChartData() {
+        header('Content-Type: application/json');
+
+        if (!method_exists($this->burialModel, 'getDailyTransactionTotals')) {
+            echo json_encode(['ok' => false, 'message' => 'Required model method is missing.']);
+            return;
+        }
+
+        try {
+            // Kunin ang data para sa nakaraang 7 araw
+            $dailyData = $this->burialModel->getDailyTransactionTotals(7);
+            
+            // Ihanda ang data para sa Chart.js
+            $labels = array_map(function($date) {
+                return date('M d', strtotime($date)); // Format: "Oct 07"
+            }, array_keys($dailyData));
+
+            $data = array_values($dailyData);
+
+            echo json_encode(['ok' => true, 'labels' => $labels, 'data' => $data]);
+        } catch (Exception $e) {
+            echo json_encode(['ok' => false, 'message' => 'Failed to fetch financial data.']);
+        }
+    }
+
+    // app/controllers/AdminController.php
+
+// Idagdag itong tatlong functions sa loob ng "class AdminController"
+
+    /**
+     * [BAGONG FUNCTION] Ipinapakita ang Backup & Restore page.
+     */
+   public function backup() {
+        if ($_SESSION['user']['role'] !== 'admin') {
+            redirect('admin/dashboard');
+        }
+        
+        // Kinukuha na ngayon ang logs mula sa database
+        $logs = $this->auditModel->getBackupRestoreLogs();
+
+        $this->view('admin/backup', [
+            'title' => 'Backup & Restore',
+            'logs' => $logs // Ipasa ang logs sa view
+        ]);
+    }
+
+    /**
+     * [BAGONG FUNCTION] Gumagawa at nagda-download ng SQL backup.
+     */
+    public function createBackup() {
+        if ($_SESSION['user']['role'] !== 'admin') {
+            redirect('admin/dashboard');
+        }
+
+        try {
+            $db = new Database;
+            $tables = [];
+            $db->query('SHOW TABLES');
+            $results = $db->resultSet();
+            foreach ($results as $result) {
+                $tables[] = current((array)$result);
+            }
+
+            $sql_content = "-- Gravengel DB Backup\n-- Generation Time: " . date('Y-m-d H:i:s') . "\n\n";
+            $sql_content .= "SET NAMES utf8mb4;\nSET FOREIGN_KEY_CHECKS = 0;\n\n";
+
+            foreach ($tables as $table) {
+                $db->query("SELECT * FROM `$table`");
+                $rows = $db->resultSet();
+                
+                $db->query("SHOW CREATE TABLE `$table`");
+                $create_table_row = $db->single();
+                $sql_content .= "\n-- ----------------------------\n";
+                $sql_content .= "-- Table structure for $table\n";
+                $sql_content .= "-- ----------------------------\n";
+                $sql_content .= "DROP TABLE IF EXISTS `$table`;\n";
+                $sql_content .= $create_table_row->{'Create Table'} . ";\n\n";
+
+                if (!empty($rows)) {
+                    $sql_content .= "-- ----------------------------\n";
+                    $sql_content .= "-- Records of $table\n";
+                    $sql_content .= "-- ----------------------------\n";
+                    foreach ($rows as $row) {
+                        $sql_content .= "INSERT INTO `$table` VALUES(";
+                        $values = [];
+                        foreach ((array)$row as $value) {
+                            if (is_null($value)) {
+                                $values[] = "NULL";
+                            } else {
+                                // Gamit ang query binding para sa proper escaping
+                                $db->query('SELECT :value as val');
+                                $db->bind(':value', $value);
+                                $escaped_value = $db->single()->val;
+                                $values[] = "'$escaped_value'";
+                            }
+                        }
+                        $sql_content .= implode(', ', $values) . ");\n";
+                    }
+                }
+            }
+
+            $sql_content .= "\nSET FOREIGN_KEY_CHECKS = 1;\n";
+
+            $filename = 'gravengel_backup_' . date('Y-m-d_H-i-s') . '.sql';
+            header('Content-Type: application/sql');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            echo $sql_content;
+            exit();
+
+        } catch (Exception $e) {
+            die("Error creating backup: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * [BAGONG FUNCTION] Nagha-handle ng pag-upload at pag-restore ng SQL file.
+     */
+  public function restoreBackup() {
+        if ($_SESSION['user']['role'] !== 'admin' || $_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('admin/backup');
+        }
+        
+        $userId = $_SESSION['user']['id'];
+        $userName = $_SESSION['user']['name'];
+
+        if (isset($_FILES['backup_file']) && $_FILES['backup_file']['error'] == UPLOAD_ERR_OK) {
+            $file_tmp_path = $_FILES['backup_file']['tmp_name'];
+            $file_name = $_FILES['backup_file']['name'];
+
+            if (pathinfo($file_name, PATHINFO_EXTENSION) != 'sql') {
+                $_SESSION['flash_message'] = 'Error: Invalid file type. Please upload a .sql file.';
+                $_SESSION['flash_type'] = 'danger';
+                $this->auditModel->logAction($userId, $userName, 'restore_attempted', 'failure', 'Invalid file type: ' . htmlspecialchars($file_name));
+                redirect('admin/backup');
+                return;
+            }
+
+            $db = new Database;
+            try {
+                $sql_content = file_get_contents($file_tmp_path);
+                
+                // Hahatiin ang buong SQL content sa mga individual na command
+                $queries = explode(';', $sql_content);
+                
+                foreach ($queries as $query) {
+                    $trimmed_query = trim($query);
+                    if (!empty($trimmed_query)) {
+                        $db->query($trimmed_query);
+                        $db->execute();
+                    }
+                }
+
+                $_SESSION['flash_message'] = 'Database has been successfully restored from ' . htmlspecialchars($file_name) . '.';
+                $_SESSION['flash_type'] = 'success';
+                $this->auditModel->logAction($userId, $userName, 'restore_attempted', 'success', 'Restored from file: ' . htmlspecialchars($file_name));
+
+            } catch (Exception $e) {
+                $_SESSION['flash_message'] = 'An error occurred during restore: ' . $e->getMessage();
+                $_SESSION['flash_type'] = 'danger';
+                $this->auditModel->logAction($userId, $userName, 'restore_attempted', 'failure', 'Error restoring from ' . htmlspecialchars($file_name) . ': ' . $e->getMessage());
+            }
+        } else {
+            $_SESSION['flash_message'] = 'Error uploading file. Please try again.';
+            $_SESSION['flash_type'] = 'danger';
+            $this->auditModel->logAction($userId, $userName, 'restore_attempted', 'failure', 'File upload error.');
+        }
+
+        redirect('admin/backup');
+    }
+// app/controllers/AdminController.php
+
+// Idagdag itong bagong function sa loob ng "class AdminController"
+
+    /**
+     * [BAGONG FUNCTION] Gumagawa ng printable report para sa audit trail.
+     */
+    public function printAuditHistory()
+    {
+        // Siguraduhing admin lang ang makaka-access
+        if ($_SESSION['user']['role'] !== 'admin') {
+            redirect('admin/dashboard');
+        }
+        
+        $logs = $this->auditModel->getBackupRestoreLogs();
+        $data = [
+            'title' => 'Audit Trail Report',
+            'logs' => $logs
+        ];
+        
+        $this->view('admin/print_audit', $data);
+    }
+    
+
 }

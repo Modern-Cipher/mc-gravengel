@@ -1,7 +1,7 @@
 <?php require APPROOT . '/views/includes/admin_header.php'; ?>
 
 <style>
-/* Calendar badge styling (readable, mas malaki, maroon accent) */
+/* Calendar badge styling */
 .fc .exp-pill{
   display:inline-flex; align-items:center; gap:.35rem;
   padding:.18rem .5rem; border-radius:999px;
@@ -18,11 +18,11 @@
 </style>
 
 <div class="main-content-header mb-4">
-    <h1>Hello, <?php echo htmlspecialchars(explode(' ', $_SESSION['user']['name'])[0] ?? 'Staff'); ?>!</h1>
+    <h1>Hello, <?php echo htmlspecialchars(explode(' ', $_SESSION['user']['name'])[0] ?? 'Admin'); ?>!</h1>
 </div>
 
 <div class="row">
-    <div class="col-lg-7">
+    <div class="col-lg-7 mb-4 mb-lg-0">
         <div class="row">
             <div class="col-md-6 mb-4">
                 <div class="dashboard-card">
@@ -53,7 +53,34 @@
                 </div>
             </div>
         </div>
+
+        <div class="row mt-2">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Rental Status Overview</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="rentalChart" style="max-height: 250px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Daily Transaction Totals (Last 7 Days)</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="financialChart" style="max-height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
     <div class="col-lg-5">
         <div id="calendar-container"></div>
     </div>

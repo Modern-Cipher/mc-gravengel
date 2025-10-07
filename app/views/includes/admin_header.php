@@ -174,6 +174,13 @@
                <i class="fas fa-address-book fa-fw me-2"></i> Contact Us
             </a>
           </li>
+
+          <li>
+              <a href="<?php echo URLROOT; ?>/admin/backup"
+                 class="<?php echo (!empty($data['title']) && $data['title']==='Backup & Restore') ? 'active' : ''; ?>">
+                 <i class="fas fa-database fa-fw me-2"></i> Backup & Restore
+              </a>
+            </li>
         <?php endif; ?>
       </ul>
 
