@@ -1,49 +1,46 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Reset Password · Gravengel</title>
-  <script>window.URLROOT = '<?= URLROOT ?>';</script>
-  <link rel="stylesheet" href="<?= URLROOT ?>/public/css/login.css?v=1">
-  <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-  <script defer src="<?= URLROOT ?>/public/js/login.js?v=1"></script>
+    <title>Password Reset Request</title>
 </head>
-<body>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+    
+    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+            <td align="center">
+                <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <tr>
+                        <td style="padding: 20px;">
+                            <p>Hello, **<?php echo htmlspecialchars($data['full_name']); ?>**</p>
+                            <p style="margin-bottom: 20px;">We received a request to reset the password for your account. If you did not make this request, you can safely ignore this email.</p>
+                            
+                            <p style="margin-bottom: 20px;">To reset your password, please click the button below:</p>
+                            
+                            <!-- CRITICAL FIX: Ginamit ang inline style button structure para gumana ang link -->
+                            <table border="0" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
+                                <tr>
+                                    <td align="left" bgcolor="#7b1e28" style="border-radius: 4px;">
+                                        <a href="<?php echo htmlspecialchars($data['reset_link']); ?>" target="_blank" 
+                                           style="display: block; padding: 10px 20px; border-radius: 4px; background-color: #7b1e28; color: #ffffff !important; 
+                                                  text-decoration: none; font-weight: bold; font-size: 15px; border: 1px solid #7b1e28;">
+                                            Reset My Password
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="font-size: 12px; color: #999;">If the button does not work, copy and paste this link in your browser:</p>
+                            <p style="font-size: 12px; word-break: break-all; color: #7b1e28;"><a href="<?php echo htmlspecialchars($data['reset_link']); ?>"><?php echo htmlspecialchars($data['reset_link']); ?></a></p>
 
-<header class="login-topbar">
-  <div class="topbar-inner">
-    <a href="<?= URLROOT ?>/public/" class="topbar-brand" aria-label="Home">
-      <img src="<?= URLROOT ?>/public/img/gravengel.png" alt="Gravengel">
-      <span class="brand-title">PLARIDEL PUBLIC CEMETERY</span>
-    </a>
-    <button type="button" id="back-btn" class="topbar-back-btn">Back</button>
-  </div>
-</header>
-
-
-<section class="login-hero">
-  <div class="login-wrap">
-    <div class="login-card">
-      <h2 class="welcome-title" style="margin-bottom:10px">Reset Password</h2>
-      <p style="color:#fff;margin:0 0 12px">Enter your new password below.</p>
-
-      <form id="reset-password-form" method="post" novalidate>
-        <input type="hidden" name="user_id" value="<?= htmlspecialchars($data['user']->id) ?>">
-        <input type="hidden" name="token" value="<?= htmlspecialchars($data['token']) ?>">
-
-        <label for="new-password">New Password</label>
-        <input id="new-password" name="new_password" type="password" placeholder="Enter new password" required>
-
-        <label for="confirm-password">Confirm New Password</label>
-        <input id="confirm-password" name="confirm_password" type="password" placeholder="Confirm new password" required>
-
-        <button class="cta-button" type="submit">Reset Password</button>
-      </form>
-
-      <p class="login-caption">Smart Records. Sacred Grounds.</p>
-    </div>
-  </div>
-</section>
+                            <p style="font-size: 12px; color: #555;">This link is valid for 2 hours.</p>
+                            
+                            <p style="margin-top: 30px;">Thank you,<br>Plaridel Public Cemetery Management</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    
 </body>
 </html>

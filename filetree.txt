@@ -1,5 +1,5 @@
 File Tree: mc-gravengel
-Generated on: 10/2/2025, 7:59:39 AM
+Generated on: 10/7/2025, 8:33:27 AM
 Root path: c:\xampp\htdocs\mc-gravengel
 
 ────────────────────────────────────────────────────────────────────────────────
@@ -13,6 +13,7 @@ Root path: c:\xampp\htdocs\mc-gravengel
 │   │   ├── AdminController.php
 │   │   ├── AuthController.php
 │   │   ├── MapsController.php
+│   │   ├── NotificationsController.php
 │   │   ├── PagesController.php
 │   │   ├── StaffController.php
 │   │   ├── UserController.php.txt
@@ -27,6 +28,8 @@ Root path: c:\xampp\htdocs\mc-gravengel
 │   ├── models/
 │   │   ├── Burial.php
 │   │   ├── Map.php
+│   │   ├── Notification.php
+│   │   ├── Renewal.php
 │   │   └── User.php
 │   ├── views/
 │   │   ├── admin/
@@ -41,9 +44,15 @@ Root path: c:\xampp\htdocs\mc-gravengel
 │   │   │   ├── print_contract.php
 │   │   │   ├── print_qr_ticket.php
 │   │   │   ├── profile.php
+│   │   │   ├── renewals.php
 │   │   │   └── user_accounts.php
 │   │   ├── emails/
+│   │   │   ├── expired_today.php
+│   │   │   ├── expiry_30.php
+│   │   │   ├── renewal_confirmation.php
+│   │   │   ├── reset_from_admin.php
 │   │   │   ├── reset_password.php
+│   │   │   ├── vacate_confirmation.php
 │   │   │   └── welcome_staff.php
 │   │   ├── includes/
 │   │   │   ├── admin_footer.php
@@ -53,8 +62,10 @@ Root path: c:\xampp\htdocs\mc-gravengel
 │   │   │   ├── header_min.php
 │   │   │   ├── navbar_main.php
 │   │   │   ├── navbar_map.php
+│   │   │   ├── staff_footer.php
 │   │   │   ├── staff_footer.php.txt
-│   │   │   └── staff_header.php
+│   │   │   ├── staff_header.php
+│   │   │   └── staff_header.php.txt
 │   │   ├── maps/
 │   │   │   ├── index copy.php
 │   │   │   ├── index.php
@@ -62,9 +73,18 @@ Root path: c:\xampp\htdocs\mc-gravengel
 │   │   ├── pages/
 │   │   │   └── index.php
 │   │   ├── staff/
+│   │   │   ├── add_burial.php
+│   │   │   ├── archived_burials.php
+│   │   │   ├── burial_records.php
 │   │   │   ├── cemetery_map.php
+│   │   │   ├── contact_us.php
 │   │   │   ├── index.php
-│   │   │   └── profile.php
+│   │   │   ├── logs_reports.php
+│   │   │   ├── print_burial_form.php
+│   │   │   ├── print_contract.php
+│   │   │   ├── print_qr_ticket.php
+│   │   │   ├── profile.php
+│   │   │   └── renewals.php
 │   │   └── users/
 │   │       ├── force_change.php
 │   │       ├── forgot.php
@@ -80,6 +100,11 @@ Root path: c:\xampp\htdocs\mc-gravengel
 │   │   ├── map-styles copy.css
 │   │   ├── map-styles.css
 │   │   ├── profile.css
+│   │   ├── staff.css
+│   │   ├── staff_burial-records.css
+│   │   ├── staff_map-styles.css
+│   │   ├── staff_profile.css
+│   │   ├── staff_theme.css
 │   │   └── style.css
 │   ├── img/
 │   │   ├── profiles/
@@ -108,7 +133,12 @@ Root path: c:\xampp\htdocs\mc-gravengel
 │   │   ├── main.js
 │   │   ├── map copy.js
 │   │   ├── map.js
+│   │   ├── notifications.js
 │   │   ├── profile.js
+│   │   ├── staff-burial-records.js
+│   │   ├── staff.js
+│   │   ├── staff_logs_reports.js
+│   │   ├── staff_map.js
 │   │   ├── staff_profile.js
 │   │   └── user_accounts.js
 │   ├── .htaccess

@@ -1,20 +1,9 @@
 <?php require APPROOT . '/views/includes/staff_header.php'; ?>
 
 <style>
-/* same “Expiry pill” styling used in admin */
-.fc .exp-pill{
-  display:inline-flex; align-items:center; gap:.35rem;
-  padding:.18rem .5rem; border-radius:999px;
-  background:#800000; color:#fff; font-weight:700; font-size:.78rem; line-height:1;
-  box-shadow:0 1px 2px rgba(0,0,0,.15);
-}
-.fc .exp-time{
-  display:inline-block; padding:.1rem .4rem; border-radius:6px;
-  background:#a75a5a; color:#fff; font-weight:700; font-size:.74rem;
-}
-.fc .exp-holder{
-  display:block; margin-top:.15rem; font-size:.72rem; color:#5a5a5a; font-weight:600;
-}
+.fc .exp-pill{display:inline-flex;align-items:center;gap:.35rem;padding:.18rem .5rem;border-radius:999px;background:#800000;color:#fff;font-weight:700;font-size:.78rem;line-height:1;box-shadow:0 1px 2px rgba(0,0,0,.15);}
+.fc .exp-time{display:inline-block;padding:.1rem .4rem;border-radius:6px;background:#a75a5a;color:#fff;font-weight:700;font-size:.74rem;}
+.fc .exp-holder{display:block;margin-top:.15rem;font-size:.72rem;color:#5a5a5a;font-weight:600;}
 </style>
 
 <div class="main-content-header mb-4">

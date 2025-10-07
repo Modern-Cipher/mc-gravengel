@@ -22,7 +22,7 @@
   }
 
   .table thead th{
-    background:#7b1113; color:#fff; border-bottom:1px solid #5f0c0e;
+    background:#800000; color:#fff; border-bottom:1px solid #6a0000;
     white-space:nowrap; font-weight:600;
   }
   .table tbody td, .table tbody th { border-color:#ececec; }
@@ -31,13 +31,23 @@
   }
 
   .actions i{ font-size:19px; cursor:pointer; margin:0 .32rem; }
-  .actions i:hover{ transform:translateY(-1px) }
-  .actions .i-view  { color:#0d6efd }
-  .actions .i-print { color:#0dcaf0 }
-  .actions .i-qr    { color:#6c757d }
+  .actions i:hover{ transform:translateY(-1px); }
+  
+  /* --- ITO ANG BINAGO: GINAWANG MAROON ANG MGA ICONS --- */
+  .actions .i-view,
+  .actions .i-print,
+  .actions .i-qr {
+    color: #800000; /* Maroon Theme Color */
+  }
+  .actions .i-view:hover,
+  .actions .i-print:hover,
+  .actions .i-qr:hover {
+    color: #6a0000; /* Darker Maroon on hover */
+  }
+  /* --- END NG PAGBABAGO --- */
 
-  .btn-maroon{ background:#7b1113; border-color:#7b1113; color:#fff; }
-  .btn-maroon:hover,.btn-maroon:focus{ background:#5f0c0e; border-color:#5f0c0e; color:#fff; }
+  .btn-maroon{ background:#800000; border-color:#800000; color:#fff; }
+  .btn-maroon:hover,.btn-maroon:focus{ background:#6a0000; border-color:#6a0000; color:#fff; }
 
   .expiry-badge{
     display:inline-block;font-size:.72rem;line-height:1;padding:.18rem .45rem;border-radius:999px;
@@ -72,7 +82,7 @@
           <th>Age</th>
           <th>Sex</th>
           <th>Rental</th>
-          <th>IRH Email</th> <!-- NEW -->
+          <th>IRH Email</th>
           <th class="text-center">Action</th>
         </tr>
         </thead>
@@ -130,7 +140,6 @@
   </div>
 </div>
 
-<!-- View details modal -->
 <div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
@@ -148,7 +157,6 @@
   </div>
 </div>
 
-<!-- Print picker -->
 <div class="modal fade" id="printPicker" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -166,7 +174,6 @@
   </div>
 </div>
 
-<!-- QR modal -->
 <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-sm modal-dialog-centered">
     <div class="modal-content">
@@ -181,6 +188,14 @@
 
 <script>
 (() => {
+  const themedSwal = Swal.mixin({
+      customClass: {
+          confirmButton: 'btn btn-maroon mx-2',
+          cancelButton: 'btn btn-secondary mx-2'
+      },
+      buttonsStyling: false
+  });
+
   [...document.querySelectorAll('[data-bs-toggle="tooltip"]')].forEach(el => new bootstrap.Tooltip(el));
 
   const table      = document.getElementById('archTable');
@@ -237,7 +252,7 @@
         ${row('IRH', d.interment_full_name||'')}
         ${row('Relationship', d.interment_relationship||'')}
         ${row('Contact', d.interment_contact_number||'')}
-        ${row('Email', d.interment_email||'')}          <!-- NEW -->
+        ${row('Email', d.interment_email||'')}
         ${row('Address', d.interment_address||'')}
         ${row('Grave', (d.grave_level||'-')+' / '+(d.grave_type||'-'))}
         ${row('Cause of Death', d.cause_of_death||'')}
@@ -257,13 +272,12 @@
   }
 
   async function confirmRestore(id, row){
-    const ans = await Swal.fire({
+    const ans = await themedSwal.fire({
       icon:'question',
       title:'Restore this record?',
       text:'It will return to the active Burial Records.',
       showCancelButton:true,
-      confirmButtonText:'Restore',
-      confirmButtonColor:'#7b1113'
+      confirmButtonText:'Restore'
     });
     if(!ans.isConfirmed) return;
 
@@ -276,12 +290,12 @@
       setTimeout(()=>row.remove(), 200);
       toast('Restored','success');
     }else{
-      Swal.fire({icon:'error',title:'Restore failed',text:res.message||'Please try again.'});
+      themedSwal.fire({icon:'error',title:'Restore failed',text:res.message||'Please try again.'});
     }
   }
 
   function toast(title,icon='success'){
-    Swal.fire({toast:true,position:'top-end',showConfirmButton:false,timer:1700,icon,title});
+    themedSwal.fire({toast:true,position:'top-end',showConfirmButton:false,timer:1700,icon,title});
   }
 })();
 </script>

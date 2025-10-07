@@ -379,4 +379,29 @@ class Burial {
         ");
         return $this->db->resultSet();
     }
+
+
+
+public function findPublicByBurialId($burialId) {
+    $sql = "SELECT 
+                b.burial_id,
+                CONCAT(COALESCE(b.deceased_first_name,''),' ',
+                       COALESCE(b.deceased_last_name,'')) AS deceased_full_name,
+                b.date_born, b.date_died,
+                b.grave_level, b.grave_type,
+                p.plot_number,
+                mb.title AS block_title
+            FROM burials b
+            JOIN plots p      ON p.id = b.plot_id
+            JOIN map_blocks mb ON mb.id = p.map_block_id
+            WHERE b.burial_id = :bid AND b.is_active = 1
+            LIMIT 1";
+    $this->db->query($sql);
+    $this->db->bind(':bid', $burialId);
+    return $this->db->single();
+}
+
+
+
+    
 }

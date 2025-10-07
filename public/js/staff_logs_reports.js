@@ -3,8 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
   const MAROON_COLOR = '#7b1d1d';
+  const ROOT = window.URLROOT || '';
 
-  // ---------- helpers ----------
+  // helpers
   const fmtMoney = n =>
     (Number(n || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -30,8 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const txt = await res.text().catch(() => '');
       console.error('Non-JSON response:', txt);
       Swal.fire({
-        icon: 'error', 
-        title: 'Error', 
+        icon: 'error',
+        title: 'Error',
         text: 'Server returned an unexpected response. Please check logs.',
         confirmButtonColor: MAROON_COLOR
       });
@@ -42,15 +43,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // tooltips on static icons
   $$('.fa-gear, [data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
 
-  // ---------- Activity Logs ----------
+  // ========== Activity Logs (STAFF endpoints) ==========
   async function loadActivity() {
     const params = new URLSearchParams({
       from: $('#act-from').value || '',
-      to:   $('#act-to').value || '',
+      to:   $('#act-to').value   || '',
       q:    $('#act-search').value || ''
     });
 
-    const res  = await fetch(`${window.URLROOT}/admin/fetchActivityLogs?` + params.toString(), { credentials:'same-origin' });
+    const res  = await fetch(`${ROOT}/staff/fetchActivityLogs?` + params.toString(), { credentials:'same-origin' });
     const data = await parseJSONSafe(res);
 
     const tbody = $('#tbl-activity tbody');
@@ -97,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
           showActivityDetails(obj);
         } catch (e) {
           console.error('Decode error:', e);
-          Swal.fire({icon: 'error', title: 'Error', text: 'Unable to open details.', confirmButtonColor: MAROON_COLOR});
+          Swal.fire({icon:'error', title:'Error', text:'Unable to open details.', confirmButtonColor: MAROON_COLOR});
         }
       });
     });
@@ -109,16 +110,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const kindBadge =
       o.kind === 'create_burial' ? `<span class="badge bg-success"><i class="fa-solid fa-circle-plus me-1"></i>Create Burial</span>` :
       o.kind === 'update_burial' ? `<span class="badge bg-warning text-dark"><i class="fa-solid fa-pen-to-square me-1"></i>Update Burial</span>` :
-      o.kind === 'login'         ? `<span class="badge" style="background-color: ${MAROON_COLOR};"><i class="fa-solid fa-right-to-bracket me-1"></i>Login</span>` :
+      o.kind === 'login'         ? `<span class="badge" style="background-color:${MAROON_COLOR};"><i class="fa-solid fa-right-to-bracket me-1"></i>Login</span>` :
       o.kind === 'logout'        ? `<span class="badge bg-secondary"><i class="fa-solid fa-right-from-bracket me-1"></i>Logout</span>` :
                                    `<span class="badge bg-info text-dark"><i class="fa-solid fa-circle-info me-1"></i>Info</span>`;
 
-    const html = `<div class="container text-start" style="font-size: 14px;">...</div>`; // (content is the same, no changes needed here)
-
     Swal.fire({
       html: `
-        <div class="container text-start" style="font-size: 14px;">
-          <h5 class="mb-3 text-start" style="color: ${MAROON_COLOR};"><i class="fa-solid fa-clipboard-list me-2"></i>Activity Details</h5>
+        <div class="container text-start" style="font-size:14px;">
+          <h5 class="mb-3 text-start" style="color:${MAROON_COLOR};"><i class="fa-solid fa-clipboard-list me-2"></i>Activity Details</h5>
           <hr class="mt-0 mb-3"/>
           <div class="row g-3">
             <div class="col-md-6">
@@ -146,15 +145,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ---------- Transaction Reports ----------
+  // ========== Transaction Reports (STAFF endpoints) ==========
   async function loadTransactions() {
     const params = new URLSearchParams({
       from: $('#trx-from').value || '',
-      to:   $('#trx-to').value || '',
+      to:   $('#trx-to').value   || '',
       q:    $('#trx-search').value || ''
     });
 
-    const res  = await fetch(`${window.URLROOT}/admin/fetchTransactionReports?` + params.toString(), { credentials:'same-origin' });
+    const res  = await fetch(`${ROOT}/staff/fetchTransactionReports?` + params.toString(), { credentials:'same-origin' });
     const data = await parseJSONSafe(res);
 
     const tbody = $('#tbl-transactions tbody');
@@ -203,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
           showTransactionDetails(obj);
         } catch (e) {
           console.error('Decode error:', e);
-          Swal.fire({icon: 'error', title: 'Error', text: 'Unable to open details.', confirmButtonColor: MAROON_COLOR});
+          Swal.fire({icon:'error', title:'Error', text:'Unable to open details.', confirmButtonColor: MAROON_COLOR});
         }
       });
     });
@@ -214,8 +213,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function showTransactionDetails(o = {}) {
     Swal.fire({
       html: `
-        <div class="container text-start" style="font-size: 14px;">
-          <h5 class="mb-3 text-start" style="color: ${MAROON_COLOR};"><i class="fa-solid fa-receipt me-2"></i>Transaction Details</h5>
+        <div class="container text-start" style="font-size:14px;">
+          <h5 class="mb-3 text-start" style="color:${MAROON_COLOR};"><i class="fa-solid fa-receipt me-2"></i>Transaction Details</h5>
           <hr class="mt-0 mb-3"/>
           <div class="row g-3">
             <div class="col-md-6">
@@ -257,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ---------- filters + print ----------
+  // filters + print
   $('#act-filter')?.addEventListener('click', loadActivity);
   $('#act-reset')?.addEventListener('click', () => {
     $('#act-from').value=''; $('#act-to').value=''; $('#act-search').value='';
@@ -278,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   $('#btn-print')?.addEventListener('click', () => window.print());
 
-  // ---------- initial load ----------
+  // initial
   loadActivity();
   loadTransactions();
 });

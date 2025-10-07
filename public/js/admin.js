@@ -24,34 +24,38 @@ document.addEventListener('DOMContentLoaded', function () {
       initialView: (window.innerWidth < 768) ? 'listWeek' : 'dayGridMonth',
       headerToolbar: { left:'prev,next today', center:'title', right:'dayGridMonth,timeGridWeek,listWeek' },
       height: 'auto',
-   events: async (info, success, failure) => {
-  try {
-    const url = `${window.URLROOT}/admin/expiryEvents?from=${encodeURIComponent(info.startStr)}&to=${encodeURIComponent(info.endStr)}`;
-    const res = await fetch(url, { credentials: 'same-origin' });
 
-    // Read as text first to gracefully handle any non-JSON
-    const txt = await res.text();
+      // --- ITO ANG IDINAGDAG PARA I-CAPITALIZE ANG MGA BUTTONS ---
+      buttonText: {
+          today:    'Today',
+          month:    'Month',
+          week:     'Week',
+          list:     'List'
+      },
+      // --- END NG DAGDAG ---
 
-    let json;
-    try { json = JSON.parse(txt); }
-    catch { 
-      // Silent-fail to keep UI clean; just log once for dev
-      console.warn('Calendar events: non-JSON response received. Check PHP errors/redirects.');
-      success([]); 
-      return;
-    }
-
-    if (json && json.ok && Array.isArray(json.events)) {
-      success(json.events);
-    } else {
-      success([]);
-    }
-  } catch (err) {
-    console.error('Calendar events error:', err);
-    failure(err);
-  }
-},
-
+      events: async (info, success, failure) => {
+        try {
+          const url = `${window.URLROOT}/admin/expiryEvents?from=${encodeURIComponent(info.startStr)}&to=${encodeURIComponent(info.endStr)}`;
+          const res = await fetch(url, { credentials: 'same-origin' });
+          const txt = await res.text();
+          let json;
+          try { json = JSON.parse(txt); }
+          catch { 
+            console.warn('Calendar events: non-JSON response received. Check PHP errors/redirects.');
+            success([]); 
+            return;
+          }
+          if (json && json.ok && Array.isArray(json.events)) {
+            success(json.events);
+          } else {
+            success([]);
+          }
+        } catch (err) {
+          console.error('Calendar events error:', err);
+          failure(err);
+        }
+      },
       eventContent: function(arg){
         const p = arg.event.extendedProps || {};
         const timeLabel = (arg.timeText || '').replace(/^0/,'');

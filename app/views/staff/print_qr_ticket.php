@@ -1,5 +1,5 @@
 <?php
-/** app/views/admin/print_qr_ticket.php */
+/** app/views/staff/print_qr_ticket.php */
 $r = $data['r'] ?? null;
 if (!$r) {
     echo '<h3 style="padding:16px">Record not found.</h3>';

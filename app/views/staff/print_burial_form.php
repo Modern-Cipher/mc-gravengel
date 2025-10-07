@@ -1,5 +1,5 @@
 <?php
-/** app/views/staff/print_burial_form.php */
+/** app/views/admin/print_burial_form.php */
 $r = $data['r'] ?? null;
 if (!$r) {
     echo '<h3 style="padding:16px">No data found.</h3>';

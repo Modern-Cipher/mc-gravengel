@@ -12,6 +12,11 @@
       <a href="#about">About</a>
       <a href="#features">Features</a>
       <a href="#contact">Contact</a>
+      <!-- QR Scanner (desktop) -->
+<a href="<?= URLROOT ?>/pages/qr_scanner" class="qr-nav-btn">
+  <ion-icon name="qr-code-outline"></ion-icon> QR Scanner
+</a>
+
       <a href="<?php echo URLROOT; ?>/auth/login" class="login-button">
         <ion-icon name="log-in-outline"></ion-icon> Login
       </a>
@@ -37,6 +42,11 @@
   <a href="#about"><ion-icon name="information-circle-outline"></ion-icon><span>About</span></a>
   <a href="#features"><ion-icon name="grid-outline"></ion-icon><span>Features</span></a>
   <a href="#contact"><ion-icon name="mail-outline"></ion-icon><span>Contact</span></a>
+  <!-- QR Scanner (sidebar) -->
+<a href="<?= URLROOT ?>/pages/qr_scanner" class="qr-nav-item">
+  <ion-icon name="qr-code-outline"></ion-icon><span>QR Scanner</span>
+</a>
+
   <a href="<?php echo URLROOT; ?>/auth/login" class="login-button"><span>Login</span></a>
 </div>
 

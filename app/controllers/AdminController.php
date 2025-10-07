@@ -6,6 +6,9 @@ class AdminController extends Controller
     private $userModel;
     private $mapModel;
     private $burialModel;
+    private $renewalModel;
+    
+    
 
     public function __construct()
     {
@@ -17,6 +20,7 @@ class AdminController extends Controller
         $this->userModel   = $this->model('User');
         $this->mapModel    = $this->model('Map');
         $this->burialModel = $this->model('Burial');
+        $this->renewalModel = $this->model('Renewal');
 
         $currentMethod = $this->params[0] ?? 'dashboard';
         if (($_SESSION['user']['role'] ?? '') !== 'admin' &&
@@ -289,6 +293,84 @@ class AdminController extends Controller
             ]);
         }
     }
+
+    /**
+     * Handles updating a burial record from the edit modal.
+     * It fetches the current record and merges submitted form data over it
+     * to prevent accidental data loss for fields that were not submitted.
+     */
+    public function updateBurial()
+    {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['ok' => false, 'message' => 'Invalid request method.']);
+            return;
+        }
+    
+        $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    
+        $burialId = trim($_POST['burial_id'] ?? '');
+        if (empty($burialId)) {
+            echo json_encode(['ok' => false, 'message' => 'Missing burial ID.']);
+            return;
+        }
+    
+        // 1. Fetch the existing record to serve as a base, preventing data loss
+        $existingRecord = $this->burialModel->findAnyByBurialId($burialId);
+        if (!$existingRecord) {
+            echo json_encode(['ok' => false, 'message' => 'Burial record not found.']);
+            return;
+        }
+    
+        // 2. Validate incoming email, if provided
+        $interment_email  = trim($_POST['interment_email'] ?? '');
+        if ($interment_email !== '' && !filter_var($interment_email, FILTER_VALIDATE_EMAIL)) {
+            echo json_encode(['ok' => false, 'message' => 'Please enter a valid email address.']);
+            return;
+        }
+    
+        // 3. Prepare an array of the submitted data for merging
+        $submittedData = [
+            'burial_id'                => $burialId,
+            'deceased_first_name'      => trim($_POST['deceased_first_name'] ?? ''),
+            'deceased_middle_name'     => trim($_POST['deceased_middle_name'] ?? ''),
+            'deceased_last_name'       => trim($_POST['deceased_last_name'] ?? ''),
+            'deceased_suffix'          => trim($_POST['deceased_suffix'] ?? ''),
+            'age'                      => trim($_POST['age'] ?? ''),
+            'sex'                      => $_POST['sex'] ?? '',
+            'date_born'                => $_POST['date_born'] ?: null,
+            'date_died'                => $_POST['date_died'] ?: null,
+            'cause_of_death'           => trim($_POST['cause_of_death'] ?? ''),
+            'grave_level'              => $_POST['grave_level'] ?? '',
+            'grave_type'               => $_POST['grave_type'] ?? '',
+            'interment_full_name'      => trim($_POST['interment_full_name'] ?? ''),
+            'interment_relationship'   => $_POST['interment_relationship'] ?? '',
+            'interment_contact_number' => $_POST['interment_contact_number'] ?? '',
+            'interment_address'        => trim($_POST['interment_address'] ?? ''),
+            'interment_email'          => ($interment_email === '') ? null : $interment_email,
+            'payment_amount'           => (float)($_POST['payment_amount'] ?? 0),
+            'rental_date'              => $_POST['rental_date'] ?: null,
+            'expiry_date'              => $_POST['expiry_date'] ?: null,
+            // The frontend JS sends the requirements as a comma-separated string from a hidden input.
+            // If empty, it's an empty string, which is correct.
+            'requirements'             => trim($_POST['requirements'] ?? ''),
+            'updated_by_user_id'       => $_SESSION['user']['id'] ?? null,
+        ];
+    
+        // 4. Merge the submitted data over the existing record.
+        // This ensures any fields not submitted by the form retain their original values.
+        $finalData = array_merge((array)$existingRecord, $submittedData);
+    
+        // 5. Pass the complete, final data to the model for updating.
+        if ($this->burialModel->updateBurial($finalData)) {
+            echo json_encode(['ok' => true, 'message' => 'Record updated successfully!']);
+        } else {
+            // The model's execute() returns true on success, false on failure.
+            // It can also indicate no rows were affected if the data was identical.
+            echo json_encode(['ok' => false, 'message' => 'No changes were detected or the update failed.']);
+        }
+    }
+
 
     private function makeTransactionId($suffixInt): string
     {
@@ -613,4 +695,275 @@ class AdminController extends Controller
         }
     }
 
+        /* ---------- JSON: For Renewal Polling ---------- */
+    public function fetchForRenewalData()
+    {
+        header('Content-Type: application/json');
+        try {
+            // This is the corrected query logic
+            $this->renewalModel = $this->model('Renewal');
+            $records = $this->renewalModel->getBurialsForRenewal();
+            echo json_encode(['ok' => true, 'records' => $records]);
+        } catch (Throwable $e) {
+            echo json_encode(['ok' => false, 'message' => 'Failed to load renewal data.']);
+        }
+        exit;
+    }
+
+public function renewals() {
+    $all_active_burials = $this->renewalModel->getBurialsForRenewal(); 
+    $history = $this->renewalModel->getRenewalHistory();
+    
+    $data = [
+        'title' => 'Renewals',
+        'all_burials' => $all_active_burials, 
+        'history' => $history
+    ];
+    
+    $this->view('admin/renewals', $data);
+}
+
+
+public function processRenewal() {
+    header('Content-Type: application/json');
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        echo json_encode(['ok' => false, 'message' => 'Invalid request method.']);
+        return;
+    }
+
+    $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    
+    $burial = $this->renewalModel->getDetailedBurialForRenewal($_POST['burial_id']);
+    
+    if (!$burial) {
+        echo json_encode(['ok' => false, 'message' => 'Burial record not found or is inactive.']);
+        return;
+    }
+
+    $oldExpiryDate = $burial->expiry_date;
+    $newRentalDate = $oldExpiryDate;
+
+    try {
+        $expiry = new DateTime($newRentalDate, new DateTimeZone('Asia/Manila'));
+        $expiry->modify('+5 years');
+        $newExpiryDate = $expiry->format('Y-m-d H:i:s');
+    } catch (Exception $e) {
+        echo json_encode(['ok' => false, 'message' => 'Invalid expiry date format.']);
+        return;
+    }
+
+    $data = [
+        'burial_id'            => $burial->burial_id,
+        'previous_expiry_date' => $oldExpiryDate,
+        'new_rental_date'      => $newRentalDate,
+        'new_expiry_date'      => $newExpiryDate,
+        'payment_amount'       => $_POST['payment_amount'],
+        'payment_date'         => $_POST['payment_date'],
+        'payer_name'           => $_POST['payer_name'],
+        'payer_email'          => trim($_POST['payer_email']),
+        'processed_by_user_id' => $_SESSION['user']['id'],
+        'receipt_email_status' => 'Not sent (no email provided).'
+    ];
+
+    $result = $this->renewalModel->createRenewal($data);
+
+    if ($result && isset($result['ok']) && $result['ok']) {
+        $email_status = $data['receipt_email_status'];
+
+        if (!empty($data['payer_email'])) {
+            if (!class_exists('EmailHelper')) { 
+                require_once APPROOT . '/helpers/Email.php'; 
+            }
+
+            $email_data_payload = [
+                'payer_name'         => $data['payer_name'],
+                'transaction_id'     => $result['transaction_id'],
+                'payment_date'       => $data['payment_date'],
+                'payment_amount'     => $data['payment_amount'],
+                'new_expiry_date'    => $data['new_expiry_date'],
+                'deceased_name'      => trim($burial->deceased_first_name . ' ' . $burial->deceased_last_name),
+                'plot_label'         => trim(($burial->block_title ?? 'N/A') . ' - ' . ($burial->plot_number ?? 'N/A')),
+            ];
+
+            $data_for_template = ['emailData' => $email_data_payload];
+            
+            $body = $this->view('emails/renewal_confirmation', $data_for_template, true);
+            $subject = 'Official Receipt for Your Renewal - Plaridel Public Cemetery';
+
+            $emailHelper = new EmailHelper();
+            $email_ok = $emailHelper->sendEmail($data['payer_email'], $data['payer_name'], $subject, $body);
+
+            $email_status = ($email_ok === true) ? 'Sent successfully.' : 'Failed: '.$email_ok;
+            $this->renewalModel->updateEmailStatus($result['transaction_id'], $email_status);
+        }
+
+        echo json_encode([
+            'ok' => true, 
+            'message' => 'Renewal successful! Rental period updated.', 
+            'email_status' => $email_status,
+            'burial_id' => $burial->burial_id // ITO ANG IDINAGDAG
+        ]);
+
+    } else {
+        echo json_encode(['ok' => false, 'message' => 'Failed to process renewal in database.']);
+    }
+}
+
+public function processVacate() {
+    header('Content-Type: application/json');
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        echo json_encode(['ok' => false, 'message' => 'Invalid request method.']);
+        return;
+    }
+    
+    // Kukunin muna natin ang kumpletong detalye para magamit sa email
+    $burial = $this->renewalModel->getDetailedBurialForRenewal($_POST['burial_id']);
+    if (!$burial) {
+        echo json_encode(['ok' => false, 'message' => 'Burial record not found.']);
+        return;
+    }
+
+    // Ituloy ang pag-vacate ng plot
+    $ok = $this->renewalModel->vacatePlot($burial->burial_id, $burial->plot_id, $_SESSION['user']['id']);
+    
+    if ($ok) {
+        $email_status = 'Not sent (no email on record).';
+
+        // Kung successful ang pag-vacate AT may email, magpadala ng notification
+        if (!empty($burial->interment_email)) {
+            if (!class_exists('EmailHelper')) { 
+                require_once APPROOT . '/helpers/Email.php'; 
+            }
+
+            $email_data_payload = [
+                'interment_name' => $burial->interment_full_name,
+                'deceased_name'  => trim($burial->deceased_first_name . ' ' . $burial->deceased_last_name),
+                'plot_label'     => trim(($burial->block_title ?? 'N/A') . ' - ' . ($burial->plot_number ?? 'N/A')),
+                'vacate_date'    => date('F d, Y') // Petsa ngayon
+            ];
+
+            $data_for_template = ['emailData' => $email_data_payload];
+            
+            $body = $this->view('emails/vacate_confirmation', $data_for_template, true);
+            $subject = 'Confirmation of Plot Vacation - Plaridel Public Cemetery';
+
+            $emailHelper = new EmailHelper();
+            $email_ok = $emailHelper->sendEmail($burial->interment_email, $burial->interment_full_name, $subject, $body);
+
+            $email_status = ($email_ok === true) ? 'Sent successfully.' : 'Failed: ' . $email_ok;
+        }
+
+        // Mag-reply sa request na may kasamang email status
+        echo json_encode([
+            'ok' => true, 
+            'message' => 'Plot has been vacated and record is archived.',
+            'email_status' => $email_status
+        ]);
+
+    } else {
+        echo json_encode(['ok' => false, 'message' => 'Failed to vacate plot.']);
+    }
+}
+
+/* ---- USER STATUS TOGGLE ---- */
+    public function setUserActive()
+    {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success'=>false,'message'=>'Invalid method']); return;
+        }
+
+        $id        = (int)($_POST['id'] ?? 0);
+        $is_active = (int)($_POST['is_active'] ?? 0);
+
+        if ($id <= 0) { echo json_encode(['success'=>false,'message'=>'Missing user id']); return; }
+
+        $ok = $this->userModel->toggleUserActiveStatus($id, $is_active);
+
+        echo json_encode($ok
+            ? ['success'=>true,'message'=>'User status updated.']
+            : ['success'=>false,'message'=>'Failed to update user status.']
+        );
+    }
+
+  
+  public function resetPassword()
+    {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid method']); return;
+        }
+    
+        $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+        $userId = $_POST['user_id'] ?? null;
+        $email  = $_POST['email'] ?? null;
+    
+        if (!$userId || !$email) {
+            echo json_encode(['success' => false, 'message' => 'Missing parameters']); return;
+        }
+    
+        try {
+            $db = new Database(); 
+    
+            // 1. Fetch user to get name and ID
+            $db->query("SELECT id, email, first_name, last_name, role FROM users WHERE id = :id LIMIT 1");
+            $db->bind(':id', $userId);
+            $user = $db->single();
+    
+            // Validation: Check user, email, and ensure the role is 'staff'
+            if (!$user || strcasecmp($user->email, $email) !== 0 || $user->role !== 'staff') {
+                echo json_encode(['success' => false, 'message' => 'User not authorized for password reset.']); return;
+            }
+    
+            // 2. TOKEN GENERATION (RAW token)
+            $rawToken = bin2hex(random_bytes(32)); 
+            $expires  = (new DateTime('+2 hours', new DateTimeZone('Asia/Manila')))->format('Y-m-d H:i:s');
+            
+            // Delete old tokens
+            $db->query('DELETE FROM password_resets WHERE user_id = :user_id OR expires_at < NOW()');
+            $db->bind(':user_id', $userId);
+            $db->execute();
+            
+            // Insert the RAW token
+            $db->query('INSERT INTO password_resets (user_id, token, expires_at) VALUES (:u, :t, :e)');
+            $db->bind(':u', $userId);
+            $db->bind(':t', $rawToken); // RAW token
+            $db->bind(':e', $expires);
+            $db->execute();
+    
+            // 3. Set the final link
+            $reset_link = URLROOT . "/auth/resetPassword?token={$rawToken}"; 
+            
+            // 4. Prepare data for the RE-USED TEMPLATE (emails/reset_password)
+            $email_data_payload = [
+                // FIX: Gagamitin ang $user->first_name lang para maayos ang Undefined array key error.
+                'full_name'  => $user->first_name, 
+                'reset_link' => $reset_link,       
+            ];
+            
+            // Render the ORIGINAL emails/reset_password template
+            if (!class_exists('EmailHelper')) { 
+                require_once APPROOT . '/helpers/Email.php'; 
+            }
+            
+            // Ang template mo ay nangangailangan ng ['data' => $email_data_payload]
+            $body = $this->view('emails/reset_password', ['data' => $email_data_payload], true); 
+            $subject = 'Password Reset Request - Plaridel Public Cemetery System';
+    
+            $emailHelper = new EmailHelper();
+            $recipient_name = $user->first_name . ' ' . $user->last_name; 
+            $sent = $emailHelper->sendEmail($user->email, $recipient_name, $subject, $body);
+    
+            if ($sent !== true) {
+                error_log("Failed to send reset email: " . $sent);
+                echo json_encode(['success' => false, 'message' => 'Failed to send email. Mailer Error: ' . $sent]); return;
+            }
+    
+            echo json_encode(['success' => true, 'message' => 'A password reset link was emailed.']);
+    
+        } catch (Throwable $e) {
+            error_log("Unexpected resetPassword error: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Unexpected error. Please check server logs.']);
+        }
+    }
 }

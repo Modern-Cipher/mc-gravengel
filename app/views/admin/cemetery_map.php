@@ -17,8 +17,8 @@
     <div class="legend-items">
         <div class="legend-item"><span class="legend-color vacant"></span> Vacant</div>
         <div class="legend-item"><span class="legend-color occupied"></span> Occupied</div>
-        <div class="legend-item"><span class="legend-color reserved"></span> Reserved</div>
-        <div class="legend-item"><span class="legend-color bone"></span> Bone</div>
+        <!-- <div class="legend-item"><span class="legend-color reserved"></span> Reserved</div>
+        <div class="legend-item"><span class="legend-color bone"></span> Bone</div> -->
     </div>
 </div>
 

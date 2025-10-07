@@ -1,0 +1,214 @@
+/* public/css/profile.css */
+.profile-card, .action-card {
+    background-color: #fff;
+    border: none;
+    border-radius: .75rem;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,.08);
+    margin-bottom: 2rem;
+}
+.profile-card { padding: 2rem; }
+.action-card { padding: 0; }
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+.profile-avatar-container {
+    width: 90px;
+    height: 90px;
+    flex-shrink: 0;
+    position: relative;
+}
+
+/* Bagong style para sa zoom feature */
+.profile-avatar-container.zoomable .profile-avatar {
+    cursor: zoom-in;
+}
+
+.profile-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--maroon);
+}
+
+.profile-avatar-icon {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 4px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    color: #adb5bd;
+    font-size: 3rem;
+}
+
+.profile-info h4 {
+    margin-bottom: 0.25rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+.profile-info p { margin: 0; color: #6c757d; font-size: 0.9rem; }
+.profile-info .designation { font-weight: 600; color: var(--maroon); }
+
+.profile-header .btn-edit-info {
+    margin-left: auto;
+    background-color: var(--maroon);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+}
+.profile-header .btn-edit-info:hover {
+    background-color: var(--dark-maroon);
+}
+
+/* Styles para sa card na may header/footer/body */
+.action-card .card-header {
+    background: none;
+    border-bottom: 1px solid #eee;
+    padding: 1.5rem 2rem;
+}
+.action-card .card-header .card-title-strong {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+.action-card .card-body {
+    padding: 1rem 2rem 2rem 2rem;
+}
+.action-card .card-footer {
+    background: none;
+    border-top: 1px solid #eee;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.card-title-strong {
+    font-weight: 700;
+    color: var(--dark-maroon);
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.action-card .form-control { border-radius: 8px; }
+.action-card .btn { border-radius: 8px; font-weight: 600; }
+.activity-list { list-style: none; padding: 0; margin: 0; }
+.activity-item {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f0f0f0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+.activity-item:last-child { border-bottom: none; padding-bottom: 0; }
+.activity-item:first-child { padding-top: 0; }
+
+.delete-account-btn {
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+    text-decoration: none;
+    background-color: #f8d7da;
+    color: #842029;
+    border: 1px solid #f5c2c7;
+    transition: all 0.2s ease-in-out;
+}
+.delete-account-btn:hover {
+    background-color: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
+
+/* MODAL STYLES */
+#editProfileModal .modal-content { border-radius: 1rem; border: none; }
+#editProfileModal .modal-header {
+    background-color: var(--dark-maroon);
+    color: white;
+    border-bottom: none;
+    padding: 1rem 1.5rem;
+}
+#editProfileModal .modal-header .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+#editProfileModal .modal-title { font-weight: 600; }
+
+#editProfileModal .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 1.5rem 2rem;
+}
+#editProfileModal .form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+#editProfileModal .form-control {
+    border-radius: 8px;
+    padding: 0.6rem 0.9rem;
+}
+
+#editProfileModal .modal-footer {
+    border-top: 1px solid #e9ecef;
+    padding: 1rem 1.5rem;
+}
+
+/* IMAGE UPLOAD AREA */
+#imageUploadForm {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+.modal-avatar {
+    width: 120px;
+    height: 120px;
+    position: relative;
+    display: inline-block;
+}
+#modal-profile-image {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #dee2e6;
+    cursor: pointer;
+    transition: filter 0.2s ease;
+}
+#modal-profile-image:hover { filter: brightness(0.9); }
+
+#imageUploadInput { display: none; }
+
+.image-upload-area .btn-upload {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* HIDDEN SCROLLBAR (PRO LOOK) */
+#editProfileModal .modal-body::-webkit-scrollbar { width: 8px; }
+#editProfileModal .modal-body::-webkit-scrollbar-track { background: transparent; }
+#editProfileModal .modal-body::-webkit-scrollbar-thumb {
+  background-color: #d1d1d1;
+  border-radius: 10px;
+  border: 3px solid #fff;
+}
+#editProfileModal .modal-body {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d1d1 #fff;
+}

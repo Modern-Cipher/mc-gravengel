@@ -1,532 +1,968 @@
 <?php
 // app/controllers/StaffController.php
+// Full clone of AdminController, but accessible to role 'staff' (and 'admin').
+// Routes example: /staff/dashboard, /staff/burialRecords, etc.
+// Views reused from admin/* so you don't need to duplicate blades.
+
 class StaffController extends Controller
 {
-    private $burialModel;
     private $userModel;
-    private $db; // fallback when model helpers are missing
-
+    private $mapModel;
+    private $burialModel;
+    private $renewalModel;
+    
     public function __construct()
     {
         if (session_status() === PHP_SESSION_NONE) session_start();
-        if (empty($_SESSION['user'])) { header('Location: ' . URLROOT . '/auth/login'); exit; }
-
-        // strictly allow staff (and optionally admin)
-        $role = $_SESSION['user']['role'] ?? '';
-        if ($role !== 'staff' && $role !== 'admin') {
-            header('Location: ' . URLROOT . '/errors/403'); exit;
+        if (empty($_SESSION['user'])) {
+            header('Location: ' . URLROOT . '/auth/login'); exit;
         }
 
-        $this->burialModel = $this->model('Burial');
-        $this->userModel   = $this->model('User');
+        // Allow both admin and staff to access this controller (full features).
+        $role = $_SESSION['user']['role'] ?? '';
+        if (!in_array($role, ['staff'], true)) {
+            header('Location: ' . URLROOT . '/auth/login'); exit;
+        }
 
-        if (class_exists('Database')) $this->db = new Database;
+        $this->userModel    = $this->model('User');
+        $this->mapModel     = $this->model('Map');
+        $this->burialModel  = $this->model('Burial');
+        $this->renewalModel = $this->model('Renewal');
+
+        // IMPORTANT: Unlike AdminController, walang block dito.
+        // Staff can call everything; visibility via menu na lang sa UI.
     }
 
-    /* =======================================================
-     * HOME (dashboard)
-     * ======================================================= */
-    // GET /staff or /staff/index
-    public function index()
+    /* =================== NAV / LANDING =================== */
+    public function index() { redirect('staff/burialRecords'); }
+
+    public function dashboard()
     {
-        $data = ['title' => 'Dashboard'];
-        $this->view('staff/index', $data);
+        // NOTE: these model helpers must exist — countActive(), countExpired(), countTodayTransactions()
+        $this->view('staff/index', [ // reuse admin view
+            'title'           => 'Dashboard',
+            'name'            => $_SESSION['user']['name'] ?? 'Staff',
+            'must_change_pwd' => (int)($_SESSION['user']['must_change_pwd'] ?? 0),
+            'metrics'         => [
+                'active'   => method_exists($this->burialModel,'countActive')             ? (int)$this->burialModel->countActive()             : 0,
+                'expired'  => method_exists($this->burialModel,'countExpired')            ? (int)$this->burialModel->countExpired()            : 0,
+                'todayTx'  => method_exists($this->burialModel,'countTodayTransactions')  ? (int)$this->burialModel->countTodayTransactions()  : 0,
+                'staff'    => method_exists($this->userModel,'countStaffUsers')           ? (int)$this->userModel->countStaffUsers()           : 0,
+            ],
+        ]);
     }
 
-    // GET /staff/dashboardCards  (counts for the 4 cards)
+    /* =================== PAGES =================== */
+    public function cemeteryMap()
+    {
+        $blocks = $this->mapModel->getAllBlocks();
+        $this->view('staff/cemetery_map', ['title'=>'Cemetery Map','blocks'=>$blocks]);
+    }
+
+    public function userAccounts()
+    {
+        $uid   = $_SESSION['user']['id'];
+        $users = $this->userModel->getAllUsersExcluding($uid);
+        $this->view('staff/user_accounts', ['title'=>'User Accounts','users'=>$users]);
+    }
+
+    public function profile()
+    {
+        $uid  = $_SESSION['user']['id'];
+        $user = $this->userModel->findById($uid);
+        $this->view('staff/profile', ['title'=>'My Profile','user'=>$user]);
+    }
+
+    public function contact_us()
+    {
+        $this->view('staff/contact_us', ['title'=>'Contact Us']);
+    }
+
+    /* =================== MAP =================== */
+    public function updateBlock()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST'){ redirect('staff/cemeteryMap'); return; }
+
+        $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+        $data = [
+            'id'         => $_POST['id'],
+            'title'      => trim($_POST['title']),
+            'offset_x'   => (int)$_POST['offset_x'],
+            'offset_y'   => (int)$_POST['offset_y'],
+            'modal_rows' => (int)$_POST['modal_rows'],
+            'modal_cols' => (int)$_POST['modal_cols'],
+        ];
+        if ($this->mapModel->updateBlock($data)) {
+            $_SESSION['flash_message']='Block details saved successfully!';
+            $_SESSION['flash_type']='success';
+            redirect('staff/cemeteryMap');
+        } else {
+            die('Something went wrong');
+        }
+    }
+
+    /* =================== USERS =================== */
+    public function addStaff()
+    {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST'){
+            echo json_encode(['success'=>false,'message'=>'Invalid request method.']); return;
+        }
+
+        $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+        $data = [
+            'first_name'  => trim($_POST['first_name'] ?? ''),
+            'last_name'   => trim($_POST['last_name'] ?? ''),
+            'username'    => trim($_POST['username'] ?? ''),
+            'email'       => trim($_POST['email'] ?? ''),
+            'phone'       => trim($_POST['phone'] ?? ''),
+            'staff_id'    => trim($_POST['staff_id'] ?? ''),
+            'designation' => trim($_POST['designation'] ?? ''),
+        ];
+
+        if (in_array('', [$data['first_name'],$data['last_name'],$data['username'],$data['email'],$data['staff_id'],$data['designation']], true)){
+            echo json_encode(['success'=>false,'message'=>'Please fill in all required fields.']); return;
+        }
+        if ($this->userModel->findByUsernameOrEmail($data['username'])) {
+            echo json_encode(['success'=>false,'message'=>'Username or email is already taken.']); return;
+        }
+
+        $temp_password           = substr(bin2hex(random_bytes(8)), 0, 16);
+        $data['password_hash']   = password_hash($temp_password, PASSWORD_DEFAULT);
+        $data['must_change_pwd'] = 1;
+
+        $user_id = $this->userModel->addStaffUser($data);
+        if ($user_id) {
+            $emailHelper = new EmailHelper();
+            $email_data  = ['full_name'=>$data['first_name'].' '.$data['last_name'], 'temp_password'=>$temp_password];
+            $body        = $this->view('emails/welcome_staff', $email_data, true);
+            $ok          = $emailHelper->sendEmail($data['email'], $email_data['full_name'], 'Welcome to Plaridel Public Cemetery System!', $body);
+
+            echo json_encode($ok===true
+                ? ['success'=>true,'message'=>'Staff account created and welcome email sent!','temp_password'=>$temp_password,'user'=>$email_data]
+                : ['success'=>false,'message'=>'Account created, but failed to send welcome email. '.$ok]
+            );
+        } else {
+            echo json_encode(['success'=>false,'message'=>'Failed to create user account.']);
+        }
+    }
+
+    // JSON diff update; no-op kung walang nabago
+    public function updateStaff()
+    {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success'=>false,'message'=>'Invalid request method.']); return;
+        }
+
+        $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+        $id    = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) { echo json_encode(['success'=>false,'message'=>'Missing user id.']); return; }
+
+        $current = $this->userModel->findById($id);
+        if (!$current) { echo json_encode(['success'=>false,'message'=>'User not found.']); return; }
+
+        $incoming = [
+            'first_name'  => trim($_POST['first_name']  ?? ''),
+            'last_name'   => trim($_POST['last_name']   ?? ''),
+            'username'    => trim($_POST['username']    ?? ''),
+            'email'       => trim($_POST['email']       ?? ''),
+            'phone'       => trim($_POST['phone']       ?? ''),
+            'staff_id'    => trim($_POST['staff_id']    ?? ''),
+            'designation' => trim($_POST['designation'] ?? ''),
+        ];
+        $payload = [];
+        foreach ($incoming as $k => $v) if ($v !== '') $payload[$k] = $v;
+
+        $changes = [];
+        foreach ($payload as $k => $v) {
+            $old = isset($current->$k) ? (string)$current->$k : '';
+            if ($old !== $v) $changes[$k] = $v;
+        }
+        if (empty($changes)) { echo json_encode(['success'=>true,'message'=>'No changes detected.']); return; }
+
+        if (isset($changes['username']) || isset($changes['email'])) {
+            $check = $changes['username'] ?? $current->username;
+            $exists = $this->userModel->findByUsernameOrEmail($check);
+            if ($exists && (int)$exists->id !== $id) {
+                echo json_encode(['success'=>false,'message'=>'Username or email is already taken.']); return;
+            }
+        }
+
+        $ok = false;
+        if (method_exists($this->userModel, 'updateStaffUser')) {
+            $ok = (bool)$this->userModel->updateStaffUser($id, $changes);
+        } elseif (method_exists($this->userModel, 'update')) {
+            $changes['id'] = $id;
+            $ok = (bool)$this->userModel->update($changes);
+        } elseif (method_exists($this->userModel, 'updateById')) {
+            $ok = (bool)$this->userModel->updateById($id, $changes);
+        } else {
+            echo json_encode(['success'=>false,'message'=>'Update method not available in User model.']); return;
+        }
+
+        echo json_encode($ok ? ['success'=>true,'message'=>'User details updated.']
+                             : ['success'=>false,'message'=>'Failed to update user.']);
+    }
+
+    /* =================== BURIALS =================== */
+    public function burialRecords()
+    {
+        $records = $this->burialModel->getAllBurialRecords(); // is_active = 1
+        $this->view('staff/burial_records', ['title'=>'Burial Records','records'=>$records]);
+    }
+
+    public function addBurial()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $plots = $this->burialModel->getVacantPlotsFromPlots();
+            $this->view('staff/add_burial', ['plots'=>$plots]);
+            return;
+        }
+
+        header('Content-Type: application/json');
+        $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+        $burialIdIncoming = trim($_POST['burial_id'] ?? '');
+        $interment_email  = trim($_POST['interment_email'] ?? '');
+
+        // Basic optional email validation (format + max length 150)
+        if ($interment_email !== '') {
+            if (strlen($interment_email) > 150) {
+                echo json_encode(['ok'=>false,'message'=>'Interment email must be at most 150 characters.']); return;
+            }
+            if (!filter_var($interment_email, FILTER_VALIDATE_EMAIL)) {
+                echo json_encode(['ok'=>false,'message'=>'Please enter a valid interment email address.']); return;
+            }
+        }
+
+        $data = [
+            'plot_id'                  => (int)($_POST['plot_id'] ?? 0),
+            'deceased_first_name'      => trim($_POST['deceased_first_name'] ?? ''),
+            'deceased_middle_name'     => trim($_POST['deceased_middle_name'] ?? ''),
+            'deceased_last_name'       => trim($_POST['deceased_last_name'] ?? ''),
+            'deceased_suffix'          => trim($_POST['deceased_suffix'] ?? ''),
+            'age'                      => trim($_POST['age'] ?? ''),
+            'sex'                      => $_POST['sex'] ?? '',
+            'date_born'                => $_POST['date_born'] ?: null,
+            'date_died'                => $_POST['date_died'] ?: null,
+            'cause_of_death'           => trim($_POST['cause_of_death'] ?? ''),
+            'grave_level'              => $_POST['grave_level'] ?? '',
+            'grave_type'               => $_POST['grave_type'] ?? '',
+            'interment_full_name'      => trim($_POST['interment_full_name'] ?? ''),
+            'interment_relationship'   => $_POST['interment_relationship'] ?? '',
+            'interment_contact_number' => $_POST['interment_contact_number'] ?? '',
+            'interment_address'        => trim($_POST['interment_address'] ?? ''),
+            'interment_email'          => ($interment_email === '') ? null : $interment_email, // NEW
+            'payment_amount'           => (float)($_POST['payment_amount'] ?? 0),
+            'rental_date'              => $_POST['rental_date'] ?: null,
+            'expiry_date'              => $_POST['expiry_date'] ?: null,
+            'requirements'             => $_POST['requirements'] ?? '',
+        ];
+
+        foreach (['plot_id','deceased_first_name','deceased_last_name','date_died','interment_full_name','interment_relationship'] as $k){
+            if (empty($data[$k])) { echo json_encode(['ok'=>false,'message'=>'Missing required field: '.$k]); return; }
+        }
+
+        $uid = $_SESSION['user']['id'] ?? null;
+
+        if ($burialIdIncoming === '') {
+            $data['created_by_user_id'] = $uid;
+
+            $res = $this->burialModel->create($data);
+            if (!$res) { echo json_encode(['ok'=>false,'message'=>'Failed to save']); return; }
+
+            $transactionId = $res['transaction_id'] ?? ($this->makeTransactionId($res['insert_id'] ?? 0));
+            echo json_encode([
+                'ok' => true,
+                'message' => 'Saved',
+                'burial_id' => $res['burial_id'] ?? null,
+                'transaction_id' => $transactionId
+            ]);
+        } else {
+            $data['burial_id']          = $burialIdIncoming;
+            $data['updated_by_user_id'] = $uid;
+
+            $ok = $this->burialModel->updateBurial($data);
+            if (!$ok) { echo json_encode(['ok'=>false,'message'=>'Failed to update']); return; }
+
+            $r = $this->burialModel->findAnyByBurialId($burialIdIncoming);
+            $transactionId = $r->transaction_id ?? $this->makeTransactionId($r->id ?? 0);
+
+            echo json_encode([
+                'ok' => true,
+                'message' => 'Updated',
+                'burial_id' => $burialIdIncoming,
+                'transaction_id' => $transactionId
+            ]);
+        }
+    }
+
+    /**
+     * Handles updating a burial record from the edit modal.
+     * It fetches the current record and merges submitted form data over it
+     * to prevent accidental data loss for fields that were not submitted.
+     */
+    public function updateBurial()
+    {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['ok' => false, 'message' => 'Invalid request method.']);
+            return;
+        }
+    
+        $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    
+        $burialId = trim($_POST['burial_id'] ?? '');
+        if (empty($burialId)) {
+            echo json_encode(['ok' => false, 'message' => 'Missing burial ID.']);
+            return;
+        }
+    
+        // 1. Fetch the existing record to serve as a base, preventing data loss
+        $existingRecord = $this->burialModel->findAnyByBurialId($burialId);
+        if (!$existingRecord) {
+            echo json_encode(['ok' => false, 'message' => 'Burial record not found.']);
+            return;
+        }
+    
+        // 2. Validate incoming email, if provided
+        $interment_email  = trim($_POST['interment_email'] ?? '');
+        if ($interment_email !== '' && !filter_var($interment_email, FILTER_VALIDATE_EMAIL)) {
+            echo json_encode(['ok' => false, 'message' => 'Please enter a valid email address.']);
+            return;
+        }
+    
+        // 3. Prepare an array of the submitted data for merging
+        $submittedData = [
+            'burial_id'                => $burialId,
+            'deceased_first_name'      => trim($_POST['deceased_first_name'] ?? ''),
+            'deceased_middle_name'     => trim($_POST['deceased_middle_name'] ?? ''),
+            'deceased_last_name'       => trim($_POST['deceased_last_name'] ?? ''),
+            'deceased_suffix'          => trim($_POST['deceased_suffix'] ?? ''),
+            'age'                      => trim($_POST['age'] ?? ''),
+            'sex'                      => $_POST['sex'] ?? '',
+            'date_born'                => $_POST['date_born'] ?: null,
+            'date_died'                => $_POST['date_died'] ?: null,
+            'cause_of_death'           => trim($_POST['cause_of_death'] ?? ''),
+            'grave_level'              => $_POST['grave_level'] ?? '',
+            'grave_type'               => $_POST['grave_type'] ?? '',
+            'interment_full_name'      => trim($_POST['interment_full_name'] ?? ''),
+            'interment_relationship'   => $_POST['interment_relationship'] ?? '',
+            'interment_contact_number' => $_POST['interment_contact_number'] ?? '',
+            'interment_address'        => trim($_POST['interment_address'] ?? ''),
+            'interment_email'          => ($interment_email === '') ? null : $interment_email,
+            'payment_amount'           => (float)($_POST['payment_amount'] ?? 0),
+            'rental_date'              => $_POST['rental_date'] ?: null,
+            'expiry_date'              => $_POST['expiry_date'] ?: null,
+            // The frontend JS sends the requirements as a comma-separated string from a hidden input.
+            // If empty, it's an empty string, which is correct.
+            'requirements'             => trim($_POST['requirements'] ?? ''),
+            'updated_by_user_id'       => $_SESSION['user']['id'] ?? null,
+        ];
+    
+        // 4. Merge the submitted data over the existing record.
+        // This ensures any fields not submitted by the form retain their original values.
+        $finalData = array_merge((array)$existingRecord, $submittedData);
+    
+        // 5. Pass the complete, final data to the model for updating.
+        if ($this->burialModel->updateBurial($finalData)) {
+            echo json_encode(['ok' => true, 'message' => 'Record updated successfully!']);
+        } else {
+            // The model's execute() returns true on success, false on failure.
+            // It can also indicate no rows were affected if the data was identical.
+            echo json_encode(['ok' => false, 'message' => 'No changes were detected or the update failed.']);
+        }
+    }
+
+
+    private function makeTransactionId($suffixInt): string
+    {
+        $suffixInt = (int)$suffixInt;
+        $seq = str_pad((string)($suffixInt % 1000), 3, '0', STR_PAD_LEFT);
+        return date('Ymd') . '-' . $seq;
+    }
+
+    /* ---- JSON/PRINT ---- */
+    public function burialJson($burial_id)
+    {
+        header('Content-Type: application/json');
+        if (!$burial_id) { echo json_encode(['ok'=>false,'message'=>'No id']); return; }
+        $r = $this->burialModel->findAnyByBurialId($burial_id);
+        if (!$r) { echo json_encode(['ok'=>false,'message'=>'Not found']); return; }
+        echo json_encode(['ok'=>true,'data'=>$r]);
+    }
+
+    public function printBurialForm($burial_id)
+    {
+        $rec = $this->burialModel->findAnyByBurialId($burial_id);
+        if (!$rec) { echo '<h3 style="padding:16px">Burial record not found.</h3>'; return; }
+        $this->view('staff/print_burial_form', ['r' => $rec]);
+    }
+    public function printContract($burial_id)
+    {
+        $rec = $this->burialModel->findAnyByBurialId($burial_id);
+        if (!$rec) { echo '<h3 style="padding:16px">Burial record not found.</h3>'; return; }
+        $this->view('staff/print_contract', ['r' => $rec]);
+    }
+    public function printQrTicket($burial_id)
+    {
+        $rec = $this->burialModel->findAnyByBurialId($burial_id);
+        if (!$rec) { echo '<h3 style="padding:16px">Burial record not found.</h3>'; return; }
+        $this->view('staff/print_qr_ticket', ['r' => $rec]);
+    }
+
+    /* ---- Details JSON ---- */
+    public function getBurialDetails($burial_id)
+    {
+        header('Content-Type: application/json');
+        if (empty($burial_id)) { echo json_encode(['error'=>'No burial ID']); return; }
+        $r = $this->burialModel->findAnyByBurialId($burial_id);
+        echo json_encode($r);
+    }
+
+    /* ---- Delete / Archive / Restore ----
+       * IMPORTANT: Archive/Restore DO NOT change plot status.
+       * Only DELETE frees the plot (if you still want that).
+    */
+    public function deleteBurial($burial_id)
+    {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['ok'=>false,'message'=>'Invalid method']); return;
+        }
+        $burial_id = trim($burial_id ?? '');
+        if ($burial_id === '') { echo json_encode(['ok'=>false,'message'=>'Missing burial id']); return; }
+
+        $ok = $this->burialModel->deleteByBurialId($burial_id);
+        echo json_encode(['ok'=>$ok, 'message'=>$ok?'Deleted':'Failed to delete']);
+    }
+
+    public function archivedBurials()
+    {
+        $records = $this->burialModel->getAllBurialRecordsArchived(); // is_active = 0
+        $this->view('staff/archived_burials', ['title'=>'Archived Burials','records'=>$records]);
+    }
+
+    public function archiveBurial($burial_id)
+    {
+        header('Content-Type: application/json');
+        if (empty($burial_id)) { echo json_encode(['ok'=>false,'message'=>'No burial ID']); return; }
+        $ok = $this->burialModel->archiveByBurialId($burial_id);
+        echo json_encode(['ok'=>(bool)$ok, 'message'=>$ok?'Archived':'Archive failed']);
+    }
+
+    public function restoreBurial($burial_id)
+    {
+        header('Content-Type: application/json');
+        if (empty($burial_id)) { echo json_encode(['ok'=>false,'message'=>'No burial ID']); return; }
+        $ok = $this->burialModel->restoreByBurialId($burial_id);
+        echo json_encode(['ok'=>(bool)$ok, 'message'=>$ok?'Restored':'Restore failed']);
+    }
+
+    /* =================== LOGS & REPORTS =================== */
+    public function logsReports()
+    {
+        $this->view('staff/logs_reports', ['title' => 'Logs & Reports']);
+    }
+
+    public function fetchActivityLogs()
+    {
+        header('Content-Type: application/json');
+
+        $from = $_GET['from'] ?? '';
+        $to   = $_GET['to']   ?? '';
+        $q    = trim($_GET['q'] ?? '');
+
+        $db = new Database();
+        $parts = [];
+
+        // Create
+        $parts[] = "
+          SELECT
+            sd.staff_id AS staff_id,
+            u.username  AS username,
+            b.created_at AS ts,
+            CONCAT('Added Burial Record ', b.burial_id, ' for ', mb.title, ' — ', p.plot_number) AS action_text,
+            'create_burial' AS kind
+          FROM burials b
+          JOIN plots p        ON p.id = b.plot_id
+          JOIN map_blocks mb  ON mb.id = p.map_block_id
+          LEFT JOIN users u   ON u.id = b.created_by_user_id
+          LEFT JOIN staff_details sd ON sd.user_id = u.id
+          WHERE 1=1
+        ";
+
+        // Update (no updated_at in schema)
+        $parts[] = "
+          SELECT
+            sd.staff_id AS staff_id,
+            u.username  AS username,
+            NULL AS ts,
+            CONCAT('Updated Burial Record ', b.burial_id, ' (', mb.title, ' — ', p.plot_number, ') — timestamp not available') AS action_text,
+            'update_burial' AS kind
+          FROM burials b
+          JOIN plots p        ON p.id = b.plot_id
+          JOIN map_blocks mb  ON mb.id = p.map_block_id
+          LEFT JOIN users u   ON u.id = b.updated_by_user_id
+          LEFT JOIN staff_details sd ON sd.user_id = u.id
+          WHERE b.updated_by_user_id IS NOT NULL
+        ";
+
+        // Login
+        $parts[] = "
+          SELECT
+            sd.staff_id AS staff_id,
+            u.username  AS username,
+            us.login_at AS ts,
+            'User login' AS action_text,
+            'login' AS kind
+          FROM user_sessions us
+          JOIN users u        ON u.id = us.user_id
+          LEFT JOIN staff_details sd ON sd.user_id = u.id
+          WHERE us.login_at IS NOT NULL
+        ";
+
+        // Logout
+        $parts[] = "
+          SELECT
+            sd.staff_id AS staff_id,
+            u.username  AS username,
+            us.logout_at AS ts,
+            'User logout' AS action_text,
+            'logout' AS kind
+          FROM user_sessions us
+          JOIN users u        ON u.id = us.user_id
+          LEFT JOIN staff_details sd ON sd.user_id = u.id
+          WHERE us.logout_at IS NOT NULL
+        ";
+
+        $sql  = "SELECT * FROM (".implode(" UNION ALL ", $parts).") X WHERE 1=1";
+        $bind = [];
+
+        if ($from !== '') { $sql .= " AND (ts IS NULL OR DATE(ts) >= :dfrom)"; $bind[':dfrom'] = $from; }
+        if ($to   !== '') { $sql .= " AND (ts IS NULL OR DATE(ts) <= :dto)";   $bind[':dto']   = $to;   }
+
+        if ($q !== '') {
+            $sql .= " AND (COALESCE(staff_id,'') LIKE :qq OR COALESCE(username,'') LIKE :qq OR COALESCE(action_text,'') LIKE :qq)";
+            $bind[':qq'] = "%{$q}%";
+        }
+
+        $sql .= " ORDER BY (ts IS NULL), ts DESC";
+
+        $db->query($sql);
+        foreach ($bind as $k=>$v) $db->bind($k,$v);
+        $rows = $db->resultSet();
+
+        echo json_encode(['ok'=>true,'rows'=>$rows]);
+    }
+
+    public function fetchTransactionReports()
+    {
+        header('Content-Type: application/json');
+
+        $from = $_GET['from'] ?? '';
+        $to   = $_GET['to']   ?? '';
+        $q    = trim($_GET['q'] ?? '');
+
+        $db  = new Database();
+        $sql = "
+          SELECT
+            b.transaction_id,
+            b.burial_id,
+            mb.title                     AS block_title,
+            p.plot_number,
+            b.interment_full_name,
+            b.interment_relationship,
+            b.interment_address,
+            b.interment_contact_number,
+            b.interment_email,               -- NEW
+            b.payment_amount,
+            b.rental_date,
+            b.expiry_date,
+            CONCAT_WS(' ',
+              b.deceased_first_name,
+              NULLIF(b.deceased_middle_name,''),
+              b.deceased_last_name,
+              NULLIF(b.deceased_suffix,'')
+            ) AS deceased_full_name,
+            b.sex,
+            b.age,
+            b.grave_level,
+            b.grave_type,
+            sd.staff_id                 AS created_by_staff_id,
+            u.username                  AS created_by_username,
+            b.created_at
+          FROM burials b
+          JOIN plots p        ON p.id = b.plot_id
+          JOIN map_blocks mb  ON mb.id = p.map_block_id
+          LEFT JOIN users u   ON u.id = b.created_by_user_id
+          LEFT JOIN staff_details sd ON sd.user_id = u.id
+          WHERE 1=1
+        ";
+
+        $bind = [];
+        if ($from !== '') { $sql .= " AND DATE(b.rental_date) >= :rfrom"; $bind[':rfrom'] = $from; }
+        if ($to   !== '') { $sql .= " AND DATE(b.rental_date) <= :rto";   $bind[':rto']   = $to;   }
+
+        if ($q !== '') {
+            $sql .= " AND (
+                b.transaction_id LIKE :qq OR
+                b.burial_id LIKE :qq OR
+                b.interment_full_name LIKE :qq OR
+                b.interment_contact_number LIKE :qq OR
+                b.interment_email LIKE :qq OR         -- NEW in search
+                p.plot_number LIKE :qq OR
+                mb.title LIKE :qq
+            )";
+            $bind[':qq'] = "%{$q}%";
+        }
+
+        $sql .= " ORDER BY b.rental_date DESC, b.created_at DESC";
+
+        $db->query($sql);
+        foreach ($bind as $k=>$v) $db->bind($k,$v);
+        $rows = $db->resultSet();
+
+        echo json_encode(['ok'=>true,'rows'=>$rows]);
+    }
+
+    /* ---------- JSON: dashboard cards counters ---------- */
     public function dashboardCards()
     {
         header('Content-Type: application/json');
         try {
-            // Active burials
-            $active = method_exists($this->burialModel, 'countActive')
-                ? (int)$this->burialModel->countActive()
-                : $this->scalar("SELECT COUNT(*) c FROM burials WHERE is_active=1");
-
-            // Expired rental (still marked active)
-            $expired = method_exists($this->burialModel, 'countExpired')
-                ? (int)$this->burialModel->countExpired()
-                : $this->scalar("SELECT COUNT(*) c
-                                 FROM burials
-                                 WHERE is_active=1 AND expiry_date IS NOT NULL AND expiry_date < NOW()");
-
-            // Today’s transactions (by rental_date date = today)
-            $today = method_exists($this->burialModel, 'countTransactionsToday')
-                ? (int)$this->burialModel->countTransactionsToday()
-                : $this->scalar("SELECT COUNT(*) c FROM burials WHERE DATE(rental_date) = CURDATE()");
-
-            // Staff accounts (active staff only)
-            $staff = method_exists($this->userModel, 'countActiveStaff')
-                ? (int)$this->userModel->countActiveStaff()
-                : $this->scalar("SELECT COUNT(*) c FROM users WHERE role='staff' AND is_active=1");
+            $active  = method_exists($this->burialModel, 'countActive') ? (int)$this->burialModel->countActive() : 0;
+            $expired = method_exists($this->burialModel, 'countExpired') ? (int)$this->burialModel->countExpired() : 0;
+            $today   = method_exists($this->burialModel, 'countTodayTransactions') ? (int)$this->burialModel->countTodayTransactions() : 0;
+            $staff   = method_exists($this->userModel,   'countStaffUsers') ? (int)$this->userModel->countStaffUsers() : 0;
 
             echo json_encode(['ok'=>true, 'active'=>$active, 'expired'=>$expired, 'today'=>$today, 'staff'=>$staff]);
         } catch (Throwable $e) {
-            echo json_encode(['ok'=>false, 'active'=>0, 'expired'=>0, 'today'=>0, 'staff'=>0, 'err'=>$e->getMessage()]);
+            echo json_encode(['ok'=>false, 'message'=>'Failed to load cards']);
         }
     }
 
-    // GET /staff/expiryEvents?from=YYYY-MM-DD&to=YYYY-MM-DD  (calendar)
+    /* ---------- JSON: calendar rental-expiry events ---------- */
     public function expiryEvents()
     {
+        // Always JSON
         header('Content-Type: application/json');
-        try {
-            $from = isset($_GET['from']) ? $_GET['from'] : date('Y-m-01');
-            $to   = isset($_GET['to'])   ? $_GET['to']   : date('Y-m-t');
 
-            if (method_exists($this->burialModel, 'getExpiryEventsRange')) {
-                $rows = $this->burialModel->getExpiryEventsRange($from, $to);
-            } else {
-                $sql = "
-                    SELECT 
-                        b.burial_id,
-                        b.interment_full_name,
-                        b.expiry_date,
-                        p.plot_number,
-                        mb.title AS block_title
-                    FROM burials b
-                    LEFT JOIN plots p       ON p.id = b.plot_id
-                    LEFT JOIN map_blocks mb ON mb.id = p.map_block_id
-                    WHERE b.is_active = 1
-                      AND b.expiry_date IS NOT NULL
-                      AND DATE(b.expiry_date) BETWEEN :f AND :t
-                    ORDER BY b.expiry_date ASC
-                ";
-                $this->db->query($sql);
-                $this->db->bind(':f', $from);
-                $this->db->bind(':t', $to);
-                $rows = $this->db->resultSet();
-            }
+        // Accept FullCalendar's ?start=&end= OR our ?from=&to=
+        $from = $_GET['from']  ?? $_GET['start'] ?? null;
+        $to   = $_GET['to']    ?? $_GET['end']   ?? null;
 
-            $events = [];
-            if ($rows) {
-                foreach ($rows as $r) {
-                    $start  = date('c', strtotime($r->expiry_date));
-                    $holder = trim((string)($r->interment_full_name ?? ''));
-                    $block  = (string)($r->block_title ?? '');
-                    $plot   = (string)($r->plot_number ?? '');
-                    $grave  = trim($block . ($plot !== '' ? ' — ' . $plot : ''));
-
-                    $events[] = [
-                        'title' => 'Expiry',
-                        'start' => $start,
-                        'extendedProps' => [
-                            'holder'    => $holder,
-                            'burial_id' => (string)($r->burial_id ?? ''),
-                            'block'     => $block,
-                            'plot'      => $plot,
-                            'grave'     => $grave,
-                            'expiry'    => $start
-                        ]
-                    ];
-                }
-            }
-
-            echo json_encode(['ok'=>true, 'events'=>$events]);
-        } catch (Throwable $e) {
-            echo json_encode(['ok'=>false, 'events'=>[], 'err'=>$e->getMessage()]);
-        }
-    }
-
-    /* =======================================================
-     * BURIAL RECORDS (list / archived)
-     * ======================================================= */
-
-    // GET /staff/burialRecords  (server-rendered table like admin)
-    public function burialRecords()
-    {
-        // load same dataset admin uses
-        if (method_exists($this->burialModel, 'getAllActiveWithPlot')) {
-            $records = $this->burialModel->getAllActiveWithPlot();
-        } else {
-            $sql = "
-                SELECT
-                    b.*,
-                    p.plot_number,
-                    mb.title AS block_title
-                FROM burials b
-                LEFT JOIN plots p       ON p.id = b.plot_id
-                LEFT JOIN map_blocks mb ON mb.id = p.map_block_id
-                WHERE b.is_active = 1
-                ORDER BY b.created_at DESC
-                LIMIT 2000
-            ";
-            $this->db->query($sql);
-            $records = $this->db->resultSet();
-        }
-
-        $data = ['title' => 'Burial Records', 'records' => $records ?: []];
-        $this->view('staff/burial_records', $data);
-    }
-
-    // GET /staff/archivedBurials
-    public function archivedBurials()
-    {
-        if (method_exists($this->burialModel, 'getAllArchivedWithPlot')) {
-            $records = $this->burialModel->getAllArchivedWithPlot();
-        } else {
-            $sql = "
-                SELECT
-                    b.*,
-                    p.plot_number,
-                    mb.title AS block_title
-                FROM burials b
-                LEFT JOIN plots p       ON p.id = b.plot_id
-                LEFT JOIN map_blocks mb ON mb.id = p.map_block_id
-                WHERE b.is_active = 0
-                ORDER BY b.archived_at DESC, b.updated_at DESC
-                LIMIT 2000
-            ";
-            $this->db->query($sql);
-            $records = $this->db->resultSet();
-        }
-
-        $data = ['title' => 'Archived Burials', 'records' => $records ?: []];
-        $this->view('staff/archived_burials', $data);
-    }
-
-    /* =======================================================
-     * ADD / EDIT / VIEW / ACTIONS (staff paths)
-     * ======================================================= */
-
-    // GET or POST /staff/addBurial
-    // - GET  -> show modal-wizard page (needs $data['plots'])
-    // - POST -> create/update; returns JSON (same payload as admin)
-    public function addBurial()
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            // GET: render the page
-            if (method_exists($this->burialModel, 'getVacantPlots')) {
-                $plots = $this->burialModel->getVacantPlots();
-            } else {
-                $sql = "SELECT id, plot_number FROM plots WHERE is_vacant = 1 ORDER BY plot_number ASC";
-                $this->db->query($sql);
-                $plots = $this->db->resultSet();
-            }
-            $this->view('staff/add_burial', ['title'=>'Add Burial', 'plots'=>$plots ?: []]);
+        // Basic guard
+        if (!$from || !$to) {
+            echo json_encode(['ok' => true, 'events' => []]);
             return;
         }
 
-        // POST: create or update (same as Admin, but stamp actor)
-        header('Content-Type: application/json');
+        // Check model method exists to avoid fatals
+        if (!method_exists($this->burialModel, 'getExpiryEventsInRange')) {
+            echo json_encode([
+                'ok' => false,
+                'events' => [],
+                'message' => 'Model method getExpiryEventsInRange() missing'
+            ]);
+            return;
+        }
 
         try {
-            $uid  = (int)($_SESSION['user']['id'] ?? 0);
-            $role = (string)($_SESSION['user']['role'] ?? 'staff');
-            if (!$uid) throw new Exception('Unauthorized');
+            $rows = $this->burialModel->getExpiryEventsInRange($from, $to);
+            $events = [];
 
-            // Collect expected payload (align with admin JS)
-            $payload = [
-                'burial_id'               => trim($_POST['burial_id'] ?? ''),
-                'plot_id'                 => (int)($_POST['plot_id'] ?? 0),
-                'deceased_first_name'     => trim($_POST['deceased_first_name'] ?? ''),
-                'deceased_middle_name'    => trim($_POST['deceased_middle_name'] ?? ''),
-                'deceased_last_name'      => trim($_POST['deceased_last_name'] ?? ''),
-                'deceased_suffix'         => trim($_POST['deceased_suffix'] ?? ''),
-                'age'                     => trim($_POST['age'] ?? ''),
-                'sex'                     => trim($_POST['sex'] ?? ''),
-                'date_born'               => trim($_POST['date_born'] ?? ''),
-                'date_died'               => trim($_POST['date_died'] ?? ''),
-                'cause_of_death'          => trim($_POST['cause_of_death'] ?? ''),
-                'grave_level'             => trim($_POST['grave_level'] ?? ''),
-                'grave_type'              => trim($_POST['grave_type'] ?? ''),
-                'interment_full_name'     => trim($_POST['interment_full_name'] ?? ''),
-                'interment_relationship'  => trim($_POST['interment_relationship'] ?? ''),
-                'interment_contact_number'=> trim($_POST['interment_contact_number'] ?? ''),
-                'interment_address'       => trim($_POST['interment_address'] ?? ''),
-                'interment_email'         => trim($_POST['interment_email'] ?? ''),
-                'payment_amount'          => trim($_POST['payment_amount'] ?? ''),
-                'rental_date'             => trim($_POST['rental_date'] ?? ''), // Y-m-d H:i:S (may be empty)
-                'expiry_date'             => trim($_POST['expiry_date'] ?? ''), // Y-m-d H:i:S (may be empty)
-                'requirements'            => trim($_POST['requirements'] ?? ''),
-                'created_by'              => $uid,
-                'updated_by'              => $uid,
-                'actor_role'              => $role,
-            ];
+            foreach ($rows as $r) {
+                $name  = trim(($r->deceased_first_name ?? '') . ' ' . ($r->deceased_last_name ?? ''));
+                $title = ($name !== '' ? $name : ($r->interment_full_name ?? '')) . ' — Expiry';
 
-            // Minimal validation to match admin
-            if ($payload['plot_id'] <= 0)                       throw new Exception('Plot is required.');
-            if ($payload['deceased_first_name'] === '')         throw new Exception('First name is required.');
-            if ($payload['deceased_last_name'] === '')          throw new Exception('Last name is required.');
-            if ($payload['date_died'] === '')                   throw new Exception('Date died is required.');
-            if ($payload['interment_full_name'] === '')         throw new Exception('IRH name is required.');
-            if ($payload['interment_relationship'] === '')      throw new Exception('IRH relationship is required.');
-            if ($payload['payment_amount'] === '')              throw new Exception('Payment amount is required.');
+                $events[] = [
+                    'id'       => $r->burial_id,
+                    'title'    => $title,
+                    'start'    => $r->expiry_date,   // may be datetime
+                    'allDay'   => false,
+                    // extended props for the modal
+                    'holder'    => $r->interment_full_name,
+                    'burial_id' => $r->burial_id,
+                    'block'     => $r->block_title,
+                    'plot'      => $r->plot_number,
+                    'grave'     => trim(($r->grave_level ?? '') . ' ' . ($r->grave_type ?? '')),
+                    'expiry'    => $r->expiry_date,
+                ];
+            }
 
-            // UPDATE if burial_id present
-            if ($payload['burial_id'] !== '') {
-                if (method_exists($this->burialModel, 'updateBurial')) {
-                    $ok = $this->burialModel->updateBurial($payload);
-                } else {
-                    // Fallback simple UPDATE (adjust columns to your schema)
-                    $sql = "
-                        UPDATE burials SET
-                          plot_id = :plot_id,
-                          deceased_first_name = :dfn,
-                          deceased_middle_name = :dmn,
-                          deceased_last_name = :dln,
-                          deceased_suffix = :suf,
-                          age = :age,
-                          sex = :sex,
-                          date_born = :born,
-                          date_died = :died,
-                          cause_of_death = :cod,
-                          grave_level = :glvl,
-                          grave_type = :gtyp,
-                          interment_full_name = :irh,
-                          interment_relationship = :rel,
-                          interment_contact_number = :contact,
-                          interment_address = :addr,
-                          interment_email = :email,
-                          payment_amount = :amt,
-                          rental_date = :rental,
-                          expiry_date = :expiry,
-                          requirements = :reqs,
-                          updated_by = :uid,
-                          updated_at = NOW()
-                        WHERE burial_id = :bid
-                        LIMIT 1
-                    ";
-                    $this->db->query($sql);
-                    $this->db->bind(':plot_id',  $payload['plot_id']);
-                    $this->db->bind(':dfn',      $payload['deceased_first_name']);
-                    $this->db->bind(':dmn',      $payload['deceased_middle_name']);
-                    $this->db->bind(':dln',      $payload['deceased_last_name']);
-                    $this->db->bind(':suf',      $payload['deceased_suffix']);
-                    $this->db->bind(':age',      $payload['age']);
-                    $this->db->bind(':sex',      $payload['sex']);
-                    $this->db->bind(':born',     $payload['date_born'] ?: null);
-                    $this->db->bind(':died',     $payload['date_died']);
-                    $this->db->bind(':cod',      $payload['cause_of_death']);
-                    $this->db->bind(':glvl',     $payload['grave_level']);
-                    $this->db->bind(':gtyp',     $payload['grave_type']);
-                    $this->db->bind(':irh',      $payload['interment_full_name']);
-                    $this->db->bind(':rel',      $payload['interment_relationship']);
-                    $this->db->bind(':contact',  $payload['interment_contact_number']);
-                    $this->db->bind(':addr',     $payload['interment_address']);
-                    $this->db->bind(':email',    $payload['interment_email']);
-                    $this->db->bind(':amt',      $payload['payment_amount']);
-                    $this->db->bind(':rental',   $payload['rental_date'] ?: null);
-                    $this->db->bind(':expiry',   $payload['expiry_date'] ?: null);
-                    $this->db->bind(':reqs',     $payload['requirements']);
-                    $this->db->bind(':uid',      $uid);
-                    $this->db->bind(':bid',      $payload['burial_id']);
-                    $ok = $this->db->execute();
+            echo json_encode(['ok' => true, 'events' => $events]);
+        } catch (Throwable $e) {
+            // Do NOT echo the exception text to keep response JSON-clean
+            echo json_encode(['ok' => false, 'events' => []]);
+        }
+    }
+
+    /* ---------- JSON: For Renewal Polling ---------- */
+    public function fetchForRenewalData()
+    {
+        header('Content-Type: application/json');
+        try {
+            // This is the corrected query logic
+            $this->renewalModel = $this->model('Renewal');
+            $records = $this->renewalModel->getBurialsForRenewal();
+            echo json_encode(['ok' => true, 'records' => $records]);
+        } catch (Throwable $e) {
+            echo json_encode(['ok' => false, 'message' => 'Failed to load renewal data.']);
+        }
+        exit;
+    }
+
+    public function renewals() {
+        $all_active_burials = $this->renewalModel->getBurialsForRenewal(); 
+        $history = $this->renewalModel->getRenewalHistory();
+        
+        $data = [
+            'title' => 'Renewals',
+            'all_burials' => $all_active_burials, 
+            'history' => $history
+        ];
+        
+        $this->view('staff/renewals', $data);
+    }
+
+    public function processRenewal() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['ok' => false, 'message' => 'Invalid request method.']);
+            return;
+        }
+
+        $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        
+        $burial = $this->renewalModel->getDetailedBurialForRenewal($_POST['burial_id']);
+        
+        if (!$burial) {
+            echo json_encode(['ok' => false, 'message' => 'Burial record not found or is inactive.']);
+            return;
+        }
+
+        $oldExpiryDate = $burial->expiry_date;
+        $newRentalDate = $oldExpiryDate;
+
+        try {
+            $expiry = new DateTime($newRentalDate, new DateTimeZone('Asia/Manila'));
+            $expiry->modify('+5 years');
+            $newExpiryDate = $expiry->format('Y-m-d H:i:s');
+        } catch (Exception $e) {
+            echo json_encode(['ok' => false, 'message' => 'Invalid expiry date format.']);
+            return;
+        }
+
+        $data = [
+            'burial_id'            => $burial->burial_id,
+            'previous_expiry_date' => $oldExpiryDate,
+            'new_rental_date'      => $newRentalDate,
+            'new_expiry_date'      => $newExpiryDate,
+            'payment_amount'       => $_POST['payment_amount'],
+            'payment_date'         => $_POST['payment_date'],
+            'payer_name'           => $_POST['payer_name'],
+            'payer_email'          => trim($_POST['payer_email']),
+            'processed_by_user_id' => $_SESSION['user']['id'],
+            'receipt_email_status' => 'Not sent (no email provided).'
+        ];
+
+        $result = $this->renewalModel->createRenewal($data);
+
+        if ($result && isset($result['ok']) && $result['ok']) {
+            $email_status = $data['receipt_email_status'];
+
+            if (!empty($data['payer_email'])) {
+                if (!class_exists('EmailHelper')) { 
+                    require_once APPROOT . '/helpers/Email.php'; 
                 }
 
-                if (!$ok) throw new Exception('Update failed.');
-                echo json_encode(['ok'=>true, 'burial_id'=>$payload['burial_id']]);
-                return;
+                $email_data_payload = [
+                    'payer_name'         => $data['payer_name'],
+                    'transaction_id'     => $result['transaction_id'],
+                    'payment_date'       => $data['payment_date'],
+                    'payment_amount'     => $data['payment_amount'],
+                    'new_expiry_date'    => $data['new_expiry_date'],
+                    'deceased_name'      => trim($burial->deceased_first_name . ' ' . $burial->deceased_last_name),
+                    'plot_label'         => trim(($burial->block_title ?? 'N/A') . ' - ' . ($burial->plot_number ?? 'N/A')),
+                ];
+
+                $data_for_template = ['emailData' => $email_data_payload];
+                
+                $body = $this->view('emails/renewal_confirmation', $data_for_template, true);
+                $subject = 'Official Receipt for Your Renewal - Plaridel Public Cemetery';
+
+                $emailHelper = new EmailHelper();
+                $email_ok = $emailHelper->sendEmail($data['payer_email'], $data['payer_name'], $subject, $body);
+
+                $email_status = ($email_ok === true) ? 'Sent successfully.' : 'Failed: '.$email_ok;
+                $this->renewalModel->updateEmailStatus($result['transaction_id'], $email_status);
             }
 
-            // CREATE (no burial_id)
-            if (!method_exists($this->burialModel, 'createBurial')) {
-                // Fallback INSERT (adjust columns to your schema)
-                $sql = "
-                    INSERT INTO burials (
-                      plot_id,
-                      deceased_first_name, deceased_middle_name, deceased_last_name, deceased_suffix,
-                      age, sex, date_born, date_died, cause_of_death,
-                      grave_level, grave_type,
-                      interment_full_name, interment_relationship, interment_contact_number, interment_address, interment_email,
-                      payment_amount, rental_date, expiry_date, requirements,
-                      is_active, created_by, updated_by, created_at, updated_at
-                    ) VALUES (
-                      :plot_id,
-                      :dfn, :dmn, :dln, :suf,
-                      :age, :sex, :born, :died, :cod,
-                      :glvl, :gtyp,
-                      :irh, :rel, :contact, :addr, :email,
-                      :amt, :rental, :expiry, :reqs,
-                      1, :uid, :uid, NOW(), NOW()
-                    )
-                ";
-                $this->db->query($sql);
-                $this->db->bind(':plot_id',  $payload['plot_id']);
-                $this->db->bind(':dfn',      $payload['deceased_first_name']);
-                $this->db->bind(':dmn',      $payload['deceased_middle_name']);
-                $this->db->bind(':dln',      $payload['deceased_last_name']);
-                $this->db->bind(':suf',      $payload['deceased_suffix']);
-                $this->db->bind(':age',      $payload['age']);
-                $this->db->bind(':sex',      $payload['sex']);
-                $this->db->bind(':born',     $payload['date_born'] ?: null);
-                $this->db->bind(':died',     $payload['date_died']);
-                $this->db->bind(':cod',      $payload['cause_of_death']);
-                $this->db->bind(':glvl',     $payload['grave_level']);
-                $this->db->bind(':gtyp',     $payload['grave_type']);
-                $this->db->bind(':irh',      $payload['interment_full_name']);
-                $this->db->bind(':rel',      $payload['interment_relationship']);
-                $this->db->bind(':contact',  $payload['interment_contact_number']);
-                $this->db->bind(':addr',     $payload['interment_address']);
-                $this->db->bind(':email',    $payload['interment_email']);
-                $this->db->bind(':amt',      $payload['payment_amount']);
-                $this->db->bind(':rental',   $payload['rental_date'] ?: null);
-                $this->db->bind(':expiry',   $payload['expiry_date'] ?: null);
-                $this->db->bind(':reqs',     $payload['requirements']);
-                $this->db->bind(':uid',      $uid);
-                $ok = $this->db->execute();
+            echo json_encode([
+                'ok' => true, 
+                'message' => 'Renewal successful! Rental period updated.', 
+                'email_status' => $email_status,
+                'burial_id' => $burial->burial_id
+            ]);
 
-                if (!$ok) throw new Exception('Save failed.');
-
-                // Grab last id + generate a displayable burial_id if your schema uses AUTO IDs
-                $burialId = (int)($this->db->lastInsertId() ?? 0);
-                // If you have a separate burial_id format, compute it here; otherwise return numeric.
-                echo json_encode(['ok'=>true, 'burial_id'=>$burialId]);
-                return;
-            }
-
-            // Use model createBurial (preferred)
-            $res = $this->burialModel->createBurial($payload);
-            if (empty($res['burial_id'])) throw new Exception('Save failed.');
-            echo json_encode(['ok'=>true] + $res);
-
-        } catch (Throwable $e) {
-            echo json_encode(['ok'=>false, 'message'=>$e->getMessage()]);
+        } else {
+            echo json_encode(['ok' => false, 'message' => 'Failed to process renewal in database.']);
         }
     }
 
-    // GET /staff/getBurialDetails/{id}  (for View/Edit modals)
-    public function getBurialDetails($id = null)
+    public function processVacate() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['ok' => false, 'message' => 'Invalid request method.']);
+            return;
+        }
+        
+        // Kukunin muna natin ang kumpletong detalye para magamit sa email
+        $burial = $this->renewalModel->getDetailedBurialForRenewal($_POST['burial_id']);
+        if (!$burial) {
+            echo json_encode(['ok' => false, 'message' => 'Burial record not found.']);
+            return;
+        }
+
+        // Ituloy ang pag-vacate ng plot
+        $ok = $this->renewalModel->vacatePlot($burial->burial_id, $burial->plot_id, $_SESSION['user']['id']);
+        
+        if ($ok) {
+            $email_status = 'Not sent (no email on record).';
+
+            // Kung successful ang pag-vacate AT may email, magpadala ng notification
+            if (!empty($burial->interment_email)) {
+                if (!class_exists('EmailHelper')) { 
+                    require_once APPROOT . '/helpers/Email.php'; 
+                }
+
+                $email_data_payload = [
+                    'interment_name' => $burial->interment_full_name,
+                    'deceased_name'  => trim($burial->deceased_first_name . ' ' . $burial->deceased_last_name),
+                    'plot_label'     => trim(($burial->block_title ?? 'N/A') . ' - ' . ($burial->plot_number ?? 'N/A')),
+                    'vacate_date'    => date('F d, Y') // Petsa ngayon
+                ];
+
+                $data_for_template = ['emailData' => $email_data_payload];
+                
+                $body = $this->view('emails/vacate_confirmation', $data_for_template, true);
+                $subject = 'Confirmation of Plot Vacation - Plaridel Public Cemetery';
+
+                $emailHelper = new EmailHelper();
+                $email_ok = $emailHelper->sendEmail($burial->interment_email, $burial->interment_full_name, $subject, $body);
+
+                $email_status = ($email_ok === true) ? 'Sent successfully.' : 'Failed: ' . $email_ok;
+            }
+
+            // Mag-reply sa request na may kasamang email status
+            echo json_encode([
+                'ok' => true, 
+                'message' => 'Plot has been vacated and record is archived.',
+                'email_status' => $email_status
+            ]);
+
+        } else {
+            echo json_encode(['ok' => false, 'message' => 'Failed to vacate plot.']);
+        }
+    }
+
+    /* ---- USER STATUS TOGGLE ---- */
+    public function setUserActive()
     {
         header('Content-Type: application/json');
-        try {
-            $bid = $id ?? ($_GET['id'] ?? '');
-            if ($bid === '') throw new Exception('Missing id');
-
-            if (method_exists($this->burialModel, 'getDetails')) {
-                $row = $this->burialModel->getDetails($bid);
-            } else {
-                $sql = "
-                    SELECT b.*, p.plot_number, mb.title AS block_title
-                    FROM burials b
-                    LEFT JOIN plots p       ON p.id = b.plot_id
-                    LEFT JOIN map_blocks mb ON mb.id = p.map_block_id
-                    WHERE b.burial_id = :bid
-                    LIMIT 1
-                ";
-                $this->db->query($sql);
-                $this->db->bind(':bid', $bid);
-                $row = $this->db->single();
-            }
-            if (!$row) throw new Exception('Not found');
-
-            echo json_encode($row);
-        } catch (Throwable $e) {
-            echo json_encode(['ok'=>false, 'message'=>$e->getMessage()]);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success'=>false,'message'=>'Invalid method']); return;
         }
+
+        $id        = (int)($_POST['id'] ?? 0);
+        $is_active = (int)($_POST['is_active'] ?? 0);
+
+        if ($id <= 0) { echo json_encode(['success'=>false,'message'=>'Missing user id']); return; }
+
+        $ok = $this->userModel->toggleUserActiveStatus($id, $is_active);
+
+        echo json_encode($ok
+            ? ['success'=>true,'message'=>'User status updated.']
+            : ['success'=>false,'message'=>'Failed to update user status.']
+        );
     }
 
-    // POST /staff/archiveBurial/{id} or with body burial_id
-    public function archiveBurial($id = null)
+    public function resetPassword()
     {
         header('Content-Type: application/json');
-        try {
-            $burialId = (int)($id ?? ($_POST['burial_id'] ?? 0));
-            if ($burialId <= 0) throw new Exception('Missing id');
-
-            if (method_exists($this->burialModel, 'archiveBurial')) {
-                $ok = $this->burialModel->archiveBurial($burialId, (int)($_SESSION['user']['id'] ?? 0));
-            } else {
-                $sql = "
-                    UPDATE burials
-                    SET is_active = 0, archived_at = NOW(), updated_by = :uid
-                    WHERE burial_id = :bid
-                    LIMIT 1
-                ";
-                $this->db->query($sql);
-                $this->db->bind(':uid', (int)($_SESSION['user']['id'] ?? 0));
-                $this->db->bind(':bid', $burialId);
-                $ok = $this->db->execute();
-            }
-
-            if (!$ok) throw new Exception('Archive failed');
-            echo json_encode(['ok'=>true]);
-        } catch (Throwable $e) {
-            echo json_encode(['ok'=>false, 'message'=>$e->getMessage()]);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid method']); return;
         }
-    }
-
-    // POST /staff/restoreBurial/{id}
-    public function restoreBurial($id = null)
-    {
-        header('Content-Type: application/json');
-        try {
-            $burialId = (int)($id ?? ($_POST['burial_id'] ?? 0));
-            if ($burialId <= 0) throw new Exception('Missing id');
-
-            if (method_exists($this->burialModel, 'restoreBurial')) {
-                $ok = $this->burialModel->restoreBurial($burialId, (int)($_SESSION['user']['id'] ?? 0));
-            } else {
-                $sql = "
-                    UPDATE burials
-                    SET is_active = 1, archived_at = NULL, updated_by = :uid
-                    WHERE burial_id = :bid
-                    LIMIT 1
-                ";
-                $this->db->query($sql);
-                $this->db->bind(':uid', (int)($_SESSION['user']['id'] ?? 0));
-                $this->db->bind(':bid', $burialId);
-                $ok = $this->db->execute();
-            }
-
-            if (!$ok) throw new Exception('Restore failed');
-            echo json_encode(['ok'=>true]);
-        } catch (Throwable $e) {
-            echo json_encode(['ok'=>false, 'message'=>$e->getMessage()]);
+    
+        $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+        $userId = $_POST['user_id'] ?? null;
+        $email  = $_POST['email'] ?? null;
+    
+        if (!$userId || !$email) {
+            echo json_encode(['success' => false, 'message' => 'Missing parameters']); return;
         }
-    }
-
-    // POST /staff/deleteBurial/{id}  (if staff is allowed to delete)
-    public function deleteBurial($id = null)
-    {
-        header('Content-Type: application/json');
+    
         try {
-            $burialId = (int)($id ?? ($_POST['burial_id'] ?? 0));
-            if ($burialId <= 0) throw new Exception('Missing id');
-
-            if (method_exists($this->burialModel, 'deleteBurial')) {
-                $ok = $this->burialModel->deleteBurial($burialId);
-            } else {
-                $sql = "DELETE FROM burials WHERE burial_id = :bid LIMIT 1";
-                $this->db->query($sql);
-                $this->db->bind(':bid', $burialId);
-                $ok = $this->db->execute();
+            $db = new Database(); 
+    
+            // 1. Fetch user to get name and ID
+            $db->query("SELECT id, email, first_name, last_name, role FROM users WHERE id = :id LIMIT 1");
+            $db->bind(':id', $userId);
+            $user = $db->single();
+    
+            // Validation: Check user, email, and ensure the role is 'staff'
+            if (!$user || strcasecmp($user->email, $email) !== 0 || $user->role !== 'staff') {
+                echo json_encode(['success' => false, 'message' => 'User not authorized for password reset.']); return;
             }
-
-            if (!$ok) throw new Exception('Delete failed');
-            echo json_encode(['ok'=>true]);
+    
+            // 2. TOKEN GENERATION (RAW token)
+            $rawToken = bin2hex(random_bytes(32)); 
+            $expires  = (new DateTime('+2 hours', new DateTimeZone('Asia/Manila')))->format('Y-m-d H:i:s');
+            
+            // Delete old tokens
+            $db->query('DELETE FROM password_resets WHERE user_id = :user_id OR expires_at < NOW()');
+            $db->bind(':user_id', $userId);
+            $db->execute();
+            
+            // Insert the RAW token
+            $db->query('INSERT INTO password_resets (user_id, token, expires_at) VALUES (:u, :t, :e)');
+            $db->bind(':u', $userId);
+            $db->bind(':t', $rawToken); // RAW token
+            $db->bind(':e', $expires);
+            $db->execute();
+    
+            // 3. Set the final link
+            $reset_link = URLROOT . "/auth/resetPassword?token={$rawToken}"; 
+            
+            // 4. Prepare data for the RE-USED TEMPLATE (emails/reset_password)
+            $email_data_payload = [
+                'full_name'  => $user->first_name, 
+                'reset_link' => $reset_link,       
+            ];
+            
+            if (!class_exists('EmailHelper')) { 
+                require_once APPROOT . '/helpers/Email.php'; 
+            }
+            
+            $body = $this->view('emails/reset_password', ['data' => $email_data_payload], true); 
+            $subject = 'Password Reset Request - Plaridel Public Cemetery System';
+    
+            $emailHelper = new EmailHelper();
+            $recipient_name = $user->first_name . ' ' . $user->last_name; 
+            $sent = $emailHelper->sendEmail($user->email, $recipient_name, $subject, $body);
+    
+            if ($sent !== true) {
+                error_log("Failed to send reset email: " . $sent);
+                echo json_encode(['success' => false, 'message' => 'Failed to send email. Mailer Error: ' . $sent]); return;
+            }
+    
+            echo json_encode(['success' => true, 'message' => 'A password reset link was emailed.']);
+    
         } catch (Throwable $e) {
-            echo json_encode(['ok'=>false, 'message'=>$e->getMessage()]);
+            error_log("Unexpected resetPassword error: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Unexpected error. Please check server logs.']);
         }
-    }
-
-    /* =======================================================
-     * PRINT ROUTES (optional; keep staff path, reuse admin views)
-     * Point these to the same print views if you have them.
-     * ======================================================= */
-    public function printBurialForm($id)
-    {
-        // If you already have an admin print view, you can reuse it:
-        $_GET['autoprint'] = ($_GET['autoprint'] ?? null);
-        $this->view('admin/print_burial_form', ['burial_id'=>$id]); // or staff equivalent if you have
-    }
-
-    public function printContract($id)
-    {
-        $this->view('admin/print_contract', ['burial_id'=>$id]); // or staff equivalent
-    }
-
-    public function printQrTicket($id)
-    {
-        $this->view('admin/print_qr_ticket', ['burial_id'=>$id]); // or staff equivalent
-    }
-
-    /* ----------------- helpers ----------------- */
-    private function scalar(string $sql)
-    {
-        if (!$this->db) return 0;
-        $this->db->query($sql);
-        $row = $this->db->single();
-        return (int)($row->c ?? 0);
     }
 }

@@ -1,36 +1,54 @@
 document.addEventListener('DOMContentLoaded', function () {
 
-  // ---------- DASHBOARD CARDS ----------
+  // ---------- DASHBOARD COUNTS ----------
   (async function loadCards(){
     try {
       const r = await fetch(`${window.URLROOT}/staff/dashboardCards`, { credentials: 'same-origin' });
-      const txt = await r.text();
-      let j; try { j = JSON.parse(txt); } catch { j = null; }
+      const j = await r.json();
       if (j && j.ok) {
         const set = (id, v)=>{ const el=document.getElementById(id); if(el) el.textContent = Number(v||0).toLocaleString(); };
         set('card-active',  j.active);
         set('card-expired', j.expired);
         set('card-today',   j.today);
-        set('card-staff',   j.staff);
+        if ('staff' in j) set('card-staff', j.staff);
       }
-    } catch (e) { /* leave zeros */ }
+    } catch (e) {
+      // leave zeros quietly
+    }
   })();
 
   // ---------- CALENDAR (Rental Expiry only) ----------
   const calendarEl = document.getElementById('calendar-container');
-  if (calendarEl && window.FullCalendar) {
+  if (calendarEl) {
     const cal = new FullCalendar.Calendar(calendarEl, {
       initialView: (window.innerWidth < 768) ? 'listWeek' : 'dayGridMonth',
       headerToolbar: { left:'prev,next today', center:'title', right:'dayGridMonth,timeGridWeek,listWeek' },
       height: 'auto',
+
+      // capitalize buttons
+      buttonText: { today:'Today', month:'Month', week:'Week', list:'List' },
+
       events: async (info, success, failure) => {
         try {
           const url = `${window.URLROOT}/staff/expiryEvents?from=${encodeURIComponent(info.startStr)}&to=${encodeURIComponent(info.endStr)}`;
           const res = await fetch(url, { credentials: 'same-origin' });
           const txt = await res.text();
-          let json; try { json = JSON.parse(txt); } catch { success([]); return; }
-          if (json && json.ok && Array.isArray(json.events)) success(json.events); else success([]);
-        } catch (err) { failure(err); }
+          let json;
+          try { json = JSON.parse(txt); }
+          catch {
+            console.warn('Calendar events: non-JSON response received. Check PHP errors/redirects.');
+            success([]);
+            return;
+          }
+          if (json && json.ok && Array.isArray(json.events)) {
+            success(json.events);
+          } else {
+            success([]);
+          }
+        } catch (err) {
+          console.error('Calendar events error:', err);
+          failure(err);
+        }
       },
       eventContent: function(arg){
         const p = arg.event.extendedProps || {};
@@ -40,7 +58,6 @@ document.addEventListener('DOMContentLoaded', function () {
       },
       eventClick: function(info){
         const p = info.event.extendedProps || {};
-        if (!window.Swal) return;
         Swal.fire({
           title: 'Rental Expiry',
           html: `
@@ -68,7 +85,6 @@ document.addEventListener('DOMContentLoaded', function () {
     a.addEventListener('click', function(e){
       e.preventDefault();
       const href=this.href;
-      if (!window.Swal) { location.href = href; return; }
       Swal.fire({
         title:'Are you sure?', text:'You will be logged out.',
         icon:'warning', showCancelButton:true,
@@ -77,7 +93,39 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // ---------- Sidebar active link ----------
+  // ---------- Must-change-password prompt ----------
+  const needsChange = (document.body.dataset.mustChangePwd === '1');
+  if (needsChange && !sessionStorage.getItem('passwordPrompted')) {
+    Swal.fire({
+      title:'Update Password?', text:'For security, please update your password.',
+      icon:'warning', showCancelButton:true, confirmButtonText:'Update Now',
+      confirmButtonColor:'#800000'
+    }).then(res=>{
+      sessionStorage.setItem('passwordPrompted','true');
+      if(res.isConfirmed) location.href=`${window.URLROOT}/auth/force_change`;
+    });
+  }
+
+  // ---------- Sidebar toggle ----------
+  const tgl=document.querySelector('.sidebar-toggle'), sb=document.querySelector('#sidebar');
+  if(tgl && sb){ tgl.addEventListener('click', ()=> sb.classList.toggle('open')); }
+
+  // ---------- Session keepalive / expiry ----------
+  let sessionInterval = null;
+  async function checkSession(){
+    try{
+      const r=await fetch(`${window.URLROOT}/auth/checkSession`);
+      const j=await r.json();
+      if(!j.is_valid){ clearInterval(sessionInterval);
+        Swal.fire({title:'Session Expired!',icon:'error'}).then(()=>location.href=`${window.URLROOT}/auth/logout`);
+      }
+    }catch(e){ clearInterval(sessionInterval); }
+  }
+  if (document.body.hasAttribute('data-must-change-pwd')) {
+    sessionInterval = setInterval(checkSession, 15000);
+  }
+
+  // ---------- Active link highlight (best match) ----------
   (function(){
     const links=[...document.querySelectorAll('#sidebar .sidebar-nav a')];
     if(!links.length) return;
@@ -92,7 +140,9 @@ document.addEventListener('DOMContentLoaded', function () {
       clear(); (best||links[0]).classList.add('active');
     }
     apply();
+    links.forEach(a=>a.addEventListener('click',()=>{ try{sessionStorage.setItem('ss_active_href',a.getAttribute('href')||'');}catch{} }));
     window.addEventListener('popstate',apply);
     window.addEventListener('hashchange',apply);
   })();
+
 });

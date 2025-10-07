@@ -12,4 +12,12 @@ class PagesController extends Controller {
        
         $this->view('pages/index', $data);
     }
+
+// /pages/qr_scanner  (public)
+public function qr_scanner() {
+    $this->view('pages/qr_scanner');
+}
+
+
+
 }

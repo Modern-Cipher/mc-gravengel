@@ -294,3 +294,40 @@ body.fade-out {
     opacity: 0;
     transition: opacity 0.4s ease-in-out;
 }
+
+/* ==== QR nav button (desktop) ==== */
+.nav-links .qr-nav-btn{
+  display:inline-flex; align-items:center; gap:.4rem;
+  padding:.45rem .9rem;
+  border:1px solid #fff;            /* white outline */
+  border-radius:8px;
+  color:#fff;                       /* white text (for dark header) */
+  background:transparent;
+  font-weight:700; text-decoration:none;
+  transition:background .15s ease, color .15s ease, border-color .15s ease;
+}
+.nav-links .qr-nav-btn:hover{
+  background:#fff;                  /* white hover */
+  color:#7b1d1d;                    /* maroon text on hover */
+  border-color:#fff;
+}
+.nav-links .qr-nav-btn ion-icon{ font-size:1.1rem; color:inherit; }
+
+/* ==== QR item (sidebar) ==== */
+.sidebar .qr-nav-item{
+  display:flex; align-items:center; gap:.6rem;
+  border:1px solid #fff;            /* white outline (per request) */
+  border-radius:8px;
+  padding:.6rem .8rem;
+  margin:.25rem .5rem;
+  background:transparent;
+  color:#fff;                       /* white text default */
+  font-weight:700; text-decoration:none;
+  transition:background .15s ease, color .15s ease, border-color .15s ease;
+}
+.sidebar .qr-nav-item:hover{
+  background:#fff;                  /* white hover */
+  color:#7b1d1d;                    /* maroon text on hover */
+  border-color:#fff;
+}
+.sidebar .qr-nav-item ion-icon{ color:inherit; }

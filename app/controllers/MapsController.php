@@ -76,5 +76,29 @@ public function getBlockDetails($block_key = ''){
             echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
         }
     }
+
+
+// GET /maps/publicBurial/{burialId}
+public function publicBurial($burialId = null) {
+    header('Content-Type: application/json');
+    try {
+        if (!$burialId) { echo json_encode(['ok'=>false,'error'=>'Missing burial_id']); return; }
+        $model = $this->model('Burial');
+        $row   = $model->findPublicByBurialId($burialId);
+        if ($row) {
+            echo json_encode(['ok'=>true, 'data'=>$row]);
+        } else {
+            echo json_encode(['ok'=>false,'error'=>'Not found']);
+        }
+    } catch (\Throwable $e) {
+        http_response_code(500);
+        echo json_encode(['ok'=>false,'error'=>'Server error']);
+    }
+}
+
+
+
+
+
   }
 ?>

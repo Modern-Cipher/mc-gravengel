@@ -141,6 +141,12 @@
             </a>
           </li>
           <li>
+            <a href="<?php echo URLROOT; ?>/admin/renewals"
+               class="<?php echo (!empty($data['title']) && $data['title']==='Renewals') ? 'active' : ''; ?>">
+               <i class="fas fa-file-invoice-dollar fa-fw me-2"></i> Renewals
+            </a>
+          </li>
+          <li>
             <a href="<?php echo URLROOT; ?>/admin/cemeteryMap"
                class="<?php echo (!empty($data['title']) && $data['title']==='Cemetery Map') ? 'active' : ''; ?>">
                <i class="fas fa-map-marked-alt fa-fw me-2"></i> Cemetery Map

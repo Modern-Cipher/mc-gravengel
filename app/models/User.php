@@ -309,6 +309,17 @@ public function getAdminsEmails(): array {
     return $this->db->resultSet() ?: [];
 }
 
-
+// app/models/User.php (Add this method)
+    public function toggleUserActiveStatus(int $id, int $is_active): bool
+    {
+        if ($id <= 0) return false;
+        
+        $this->db->query('UPDATE users SET is_active = :is_active WHERE id = :id');
+        $this->db->bind(':id', $id);
+        // Ensure the value is 0 or 1
+        $this->db->bind(':is_active', $is_active > 0 ? 1 : 0); 
+        
+        return $this->db->execute();
+    }
 
 }

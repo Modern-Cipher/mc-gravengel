@@ -1,82 +1,70 @@
 /* Custom Admin & Staff Theme */
 
-/* Primary Button Color */
-.btn-primary, .btn-primary:focus, .btn-primary:active {
+:root {
+    --maroon: #800000;
+    --maroon-dark: #600000;
+}
+
+/* === BUTTON THEME (Maroon) === */
+
+/* Primary, Success, Info, Secondary */
+.btn-primary, .btn-success, .btn-info, .btn-secondary {
     background-color: var(--maroon) !important;
     border-color: var(--maroon) !important;
+    color: #fff !important;
+}
+.btn-primary:hover, .btn-success:hover, .btn-info:hover, .btn-secondary:hover {
+    background-color: var(--maroon-dark) !important;
+    border-color: var(--maroon-dark) !important;
 }
 
-.btn-primary:hover {
-    background-color: #6a0000 !important;
-    border-color: #6a0000 !important;
+/* Warning Button */
+.btn-warning {
+    background-color: #800000 !important;
+    border-color: #800000 !important;
+    color: #fff !important;
+}
+.btn-warning:hover {
+    background-color: #600000 !important;
+    border-color: #600000 !important;
 }
 
-/* Outlined Secondary Button Color (Manage Blocks) */
+/* Danger Button - Keep as red for warnings */
+.btn-danger {
+    background-color: #800000 !important;
+    border-color: #800000 !important;
+}
+.btn-danger:hover {
+    background-color: #600000 !important;
+    border-color: #600000 !important;
+}
+
+/* Outlined Buttons */
 .btn-outline-secondary {
     color: var(--maroon);
     border-color: var(--maroon);
 }
-
 .btn-outline-secondary:hover {
     background-color: var(--maroon);
     color: #fff;
     border-color: var(--maroon);
 }
 
-/* Search Input Group */
-.input-group-text {
-    background-color: #fff;
-    border-right: none;
-    color: #495057;
+/* Modal Headers */
+.modal-header.bg-danger {
+    background-color: var(--maroon) !important;
 }
 
+/* === OTHER STYLES (from your original file) === */
+
 .form-control:focus {
-    box-shadow: 0 0 0 0.25rem rgba(128, 0, 0, 0.25);
+    box-shadow: 0 0 0 0.25rem rgb(128, 0, 0);
     border-color: var(--maroon);
 }
 
-/* Bagong CSS Rule para sa Search Input sa Modal */
-#blockInfoModal input.form-control {
-    color: #212529 !important; /* Tiyakin na ang text ay itim */
-    background-color: #fff !important;
-}
-
-/* Nagdagdag ng --maroon variable para madaling gamitin */
-/* ... other styles from before ... */
-
-/* Nagdagdag ng --maroon variable para madaling gamitin */
-:root {
-    --maroon: #800000;
-}
-
 /* Scrollbar Style */
-/* Hide scrollbar for Chrome, Safari and Opera */
-.main-content::-webkit-scrollbar {
-  display: none;
-}
-
-/* Hide scrollbar for IE, Edge and Firefox */
-.main-content {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-
-
-/* ... other styles from before ... */
-
-/* Table Icons */
-.btn-action-icon {
-    background: transparent;
-    border: none;
-    color: #6c757d;
-    font-size: 1rem;
-    padding: 0.25rem 0.5rem;
-    transition: color 0.2s ease;
-}
-
-.btn-action-icon:hover {
-    color: #495057;
-}
+.main-content::-webkit-scrollbar { display: none; }
+.main-content { -ms-overflow-style: none; scrollbar-width: none; }
 
 .profile-thumb {
     width: 40px;
@@ -98,25 +86,8 @@
     font-size: 1.25rem;
 }
 
-/* Other styles here... */
-
-/* FIX: Ensure modal body can scroll without affecting its size */
-.modal-body {
-    overflow-y: auto;
-    /* Optional: Hide scrollbar in Webkit browsers */
-    -webkit-overflow-scrolling: touch;
-}
-.modal-dialog {
-    /* Optional: Allow modal to be full height without being too big */
-    max-height: 90vh;
-}
-.modal-content {
-    /* Optional: To make the content fit nicely in the dialog */
-    height: 100%;
-}
-
 /* Notification bell + menu */
-.top-navbar { overflow: visible; }                /* let dropdown float outside */
+.top-navbar { overflow: visible; }
 .top-navbar-right .nav-link,
 .top-navbar-right .fa-bell { color:#fff !important; }
 
@@ -127,8 +98,8 @@
   z-index: 2000;
 }
 
-#notifCount{ font-size:.65rem; line-height:1; }   /* small badge */
+#notifCount{ font-size:.65rem; line-height:1; }
 
-/* list items inside dropdown */
 .notif-item{ background:#fff; }
 .notif-item.bg-light{ background:#f8f9fa !important; }
+
