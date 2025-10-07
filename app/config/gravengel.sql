@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 02, 2025 at 03:58 PM
+-- Generation Time: Oct 07, 2025 at 04:32 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -63,9 +63,11 @@ CREATE TABLE `burials` (
 --
 
 INSERT INTO `burials` (`id`, `plot_id`, `burial_id`, `transaction_id`, `deceased_first_name`, `deceased_middle_name`, `deceased_last_name`, `deceased_suffix`, `age`, `sex`, `date_born`, `date_died`, `cause_of_death`, `grave_level`, `grave_type`, `interment_full_name`, `interment_relationship`, `interment_contact_number`, `interment_email`, `interment_address`, `payment_amount`, `rental_date`, `expiry_date`, `requirements`, `is_active`, `created_by_user_id`, `updated_by_user_id`, `created_at`) VALUES
-(17, 544, 'B-933270', '20251001-485', 'cascas', 'asc', 'csacas', 'I', '60', 'male', '2012-04-11', '2025-10-02', 'cascasc', 'Level 1', 'Apartment', 'cascasc', 'Parent', '0987 654 3211', NULL, 'dfsgvdsfggdf, Brgy. Balaquid, Cabucgayan, Biliran, 3445', 5000.00, '2025-10-02 12:00:00', '2030-10-02 12:00:00', 'Death Certificate with registry number, Barangay Indigency for Burial Assistance', 1, 1, NULL, '2025-10-02 05:55:44'),
-(18, 543, 'B-90E339', '20251002-211', 'ascasc', 'ascasc', 'ascasc', 'Sr.', '33', 'male', '2025-10-02', '2025-10-01', 'accident', 'Level 1', 'Apartment', 'vdvsd', 'Child', '0987 654 3211', 'minion.new002@gmail.com', 'fsdgg, Brgy. Santa Cruz, Pamplona, Cagayan, 4543', 5000.00, '2025-10-02 12:00:00', '2030-10-02 12:00:00', 'Death Certificate with registry number, Barangay Indigency for Burial Assistance, Voter&#039;s ID, Cedula', 1, 1, NULL, '2025-10-02 06:15:08'),
-(20, 545, 'B-9E7ADF', '20251002-908', 'saca', 'm', 'scac', 'Sr.', '60', 'male', '2025-10-02', '2025-10-02', 'asc', 'Level 1', 'Apartment', 'sacas', 'Spouse', '0987 654 3212', 'mdctechservices@gmail.com', 'sadasd, Brgy. Minsuro, Manolo Fortich, Bukidnon, 6456', 5000.00, '2025-09-02 10:13:00', '2025-11-02 02:15:00', 'Death Certificate with registry number, Barangay Indigency for Burial Assistance, Voter&#039;s ID, Cedula, Sulat Kahilingan', 1, 1, NULL, '2025-10-02 07:44:51');
+(25, 1127, 'B-CF3C12', '20251006-624', 'asdas', 'asdasd', 'asd', 'Sr.', '7', 'male', '2018-06-06', '2025-10-06', 'dfgg', 'A', 'Columbarium', 'asfasf', 'Spouse', '09695760172', 'interment1@gmail.com', 'Poblacion', 5000.00, '2025-10-06 14:07:00', '2030-10-06 14:07:00', '', 1, 1, 1, '2025-10-06 12:14:53'),
+(26, 1129, 'B-C9F19E', '20251006-614', 'TESTING3', 'TESTING3', 'TESTING3', 'I', '15', 'male', '2010-02-11', '2025-10-06', 'TESTING3', 'B', 'Apartment', 'TESTING3', 'Child', '0969 576 0172', 'interment1@gmail.com', 'Poblacion, Brgy. Balanac, City of Ligao, Albay, 3011', 5000.00, '2025-10-06 14:45:00', '2030-10-06 14:45:00', 'Death Certificate with registry number, Voter&#039;s ID, Cedula, Sulat Kahilingan', 1, 1, 1, '2025-10-06 13:53:39'),
+(27, 1126, 'B-589902', '20251006-781', 'PRINTEST', 'PRINTEST', 'PRINTEST', 'Sr.', '33', 'male', '1992-06-11', '2025-10-06', 'PRINTEST', 'D', 'Crypt', 'PRINTEST', 'Spouse', '0969 576 0172', 'minionm219@gmail.com', 'Poblacion, Brgy. Aurora Pob., Jovellar, Albay, 3011', 5000.00, '2030-10-06 06:58:00', '2035-10-06 06:58:00', 'Death Certificate with registry number, Voter&#039;s ID, Cedula', 1, 1, 7, '2025-10-06 15:57:22'),
+(28, 1124, 'B-923227', '20251007-197', 'staffadd', 'staffadd', 'staffadd', 'Sr.', '28', 'male', '1997-02-07', '2025-10-07', 'staffadd', 'B', 'Apartment', 'staffadd', 'Relative', '0969 576 0172', 'minionm219@gmail.com', 'Poblacion, Brgy. Muslim Area, Maluso, Basilan, 3011', 5000.00, '2025-10-07 07:16:00', '2030-10-07 07:16:00', 'Voter&#039;s ID, Sulat Kahilingan', 1, 7, NULL, '2025-10-07 07:16:43'),
+(29, 1125, 'B-F25179', '20251007-076', 'Anna', 'H', 'Santos', '', '28', 'female', '1997-08-07', '2025-10-09', 'Heart Attack', 'A', 'Apartment', 'Michael Santos', 'Spouse', '0987 654 3211', 'minionm219@gmail.com', 'street, Brgy. Dampol, Plaridel, Bulacan, 3004', 5000.00, '2030-10-07 09:27:00', '2035-10-07 09:27:00', 'Death Certificate with registry number, Barangay Indigency for Burial Assistance, Voter&#039;s ID, Cedula, Sulat Kahilingan', 0, 7, 7, '2025-10-07 09:27:38');
 
 -- --------------------------------------------------------
 
@@ -87,8 +89,8 @@ CREATE TABLE `map_blocks` (
 --
 
 INSERT INTO `map_blocks` (`id`, `block_key`, `title`, `coords`, `offset_x`, `offset_y`) VALUES
-(1, 'ltls-001', 'Block-A', '166,243,216,652', 0, 0),
-(2, 'ltrs-002', 'Block-B', '256,247,216,645', 0, 0),
+(1, 'ltls-001', 'BlockA', '166,243,216,652', 0, 0),
+(2, 'ltrs-002', 'Blk-B', '256,247,216,645', 0, 0),
 (3, 'ltls-003', 'Block-C', '317,238,284,640', 0, 0),
 (4, 'ltrs-004', 'ltrs-004', '362,638,319,238', 0, 0),
 (5, 'ltls-005', 'ltls-005', '428,235,390,647', 0, 0),
@@ -196,7 +198,8 @@ CREATE TABLE `notifications` (
 --
 
 INSERT INTO `notifications` (`id`, `burial_id`, `title`, `message`, `severity`, `due_date`, `kind`, `created_at`) VALUES
-(473, 'B-9E7ADF', 'Rental expires in 30 days', 'Grave Block-A (Block-A003) rental expires on Nov 02, 2025.', 'warning', '2025-11-02', 'expiry_30', '2025-10-02 17:05:15');
+(473, 'B-9E7ADF', 'Rental expires in 30 days', 'Grave Block-A (Block-A003) rental expires on Nov 02, 2025.', 'warning', '2025-11-02', 'expiry_30', '2025-10-02 17:05:15'),
+(2328, 'B-589902', 'Rental expires in 30 days', 'Grave Blk-A (Blk-A003) rental expires on Nov 06, 2025.', 'warning', '2025-11-06', 'expiry_30', '2025-10-06 17:03:39');
 
 -- --------------------------------------------------------
 
@@ -225,7 +228,11 @@ INSERT INTO `notification_email_status` (`id`, `notification_id`, `recipient_typ
 (403, 473, 'admin', 'menarddelacruz.basc@gmail.com', 1, '2025-10-02 17:05:21', 1, NULL, '2025-10-02 17:05:15', '2025-10-02 17:05:21'),
 (404, 473, 'staff', 'minionm219@gmail.com', 1, '2025-10-02 17:05:27', 1, NULL, '2025-10-02 17:05:15', '2025-10-02 17:05:27'),
 (405, 473, 'staff', 'lovecano30@gmail.com', 1, '2025-10-02 17:05:33', 1, NULL, '2025-10-02 17:05:15', '2025-10-02 17:05:33'),
-(407, 473, 'interment', 'mdctechservices@gmail.com', 1, '2025-10-02 17:05:39', 1, NULL, '2025-10-02 17:05:15', '2025-10-02 17:05:39');
+(407, 473, 'interment', 'mdctechservices@gmail.com', 1, '2025-10-02 17:05:39', 1, NULL, '2025-10-02 17:05:15', '2025-10-02 17:05:39'),
+(5970, 2328, 'admin', 'menarddelacruz.basc@gmail.com', 1, '2025-10-06 17:03:44', 1, NULL, '2025-10-06 17:03:39', '2025-10-06 17:03:44'),
+(5971, 2328, 'staff', 'minionm219@gmail.com', 1, '2025-10-06 17:03:52', 1, NULL, '2025-10-06 17:03:39', '2025-10-06 17:03:52'),
+(5972, 2328, 'staff', 'lovecano30@gmail.com', 1, '2025-10-06 17:03:56', 1, NULL, '2025-10-06 17:03:39', '2025-10-06 17:03:56'),
+(5974, 2328, 'interment', 'interment1@gmail.com', 1, '2025-10-06 17:04:00', 1, NULL, '2025-10-06 17:03:39', '2025-10-06 17:04:00');
 
 -- --------------------------------------------------------
 
@@ -247,9 +254,12 @@ CREATE TABLE `notification_user` (
 --
 
 INSERT INTO `notification_user` (`id`, `notification_id`, `user_id`, `is_read`, `read_at`, `created_at`) VALUES
-(103, 473, 1, 0, NULL, '2025-10-02 17:05:15'),
+(103, 473, 1, 1, '2025-10-06 10:14:09', '2025-10-02 17:05:15'),
 (104, 473, 7, 1, '2025-10-02 19:38:32', '2025-10-02 17:05:15'),
-(105, 473, 8, 0, NULL, '2025-10-02 17:05:15');
+(105, 473, 8, 0, NULL, '2025-10-02 17:05:15'),
+(106, 2328, 1, 1, '2025-10-06 18:16:13', '2025-10-06 17:03:39'),
+(107, 2328, 7, 0, NULL, '2025-10-06 17:03:39'),
+(108, 2328, 8, 0, NULL, '2025-10-06 17:03:39');
 
 -- --------------------------------------------------------
 
@@ -271,9 +281,7 @@ CREATE TABLE `password_resets` (
 --
 
 INSERT INTO `password_resets` (`id`, `user_id`, `token`, `expires_at`, `used_at`, `created_at`) VALUES
-(1, 7, '2210cb1832c245cc40219c6a876d97856c7469211fc117db67c70f8d6803ca30', '2025-09-20 22:45:54', '2025-09-20 04:46:43', '2025-09-20 04:45:54'),
-(2, 7, 'f446ee7e049a717eb78b6a6d0a351c7d80b5048c5b4e40b84ad1512c833422e7', '2025-09-21 02:43:38', '2025-09-20 08:44:11', '2025-09-20 08:43:38'),
-(3, 7, '8cccfb7218b1b23734f519ba938a9dfcae70c6c64eca4936f81f78eb3b8b18e3', '2025-09-21 03:04:46', '2025-09-20 09:06:48', '2025-09-20 09:04:46');
+(15, 7, '0a98d5bfee0ef997312d091edf2190fdd153c9510831854883f26b27962f8f62', '2025-10-07 02:30:19', NULL, '2025-10-07 00:30:19');
 
 -- --------------------------------------------------------
 
@@ -293,96 +301,6 @@ CREATE TABLE `plots` (
 --
 
 INSERT INTO `plots` (`id`, `map_block_id`, `plot_number`, `status`) VALUES
-(407, 2, '1', 'vacant'),
-(408, 2, '2', 'vacant'),
-(409, 2, '3', 'vacant'),
-(410, 2, '4', 'vacant'),
-(411, 2, '5', 'vacant'),
-(412, 2, '6', 'vacant'),
-(413, 2, '7', 'vacant'),
-(414, 2, '8', 'vacant'),
-(415, 2, '9', 'vacant'),
-(416, 2, '10', 'vacant'),
-(417, 2, '11', 'vacant'),
-(418, 2, '12', 'vacant'),
-(419, 2, '13', 'vacant'),
-(420, 2, '14', 'vacant'),
-(421, 2, '15', 'vacant'),
-(422, 2, '16', 'vacant'),
-(423, 2, '17', 'vacant'),
-(424, 2, '18', 'vacant'),
-(425, 2, '19', 'vacant'),
-(426, 2, '20', 'vacant'),
-(427, 2, '21', 'vacant'),
-(428, 2, '22', 'vacant'),
-(429, 2, '23', 'vacant'),
-(430, 2, '24', 'vacant'),
-(543, 1, 'Block-A001', 'occupied'),
-(544, 1, 'Block-A002', 'occupied'),
-(545, 1, 'Block-A003', 'occupied'),
-(546, 1, 'Block-A004', 'vacant'),
-(547, 1, 'Block-A005', 'vacant'),
-(548, 1, 'Block-A006', 'vacant'),
-(549, 1, 'Block-A007', 'vacant'),
-(550, 1, 'Block-A008', 'vacant'),
-(551, 1, 'Block-A009', 'vacant'),
-(552, 1, 'Block-A010', 'vacant'),
-(553, 1, 'Block-A011', 'vacant'),
-(554, 1, 'Block-A012', 'vacant'),
-(555, 1, 'Block-A013', 'vacant'),
-(556, 1, 'Block-A014', 'vacant'),
-(557, 1, 'Block-A015', 'vacant'),
-(558, 1, 'Block-A016', 'vacant'),
-(559, 1, 'Block-A017', 'vacant'),
-(560, 1, 'Block-A018', 'vacant'),
-(561, 1, 'Block-A019', 'vacant'),
-(562, 1, 'Block-A020', 'vacant'),
-(563, 1, 'Block-A021', 'vacant'),
-(564, 1, 'Block-A022', 'vacant'),
-(565, 1, 'Block-A023', 'vacant'),
-(566, 1, 'Block-A024', 'vacant'),
-(567, 1, 'Block-A025', 'vacant'),
-(568, 1, 'Block-A026', 'vacant'),
-(569, 1, 'Block-A027', 'vacant'),
-(570, 1, 'Block-A028', 'vacant'),
-(571, 1, 'Block-A029', 'vacant'),
-(572, 1, 'Block-A030', 'vacant'),
-(573, 1, 'Block-A031', 'vacant'),
-(574, 1, 'Block-A032', 'vacant'),
-(575, 1, 'Block-A033', 'vacant'),
-(576, 1, 'Block-A034', 'vacant'),
-(577, 1, 'Block-A035', 'vacant'),
-(578, 1, 'Block-A036', 'vacant'),
-(579, 1, 'Block-A037', 'vacant'),
-(580, 1, 'Block-A038', 'vacant'),
-(581, 1, 'Block-A039', 'vacant'),
-(582, 1, 'Block-A040', 'vacant'),
-(583, 1, 'Block-A041', 'vacant'),
-(584, 1, 'Block-A042', 'vacant'),
-(585, 1, 'Block-A043', 'vacant'),
-(586, 1, 'Block-A044', 'vacant'),
-(587, 1, 'Block-A045', 'vacant'),
-(588, 1, 'Block-A046', 'vacant'),
-(589, 1, 'Block-A047', 'vacant'),
-(590, 1, 'Block-A048', 'vacant'),
-(591, 1, 'Block-A049', 'vacant'),
-(592, 1, 'Block-A050', 'vacant'),
-(593, 1, 'Block-A051', 'vacant'),
-(594, 1, 'Block-A052', 'vacant'),
-(595, 1, 'Block-A053', 'vacant'),
-(596, 1, 'Block-A054', 'vacant'),
-(597, 1, 'Block-A055', 'vacant'),
-(598, 1, 'Block-A056', 'vacant'),
-(599, 1, 'Block-A057', 'vacant'),
-(600, 1, 'Block-A058', 'vacant'),
-(601, 1, 'Block-A059', 'vacant'),
-(602, 1, 'Block-A060', 'vacant'),
-(603, 1, 'Block-A061', 'vacant'),
-(604, 1, 'Block-A062', 'vacant'),
-(605, 1, 'Block-A063', 'vacant'),
-(606, 1, 'Block-A064', 'vacant'),
-(607, 1, 'Block-A065', 'vacant'),
-(608, 1, 'Block-A066', 'vacant'),
 (621, 13, 'ltls-013001', 'vacant'),
 (622, 13, 'ltls-013002', 'vacant'),
 (623, 13, 'ltls-013003', 'vacant'),
@@ -463,7 +381,79 @@ INSERT INTO `plots` (`id`, `map_block_id`, `plot_number`, `status`) VALUES
 (698, 12, 'block-E005', 'vacant'),
 (699, 12, 'block-E006', 'vacant'),
 (700, 12, 'block-E007', 'vacant'),
-(701, 12, 'block-E008', 'vacant');
+(701, 12, 'block-E008', 'vacant'),
+(768, 2, 'Blk-B001', 'vacant'),
+(769, 2, 'Blk-B002', 'vacant'),
+(770, 2, 'Blk-B003', 'vacant'),
+(771, 2, 'Blk-B004', 'vacant'),
+(772, 2, 'Blk-B005', 'vacant'),
+(773, 2, 'Blk-B006', 'vacant'),
+(774, 2, 'Blk-B007', 'vacant'),
+(775, 2, 'Blk-B008', 'vacant'),
+(776, 2, 'Blk-B009', 'vacant'),
+(777, 2, 'Blk-B010', 'vacant'),
+(778, 2, 'Blk-B011', 'vacant'),
+(779, 2, 'Blk-B012', 'vacant'),
+(780, 2, 'Blk-B013', 'vacant'),
+(781, 2, 'Blk-B014', 'vacant'),
+(782, 2, 'Blk-B015', 'vacant'),
+(783, 2, 'Blk-B016', 'vacant'),
+(784, 2, 'Blk-B017', 'vacant'),
+(785, 2, 'Blk-B018', 'vacant'),
+(786, 2, 'Blk-B019', 'vacant'),
+(787, 2, 'Blk-B020', 'vacant'),
+(788, 2, 'Blk-B021', 'vacant'),
+(789, 2, 'Blk-B022', 'vacant'),
+(790, 2, 'Blk-B023', 'vacant'),
+(791, 2, 'Blk-B024', 'vacant'),
+(1124, 1, 'BlockA001', 'occupied'),
+(1125, 1, 'BlockA002', 'vacant'),
+(1126, 1, 'BlockA003', 'occupied'),
+(1127, 1, 'BlockA004', 'occupied'),
+(1128, 1, 'BlockA005', 'vacant'),
+(1129, 1, 'BlockA006', 'occupied'),
+(1130, 1, 'BlockA007', 'vacant'),
+(1131, 1, 'BlockA008', 'vacant'),
+(1132, 1, 'BlockA009', 'vacant'),
+(1133, 1, 'BlockA010', 'vacant'),
+(1134, 1, 'BlockA011', 'vacant'),
+(1135, 1, 'BlockA012', 'vacant'),
+(1136, 1, 'BlockA013', 'vacant'),
+(1137, 1, 'BlockA014', 'vacant'),
+(1138, 1, 'BlockA015', 'vacant'),
+(1139, 1, 'BlockA016', 'vacant'),
+(1140, 1, 'BlockA017', 'vacant'),
+(1141, 1, 'BlockA018', 'vacant'),
+(1142, 1, 'BlockA019', 'vacant'),
+(1143, 1, 'BlockA020', 'vacant'),
+(1144, 1, 'BlockA021', 'vacant'),
+(1145, 1, 'BlockA022', 'vacant'),
+(1146, 1, 'BlockA023', 'vacant'),
+(1147, 1, 'BlockA024', 'vacant'),
+(1148, 1, 'BlockA025', 'vacant'),
+(1149, 1, 'BlockA026', 'vacant'),
+(1150, 1, 'BlockA027', 'vacant'),
+(1151, 1, 'BlockA028', 'vacant'),
+(1152, 1, 'BlockA029', 'vacant'),
+(1153, 1, 'BlockA030', 'vacant'),
+(1154, 1, 'BlockA031', 'vacant'),
+(1155, 1, 'BlockA032', 'vacant'),
+(1156, 1, 'BlockA033', 'vacant'),
+(1157, 1, 'BlockA034', 'vacant'),
+(1158, 1, 'BlockA035', 'vacant'),
+(1159, 1, 'BlockA036', 'vacant'),
+(1160, 1, 'BlockA037', 'vacant'),
+(1161, 1, 'BlockA038', 'vacant'),
+(1162, 1, 'BlockA039', 'vacant'),
+(1163, 1, 'BlockA040', 'vacant'),
+(1164, 1, 'BlockA041', 'vacant'),
+(1165, 1, 'BlockA042', 'vacant'),
+(1166, 1, 'BlockA043', 'vacant'),
+(1167, 1, 'BlockA044', 'vacant'),
+(1168, 1, 'BlockA045', 'vacant'),
+(1190, 1, 'BlockA046', 'vacant'),
+(1191, 1, 'BlockA047', 'vacant'),
+(1192, 1, 'BlockA048', 'vacant');
 
 -- --------------------------------------------------------
 
@@ -483,12 +473,52 @@ CREATE TABLE `plot_layouts` (
 --
 
 INSERT INTO `plot_layouts` (`id`, `map_block_id`, `modal_rows`, `modal_cols`) VALUES
-(1, 1, 3, 22),
+(1, 1, 3, 16),
 (10, 2, 3, 8),
 (12, 3, 3, 3),
 (17, 13, 4, 8),
 (18, 18, 4, 8),
 (20, 12, 2, 4);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `renewals`
+--
+
+CREATE TABLE `renewals` (
+  `id` int(11) NOT NULL,
+  `burial_id` varchar(50) NOT NULL,
+  `transaction_id` varchar(50) NOT NULL,
+  `previous_expiry_date` datetime NOT NULL,
+  `new_expiry_date` datetime NOT NULL,
+  `payment_amount` decimal(10,2) NOT NULL,
+  `payment_date` date NOT NULL,
+  `payer_name` varchar(255) NOT NULL,
+  `payer_email` varchar(255) DEFAULT NULL,
+  `receipt_email_status` varchar(255) DEFAULT NULL,
+  `processed_by_user_id` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `renewals`
+--
+
+INSERT INTO `renewals` (`id`, `burial_id`, `transaction_id`, `previous_expiry_date`, `new_expiry_date`, `payment_amount`, `payment_date`, `payer_name`, `payer_email`, `receipt_email_status`, `processed_by_user_id`, `created_at`) VALUES
+(1, 'B-CF3C12', 'REN-20251006-510', '2030-10-06 14:07:00', '2035-10-06 14:07:00', 5000.00, '2025-10-06', 'asfasf', 'interment1@gmail.com', 'Sent successfully.', 1, '2025-10-06 10:56:45'),
+(2, 'B-589902', 'REN-20251006-308', '2027-10-06 06:57:00', '2032-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 10:59:41'),
+(3, 'B-589902', 'REN-20251006-136', '2032-10-06 06:57:00', '2037-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 11:25:02'),
+(4, 'B-589902', 'REN-20251006-531', '2037-10-06 06:57:00', '2042-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 11:30:29'),
+(5, 'B-589902', 'REN-20251006-426', '2042-10-06 06:57:00', '2047-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 11:37:43'),
+(6, 'B-589902', 'REN-20251006-287', '2030-10-06 06:57:00', '2035-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 11:55:30'),
+(7, 'B-589902', 'REN-20251006-388', '2035-10-06 06:57:00', '2040-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 12:01:56'),
+(8, 'B-589902', 'REN-20251006-347', '2040-10-06 06:57:00', '2045-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 12:13:16'),
+(9, 'B-589902', 'REN-20251006-209', '2045-10-06 06:57:00', '2050-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 12:34:00'),
+(10, 'B-589902', 'REN-20251006-921', '2050-10-06 06:57:00', '2055-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 12:37:04'),
+(11, 'B-589902', 'REN-20251006-343', '2055-10-06 06:57:00', '2060-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 13:12:37'),
+(12, 'B-589902', 'REN-20251007-390', '2030-10-06 06:58:00', '2035-10-06 06:58:00', 5000.00, '2025-10-07', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 7, '2025-10-07 00:21:40'),
+(13, 'B-F25179', 'REN-20251007-228', '2030-10-07 09:27:00', '2035-10-07 09:27:00', 5000.00, '2025-10-07', 'Michael Santos', 'minionm219@gmail.com', 'Sent successfully.', 7, '2025-10-07 01:36:23');
 
 -- --------------------------------------------------------
 
@@ -542,9 +572,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `role`, `first_name`, `last_name`, `sex`, `phone`, `address`, `profile_image`, `is_active`, `must_change_pwd`, `last_login_at`, `created_at`, `updated_at`) VALUES
-(1, 'admin', 'menarddelacruz.basc@gmail.com', '$2y$10$dHdP2hrbUX/zeM07zDeAc.UbTjYmrwUrX61aoTAE7BgGlTg28yKia', 'admin', 'Genesys', 'X', NULL, '', '', 'cemeteryMap_73469a.png', 1, 1, '2025-10-02 18:38:55', '2025-09-19 13:20:45', '2025-10-02 18:38:55'),
-(7, 'minionm2', 'minionm219@gmail.com', '$2y$10$dHdP2hrbUX/zeM07zDeAc.UbTjYmrwUrX61aoTAE7BgGlTg28yKia', 'staff', 'minion', 'minion', NULL, '0987 654 3221', '', NULL, 1, 0, '2025-10-02 17:52:57', '2025-09-20 04:31:29', '2025-10-02 17:52:57'),
-(8, 'Orion', 'lovecano30@gmail.com', '$2y$10$cQ.ZuO8jQykPGmCmhY1mbuaL9AhdiRyh7HSjEVKnWQy/ODtm6y1P6', 'staff', 'Orion Seal', 'Cano', NULL, '0987 654 3765', NULL, NULL, 1, 1, NULL, '2025-09-20 09:17:55', '2025-09-20 09:17:55');
+(1, 'admin', 'menarddelacruz.basc@gmail.com', '$2y$10$dHdP2hrbUX/zeM07zDeAc.UbTjYmrwUrX61aoTAE7BgGlTg28yKia', 'admin', 'Genesys', 'X', NULL, '', '', 'cemeteryMap_73469a.png', 1, 1, '2025-10-07 10:08:54', '2025-09-19 13:20:45', '2025-10-07 10:08:54'),
+(7, 'minionm2', 'minionm219@gmail.com', '$2y$10$wD5dRXBCbKY1tQmzpbNxcer6Gn2Yy0VNUSlLpsi8PkAHeDR/sSh/i', 'staff', 'minion', 'minion', NULL, '0987 654 3221', '', NULL, 1, 0, '2025-10-07 09:10:29', '2025-09-20 04:31:29', '2025-10-07 09:10:29'),
+(8, 'Orion', 'lovecano30@gmail.com', '$2y$10$cQ.ZuO8jQykPGmCmhY1mbuaL9AhdiRyh7HSjEVKnWQy/ODtm6y1P6', 'staff', 'Orion Seal', 'Cano', NULL, '0987 654 3765', NULL, NULL, 1, 1, NULL, '2025-09-20 09:17:55', '2025-10-06 23:51:10');
 
 -- --------------------------------------------------------
 
@@ -594,8 +624,20 @@ INSERT INTO `user_sessions` (`id`, `user_id`, `session_id`, `login_at`, `logout_
 (24, 1, 'q3o82j458mi80ch2a090egpc01', '2025-10-02 15:56:50', '2025-10-02 16:03:01', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
 (25, 1, 'ieqr37cb2pv6o35uouhv5bv546', '2025-10-02 16:08:16', '2025-10-02 16:31:11', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
 (26, 1, 'nk50rouakb10g4ds360n3gm79f', '2025-10-02 17:05:14', '2025-10-02 17:51:30', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(27, 7, 'ku855b718nqj64cj2phjphcgs7', '2025-10-02 17:52:57', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 1),
-(28, 1, '62i7q5m76dn7f335817tp7oceg', '2025-10-02 18:38:55', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 1);
+(27, 7, 'ku855b718nqj64cj2phjphcgs7', '2025-10-02 17:52:57', '2025-10-03 13:13:41', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(28, 1, '62i7q5m76dn7f335817tp7oceg', '2025-10-02 18:38:55', '2025-10-03 13:13:55', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(29, 1, '26jmrj5t8qjeadk4ap9b52l69l', '2025-10-06 10:12:44', '2025-10-06 21:18:30', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(30, 1, 'm2osfgm0lckbjjkbqt68hhkilh', '2025-10-06 21:19:47', '2025-10-06 23:33:03', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(31, 1, 'khq0fdt78r70bo4dsgeu4rjs9k', '2025-10-06 23:35:31', '2025-10-07 04:23:20', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(32, 7, 'es5iaejgqbnq0t5232kin7to80', '2025-10-07 04:23:52', '2025-10-07 05:22:46', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(33, 1, 'mbcidok2qmkpjkovousg9id30r', '2025-10-07 04:40:48', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0', 0),
+(34, 7, 'einn91kqs7embtf5saqir6l7e5', '2025-10-07 05:23:08', '2025-10-07 05:32:31', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(35, 7, 'fqv7vqb4dnnnta0rfsvo7ltd9d', '2025-10-07 05:32:59', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(36, 7, 'nefrc4hmvr2qan2s1e9sodhd12', '2025-10-07 05:36:23', '2025-10-07 08:40:02', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(37, 1, 'uojuhabupeo6c6oengqrv5vn0q', '2025-10-07 09:00:54', '2025-10-07 09:01:19', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(38, 7, 'cu2vrgdmpd9m7vt32ek9ogcu8s', '2025-10-07 09:10:29', '2025-10-07 09:58:10', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(39, 1, '8p0en16m9bungqc80qv4gbibsp', '2025-10-07 09:58:50', '2025-10-07 10:07:44', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
+(40, 1, 'bc6uush3ffdnrveijrjabttr65', '2025-10-07 10:08:54', '2025-10-07 10:10:38', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0);
 
 --
 -- Indexes for dumped tables
@@ -669,6 +711,15 @@ ALTER TABLE `plot_layouts`
   ADD UNIQUE KEY `map_block_id_unique` (`map_block_id`);
 
 --
+-- Indexes for table `renewals`
+--
+ALTER TABLE `renewals`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `transaction_id` (`transaction_id`),
+  ADD KEY `burial_id` (`burial_id`),
+  ADD KEY `processed_by_user_id` (`processed_by_user_id`);
+
+--
 -- Indexes for table `staff_details`
 --
 ALTER TABLE `staff_details`
@@ -699,7 +750,7 @@ ALTER TABLE `user_sessions`
 -- AUTO_INCREMENT for table `burials`
 --
 ALTER TABLE `burials`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT for table `map_blocks`
@@ -711,37 +762,43 @@ ALTER TABLE `map_blocks`
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1556;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2561;
 
 --
 -- AUTO_INCREMENT for table `notification_email_status`
 --
 ALTER TABLE `notification_email_status`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3654;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6671;
 
 --
 -- AUTO_INCREMENT for table `notification_user`
 --
 ALTER TABLE `notification_user`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=109;
 
 --
 -- AUTO_INCREMENT for table `password_resets`
 --
 ALTER TABLE `password_resets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `plots`
 --
 ALTER TABLE `plots`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=702;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1193;
 
 --
 -- AUTO_INCREMENT for table `plot_layouts`
 --
 ALTER TABLE `plot_layouts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+
+--
+-- AUTO_INCREMENT for table `renewals`
+--
+ALTER TABLE `renewals`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `staff_details`
@@ -759,7 +816,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `user_sessions`
 --
 ALTER TABLE `user_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- Constraints for dumped tables
