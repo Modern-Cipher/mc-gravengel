@@ -13,7 +13,7 @@ class Database {
     private $error;
 
     public function __construct(){
-      $dsn = 'mysql:host=' . $this->host . ';dbname=' . $this->dbname;
+      $dsn = 'mysql:host=' . $this->host . ';dbname=' . $this->dbname . ';charset=utf8mb4';
       $options = array(
         PDO::ATTR_PERSISTENT => true,
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
@@ -56,15 +56,30 @@ class Database {
 
     public function resultSet(){
       $this->execute();
-      return $this->stmt->fetchAll(PDO::FETCH_OBJ);
+      $results = $this->stmt->fetchAll(PDO::FETCH_OBJ);
+      if ($this->stmt) {
+          $this->stmt->closeCursor();
+      }
+      return $results;
     }
 
     public function single(){
       $this->execute();
-      return $this->stmt->fetch(PDO::FETCH_OBJ);
+      $result = $this->stmt->fetch(PDO::FETCH_OBJ);
+      if ($this->stmt) {
+          $this->stmt->closeCursor();
+      }
+      return $result;
+    }
+    
+    /**
+     * Safely quotes a string for use in a query.
+     * This is the critical function for creating a valid backup.
+     */
+    public function quote($value) {
+        return $this->dbh->quote($value);
     }
 
-    // NEW: Returns the ID of the last inserted row
     public function lastInsertId(){
       return $this->dbh->lastInsertId();
     }

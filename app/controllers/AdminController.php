@@ -1106,7 +1106,7 @@ public function printRenewalHistory()
     /**
      * [BAGONG FUNCTION] Ipinapakita ang Backup & Restore page.
      */
-   public function backup() {
+    public function backup() {
         if ($_SESSION['user']['role'] !== 'admin') {
             redirect('admin/dashboard');
         }
@@ -1120,8 +1120,17 @@ public function printRenewalHistory()
         ]);
     }
 
+
     /**
      * [BAGONG FUNCTION] Gumagawa at nagda-download ng SQL backup.
+     */
+// app/controllers/AdminController.php
+
+// Palitan ang buong createBackup() function mo nito
+
+    /**
+     * [INAYOS] Gumagawa at nagda-download ng SQL backup.
+     * Gumagamit na ngayon ng PDO::quote() para sa tamang pag-escape ng data.
      */
     public function createBackup() {
         if ($_SESSION['user']['role'] !== 'admin') {
@@ -1134,23 +1143,28 @@ public function printRenewalHistory()
             $db->query('SHOW TABLES');
             $results = $db->resultSet();
             foreach ($results as $result) {
-                $tables[] = current((array)$result);
+                // Tiyaking ang 'audit_log' ay hindi kasama sa backup
+                $tableName = current((array)$result);
+                if ($tableName != 'audit_log') {
+                    $tables[] = $tableName;
+                }
             }
 
             $sql_content = "-- Gravengel DB Backup\n-- Generation Time: " . date('Y-m-d H:i:s') . "\n\n";
             $sql_content .= "SET NAMES utf8mb4;\nSET FOREIGN_KEY_CHECKS = 0;\n\n";
 
             foreach ($tables as $table) {
-                $db->query("SELECT * FROM `$table`");
-                $rows = $db->resultSet();
-                
                 $db->query("SHOW CREATE TABLE `$table`");
                 $create_table_row = $db->single();
+                
                 $sql_content .= "\n-- ----------------------------\n";
                 $sql_content .= "-- Table structure for $table\n";
                 $sql_content .= "-- ----------------------------\n";
                 $sql_content .= "DROP TABLE IF EXISTS `$table`;\n";
                 $sql_content .= $create_table_row->{'Create Table'} . ";\n\n";
+
+                $db->query("SELECT * FROM `$table`");
+                $rows = $db->resultSet();
 
                 if (!empty($rows)) {
                     $sql_content .= "-- ----------------------------\n";
@@ -1163,11 +1177,8 @@ public function printRenewalHistory()
                             if (is_null($value)) {
                                 $values[] = "NULL";
                             } else {
-                                // Gamit ang query binding para sa proper escaping
-                                $db->query('SELECT :value as val');
-                                $db->bind(':value', $value);
-                                $escaped_value = $db->single()->val;
-                                $values[] = "'$escaped_value'";
+                                // ITO ANG MAHALAGANG PAGBABAGO:
+                                $values[] = $db->quote($value);
                             }
                         }
                         $sql_content .= implode(', ', $values) . ");\n";
@@ -1178,12 +1189,22 @@ public function printRenewalHistory()
             $sql_content .= "\nSET FOREIGN_KEY_CHECKS = 1;\n";
 
             $filename = 'gravengel_backup_' . date('Y-m-d_H-i-s') . '.sql';
-            header('Content-Type: application/sql');
+            
+            $this->auditModel->logAction(
+                $_SESSION['user']['id'],
+                $_SESSION['user']['name'],
+                'backup_created',
+                'success',
+                'Successfully generated backup file: ' . $filename
+            );
+
+            header('Content-Type: application/sql; charset=utf-8');
             header('Content-Disposition: attachment; filename="' . $filename . '"');
             echo $sql_content;
             exit();
 
         } catch (Exception $e) {
+            $this->auditModel->logAction($_SESSION['user']['id'], $_SESSION['user']['name'], 'backup_created', 'failure', 'Error: ' . $e->getMessage());
             die("Error creating backup: " . $e->getMessage());
         }
     }
@@ -1191,7 +1212,7 @@ public function printRenewalHistory()
     /**
      * [BAGONG FUNCTION] Nagha-handle ng pag-upload at pag-restore ng SQL file.
      */
-  public function restoreBackup() {
+   public function restoreBackup() {
         if ($_SESSION['user']['role'] !== 'admin' || $_SERVER['REQUEST_METHOD'] !== 'POST') {
             redirect('admin/backup');
         }
@@ -1215,7 +1236,9 @@ public function printRenewalHistory()
             try {
                 $sql_content = file_get_contents($file_tmp_path);
                 
-                // Hahatiin ang buong SQL content sa mga individual na command
+                // Mas magandang paraan para i-execute ang multi-query SQL
+                $sql_content = preg_replace('%/\*(?:(?!\*/).)*\*/%s', '', $sql_content); // Alisin ang C-style comments
+                $sql_content = preg_replace('/-- .*[\n\r]/', '', $sql_content); // Alisin ang -- comments
                 $queries = explode(';', $sql_content);
                 
                 foreach ($queries as $query) {
@@ -1231,9 +1254,11 @@ public function printRenewalHistory()
                 $this->auditModel->logAction($userId, $userName, 'restore_attempted', 'success', 'Restored from file: ' . htmlspecialchars($file_name));
 
             } catch (Exception $e) {
-                $_SESSION['flash_message'] = 'An error occurred during restore: ' . $e->getMessage();
+                // INAYOS: Idinagdag ang $e->getMessage() sa log para makita ang eksaktong error
+                $errorMessage = $e->getMessage();
+                $_SESSION['flash_message'] = 'An error occurred during restore. The operation was stopped. Please check the audit log for details.';
                 $_SESSION['flash_type'] = 'danger';
-                $this->auditModel->logAction($userId, $userName, 'restore_attempted', 'failure', 'Error restoring from ' . htmlspecialchars($file_name) . ': ' . $e->getMessage());
+                $this->auditModel->logAction($userId, $userName, 'restore_attempted', 'failure', 'Error from ' . htmlspecialchars($file_name) . ': ' . $errorMessage);
             }
         } else {
             $_SESSION['flash_message'] = 'Error uploading file. Please try again.';

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 07, 2025 at 10:30 AM
+-- Generation Time: Oct 07, 2025 at 02:37 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -37,13 +37,6 @@ CREATE TABLE `audit_log` (
   `ip_address` varchar(64) DEFAULT NULL,
   `timestamp` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `audit_log`
---
-
-INSERT INTO `audit_log` (`id`, `user_id`, `username`, `action_type`, `status`, `details`, `ip_address`, `timestamp`) VALUES
-(1, 1, 'Genesys Xx', 'restore_attempted', 'failure', 'Error restoring from gravengel_backup_2025-10-07_10-24-21.sql: SQLSTATE[HY000]: General error: 2014 Cannot execute queries while there are pending result sets. Consider unsetting the previous PDOStatement or calling PDOStatement::closeCursor()', '::1', '2025-10-07 16:25:56');
 
 -- --------------------------------------------------------
 
@@ -81,17 +74,6 @@ CREATE TABLE `burials` (
   `updated_by_user_id` int(11) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `burials`
---
-
-INSERT INTO `burials` (`id`, `plot_id`, `burial_id`, `transaction_id`, `deceased_first_name`, `deceased_middle_name`, `deceased_last_name`, `deceased_suffix`, `age`, `sex`, `date_born`, `date_died`, `cause_of_death`, `grave_level`, `grave_type`, `interment_full_name`, `interment_relationship`, `interment_contact_number`, `interment_email`, `interment_address`, `payment_amount`, `rental_date`, `expiry_date`, `requirements`, `is_active`, `created_by_user_id`, `updated_by_user_id`, `created_at`) VALUES
-(25, 1127, 'B-CF3C12', '20251006-624', 'asdas', 'asdasd', 'asd', 'Sr.', '7', 'male', '2018-06-06', '2025-10-06', 'dfgg', 'A', 'Columbarium', 'asfasf', 'Spouse', '09695760172', 'interment1@gmail.com', 'Poblacion', 5000.00, '2025-10-06 14:07:00', '2030-10-06 14:07:00', '', 1, 1, 1, '2025-10-06 12:14:53'),
-(26, 1129, 'B-C9F19E', '20251006-614', 'TESTING3', 'TESTING3', 'TESTING3', 'I', '15', 'male', '2010-02-11', '2025-10-06', 'TESTING3', 'B', 'Apartment', 'TESTING3', 'Child', '0969 576 0172', 'interment1@gmail.com', 'Poblacion, Brgy. Balanac, City of Ligao, Albay, 3011', 5000.00, '2025-10-06 14:45:00', '2030-10-06 14:45:00', 'Death Certificate with registry number, Voter&#039;s ID, Cedula, Sulat Kahilingan', 1, 1, 1, '2025-10-06 13:53:39'),
-(27, 1126, 'B-589902', '20251006-781', 'PRINTEST', 'PRINTEST', 'PRINTEST', 'Sr.', '33', 'male', '1992-06-11', '2025-10-06', 'PRINTEST', 'D', 'Crypt', 'PRINTEST', 'Spouse', '0969 576 0172', 'minionm219@gmail.com', 'Poblacion, Brgy. Aurora Pob., Jovellar, Albay, 3011', 5000.00, '2030-10-06 06:58:00', '2035-10-06 06:58:00', 'Death Certificate with registry number, Voter&#039;s ID, Cedula', 1, 1, 7, '2025-10-06 15:57:22'),
-(28, 1124, 'B-923227', '20251007-197', 'staffadd', 'staffadd', 'staffadd', 'Sr.', '28', 'male', '1997-02-07', '2025-10-07', 'staffadd', 'B', 'Apartment', 'staffadd', 'Relative', '0969 576 0172', 'minionm219@gmail.com', 'Poblacion, Brgy. Muslim Area, Maluso, Basilan, 3011', 5000.00, '2025-10-07 07:16:00', '2030-10-07 07:16:00', 'Voter&#039;s ID, Sulat Kahilingan', 0, 7, 1, '2025-10-07 07:16:43'),
-(29, 1125, 'B-F25179', '20251007-076', 'Anna', 'H', 'Santos', '', '28', 'female', '1997-08-07', '2025-10-09', 'Heart Attack', 'A', 'Apartment', 'Michael Santos', 'Spouse', '0987 654 3211', 'minionm219@gmail.com', 'street, Brgy. Dampol, Plaridel, Bulacan, 3004', 5000.00, '2030-10-07 09:27:00', '2035-10-07 09:27:00', 'Death Certificate with registry number, Barangay Indigency for Burial Assistance, Voter&#039;s ID, Cedula, Sulat Kahilingan', 0, 7, 7, '2025-10-07 09:27:38');
 
 -- --------------------------------------------------------
 
@@ -217,14 +199,6 @@ CREATE TABLE `notifications` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `notifications`
---
-
-INSERT INTO `notifications` (`id`, `burial_id`, `title`, `message`, `severity`, `due_date`, `kind`, `created_at`) VALUES
-(473, 'B-9E7ADF', 'Rental expires in 30 days', 'Grave Block-A (Block-A003) rental expires on Nov 02, 2025.', 'warning', '2025-11-02', 'expiry_30', '2025-10-02 17:05:15'),
-(2328, 'B-589902', 'Rental expires in 30 days', 'Grave Blk-A (Blk-A003) rental expires on Nov 06, 2025.', 'warning', '2025-11-06', 'expiry_30', '2025-10-06 17:03:39');
-
 -- --------------------------------------------------------
 
 --
@@ -244,20 +218,6 @@ CREATE TABLE `notification_email_status` (
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `notification_email_status`
---
-
-INSERT INTO `notification_email_status` (`id`, `notification_id`, `recipient_type`, `recipient_email`, `sent`, `last_attempt_at`, `attempts`, `last_error`, `created_at`, `updated_at`) VALUES
-(403, 473, 'admin', 'menarddelacruz.basc@gmail.com', 1, '2025-10-02 17:05:21', 1, NULL, '2025-10-02 17:05:15', '2025-10-02 17:05:21'),
-(404, 473, 'staff', 'minionm219@gmail.com', 1, '2025-10-02 17:05:27', 1, NULL, '2025-10-02 17:05:15', '2025-10-02 17:05:27'),
-(405, 473, 'staff', 'lovecano30@gmail.com', 1, '2025-10-02 17:05:33', 1, NULL, '2025-10-02 17:05:15', '2025-10-02 17:05:33'),
-(407, 473, 'interment', 'mdctechservices@gmail.com', 1, '2025-10-02 17:05:39', 1, NULL, '2025-10-02 17:05:15', '2025-10-02 17:05:39'),
-(5970, 2328, 'admin', 'menarddelacruz.basc@gmail.com', 1, '2025-10-06 17:03:44', 1, NULL, '2025-10-06 17:03:39', '2025-10-06 17:03:44'),
-(5971, 2328, 'staff', 'minionm219@gmail.com', 1, '2025-10-06 17:03:52', 1, NULL, '2025-10-06 17:03:39', '2025-10-06 17:03:52'),
-(5972, 2328, 'staff', 'lovecano30@gmail.com', 1, '2025-10-06 17:03:56', 1, NULL, '2025-10-06 17:03:39', '2025-10-06 17:03:56'),
-(5974, 2328, 'interment', 'interment1@gmail.com', 1, '2025-10-06 17:04:00', 1, NULL, '2025-10-06 17:03:39', '2025-10-06 17:04:00');
-
 -- --------------------------------------------------------
 
 --
@@ -273,18 +233,6 @@ CREATE TABLE `notification_user` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `notification_user`
---
-
-INSERT INTO `notification_user` (`id`, `notification_id`, `user_id`, `is_read`, `read_at`, `created_at`) VALUES
-(103, 473, 1, 1, '2025-10-06 10:14:09', '2025-10-02 17:05:15'),
-(104, 473, 7, 1, '2025-10-02 19:38:32', '2025-10-02 17:05:15'),
-(105, 473, 8, 0, NULL, '2025-10-02 17:05:15'),
-(106, 2328, 1, 1, '2025-10-06 18:16:13', '2025-10-06 17:03:39'),
-(107, 2328, 7, 0, NULL, '2025-10-06 17:03:39'),
-(108, 2328, 8, 0, NULL, '2025-10-06 17:03:39');
-
 -- --------------------------------------------------------
 
 --
@@ -299,31 +247,6 @@ CREATE TABLE `password_resets` (
   `used_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `password_resets`
---
-
-INSERT INTO `password_resets` (`id`, `user_id`, `token`, `expires_at`, `used_at`, `created_at`) VALUES
-(15, 7, '0a98d5bfee0ef997312d091edf2190fdd153c9510831854883f26b27962f8f62', '2025-10-07 02:30:19', NULL, '2025-10-07 00:30:19'),
-(16, 7, 'feec001a983079bdd0982b68050dc29c87081e55fad5e622015a19081f563318', '2025-10-08 07:17:12', NULL, '2025-10-07 13:17:12'),
-(17, 7, '62289c48840b11e2bd2945dbd3e6fa1b1a1797b7e2ab700aa119b2c6080ed8bc', '2025-10-08 07:27:40', NULL, '2025-10-07 13:27:40'),
-(18, 7, '0d3d2042a4b8af7569cac7d1d798b1a879a980a098a89468ac0f1f2d71b58537', '2025-10-08 07:29:56', NULL, '2025-10-07 13:29:56'),
-(19, 7, '8ea56387724b90dc20ec5830542b22c5797e75fd59ea3e0894a2ff684e428224', '2025-10-08 07:32:30', NULL, '2025-10-07 13:32:30'),
-(20, 7, '28d64bd6a053520ee646034073210ce56a819462453fe924c01fadb2de460c85', '2025-10-08 07:58:02', NULL, '2025-10-07 13:58:02'),
-(21, 7, '28fe7f9bfe883195978475f10621a99706ed262b2a000f6d70746278d7b34a05', '2025-10-08 08:02:11', NULL, '2025-10-07 14:02:11'),
-(22, 7, 'a2156fbde596f0521cc3b05f5294adfb93950b32356f7c2c1b089f369e1725da', '2025-10-08 08:06:01', NULL, '2025-10-07 14:06:01'),
-(23, 7, '61f4d68cc1419c1fe62369bb12e6aaafac61435ab62b131ca382c20b152c3d73', '2025-10-08 08:10:31', NULL, '2025-10-07 14:10:31'),
-(24, 7, 'da870938340c90175a66888c871687a3ef600fd82aec838e655b9fc2aed5374b', '2025-10-08 08:18:54', NULL, '2025-10-07 14:18:54'),
-(25, 7, 'df7c4f8fe329aa93223d85abc5c97d9e81ca12cfc227fff624d9730f7a8eff8c', '2025-10-08 08:29:48', NULL, '2025-10-07 14:29:48'),
-(26, 7, '21a9319fedad862ffa973601f9dc2a1b436afebe29f529f2fe48d9fae2cae982', '2025-10-08 08:33:53', NULL, '2025-10-07 14:33:53'),
-(27, 7, '2acbbcec26c62859cfe97e0b1981e655b16435e9cab0a3ae92e6c9f322cd9813', '2025-10-08 09:06:05', NULL, '2025-10-07 15:06:05'),
-(28, 7, '10ab4e67e53c0ad486bfdfd81739dc2e3bc718151d1b9cc17f9ed1a14bbd9ce4', '2025-10-08 09:08:52', '2025-10-07 15:10:32', '2025-10-07 15:08:52'),
-(29, 7, '5dcadbdc622a74118bc11be9a13185202ab51d2b904bb358d7b6d51e3e3b7d65', '2025-10-08 09:14:54', NULL, '2025-10-07 15:14:54'),
-(30, 7, 'd9cda0a9240d3015bf33c53276b3d5a1cf161d087c8ab71a596d1bb89378380d', '2025-10-08 09:16:43', NULL, '2025-10-07 15:16:43'),
-(31, 7, '2c927aec2aa09470e4b40147fdda98b5a647644111fe5990284740fe090565ce', '2025-10-08 09:20:31', NULL, '2025-10-07 15:20:31'),
-(32, 7, '113486a5be0aac813c43877e69b2c48ab94f68e564ea5f4acb82edf9ed01c652', '2025-10-08 09:22:57', NULL, '2025-10-07 15:22:57'),
-(33, 7, '3204657f8646e333375f5fb80c0e8180376a52baacae1881127ee5b477f60e47', '2025-10-08 09:27:57', NULL, '2025-10-07 15:27:57');
 
 -- --------------------------------------------------------
 
@@ -450,10 +373,10 @@ INSERT INTO `plots` (`id`, `map_block_id`, `plot_number`, `status`) VALUES
 (791, 2, 'Blk-B024', 'vacant'),
 (1124, 1, 'BlockA001', 'vacant'),
 (1125, 1, 'BlockA002', 'vacant'),
-(1126, 1, 'BlockA003', 'occupied'),
-(1127, 1, 'BlockA004', 'occupied'),
+(1126, 1, 'BlockA003', 'vacant'),
+(1127, 1, 'BlockA004', 'vacant'),
 (1128, 1, 'BlockA005', 'vacant'),
-(1129, 1, 'BlockA006', 'occupied'),
+(1129, 1, 'BlockA006', 'vacant'),
 (1130, 1, 'BlockA007', 'vacant'),
 (1131, 1, 'BlockA008', 'vacant'),
 (1132, 1, 'BlockA009', 'vacant'),
@@ -543,25 +466,6 @@ CREATE TABLE `renewals` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `renewals`
---
-
-INSERT INTO `renewals` (`id`, `burial_id`, `transaction_id`, `previous_expiry_date`, `new_expiry_date`, `payment_amount`, `payment_date`, `payer_name`, `payer_email`, `receipt_email_status`, `processed_by_user_id`, `created_at`) VALUES
-(1, 'B-CF3C12', 'REN-20251006-510', '2030-10-06 14:07:00', '2035-10-06 14:07:00', 5000.00, '2025-10-06', 'asfasf', 'interment1@gmail.com', 'Sent successfully.', 1, '2025-10-06 10:56:45'),
-(2, 'B-589902', 'REN-20251006-308', '2027-10-06 06:57:00', '2032-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 10:59:41'),
-(3, 'B-589902', 'REN-20251006-136', '2032-10-06 06:57:00', '2037-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 11:25:02'),
-(4, 'B-589902', 'REN-20251006-531', '2037-10-06 06:57:00', '2042-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 11:30:29'),
-(5, 'B-589902', 'REN-20251006-426', '2042-10-06 06:57:00', '2047-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 11:37:43'),
-(6, 'B-589902', 'REN-20251006-287', '2030-10-06 06:57:00', '2035-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 11:55:30'),
-(7, 'B-589902', 'REN-20251006-388', '2035-10-06 06:57:00', '2040-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 12:01:56'),
-(8, 'B-589902', 'REN-20251006-347', '2040-10-06 06:57:00', '2045-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 12:13:16'),
-(9, 'B-589902', 'REN-20251006-209', '2045-10-06 06:57:00', '2050-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 12:34:00'),
-(10, 'B-589902', 'REN-20251006-921', '2050-10-06 06:57:00', '2055-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 12:37:04'),
-(11, 'B-589902', 'REN-20251006-343', '2055-10-06 06:57:00', '2060-10-06 06:57:00', 5000.00, '2025-10-06', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 1, '2025-10-06 13:12:37'),
-(12, 'B-589902', 'REN-20251007-390', '2030-10-06 06:58:00', '2035-10-06 06:58:00', 5000.00, '2025-10-07', 'PRINTEST', 'minionm219@gmail.com', 'Sent successfully.', 7, '2025-10-07 00:21:40'),
-(13, 'B-F25179', 'REN-20251007-228', '2030-10-07 09:27:00', '2035-10-07 09:27:00', 5000.00, '2025-10-07', 'Michael Santos', 'minionm219@gmail.com', 'Sent successfully.', 7, '2025-10-07 01:36:23');
-
 -- --------------------------------------------------------
 
 --
@@ -580,10 +484,7 @@ CREATE TABLE `staff_details` (
 --
 
 INSERT INTO `staff_details` (`id`, `user_id`, `staff_id`, `designation`) VALUES
-(1, 1, 'S-001', 'System Administrator.'),
-(7, 7, 'S-002', 'Manager Staff'),
-(8, 8, 'S-003', 'developer'),
-(9, 9, 'S-2510-258', 'test');
+(1, 1, 'S-001', 'Fullstack Developer');
 
 -- --------------------------------------------------------
 
@@ -615,10 +516,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `role`, `first_name`, `last_name`, `sex`, `phone`, `address`, `profile_image`, `is_active`, `must_change_pwd`, `last_login_at`, `created_at`, `updated_at`) VALUES
-(1, 'admin', 'menarddelacruz.basc@gmail.com', '$2y$10$4TQk2MKdQp2R/hZbxAcl6.hzO.WHxAgNrlZ3/3Z7PydmTS3szo8DW', 'admin', 'Genesys', 'Xx', NULL, '', '', 'Screenshot_2025-07-17_004536_cc3528.png', 1, 0, '2025-10-07 11:15:25', '2025-09-19 13:20:45', '2025-10-07 12:53:40'),
-(7, 'minionm2', 'minionm219@gmail.com', '$2y$10$I/jQeHXo91un/T3qKfXyyOuUF/lqrIs3o5fazEZR2nChj5orikAbO', 'staff', 'minion', 'minion', NULL, '0987 654 3221', '', 'Screenshot_2025-10-01_114346_fd9043.png', 1, 0, '2025-10-07 15:11:07', '2025-09-20 04:31:29', '2025-10-07 15:11:07'),
-(8, 'Orion', 'lovecano30@gmail.com', '$2y$10$cQ.ZuO8jQykPGmCmhY1mbuaL9AhdiRyh7HSjEVKnWQy/ODtm6y1P6', 'staff', 'Orion Seal', 'Cano', NULL, '0987 654 3765', NULL, NULL, 1, 1, NULL, '2025-09-20 09:17:55', '2025-10-07 13:16:57'),
-(9, 'test', 'test@gmail.com', '$2y$10$ZffZiIQFXVAmQRmxNZyukeQx1eeRKAjJ5pEiJNA3oqRj2oyE5x8Km', 'staff', 'test', 'test', NULL, '0987 654 3211', NULL, NULL, 1, 1, NULL, '2025-10-07 13:19:29', '2025-10-07 13:19:29');
+(1, 'admin', 'menarddelacruz.basc@gmail.com', '$2y$10$Si22RpmgHwLc2OyUSYmv1O0JfgTjka9qYyclYiaow4PdtMFtgf30y', 'admin', 'Genesys', 'Xx', NULL, '', '', 'Screenshot_2025-07-17_004536_cc3528.png', 1, 0, '2025-10-07 20:22:15', '2025-09-19 13:20:45', '2025-10-07 20:22:15');
 
 -- --------------------------------------------------------
 
@@ -636,56 +534,6 @@ CREATE TABLE `user_sessions` (
   `user_agent` varchar(255) DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `user_sessions`
---
-
-INSERT INTO `user_sessions` (`id`, `user_id`, `session_id`, `login_at`, `logout_at`, `ip_address`, `user_agent`, `is_active`) VALUES
-(1, 1, '58047ketcs9e1egni3b7dfgueg', '2025-09-19 20:12:56', '2025-09-19 21:02:40', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(2, 1, '453ok2scshunsr6mnmb5iqfrae', '2025-09-19 21:03:06', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(3, 1, 'tqtjo0chhssefjj8stg4ql4pct', '2025-09-19 21:03:06', '2025-09-19 21:05:11', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(4, 1, 'vritle0ag9674abvfe7137lfd6', '2025-09-19 21:13:53', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(5, 1, '7cr6uo81giocarp3717c32nf5m', '2025-09-19 21:13:53', '2025-09-19 22:09:15', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(6, 1, '9egv1eo9cte7sb1a0pefo4h40a', '2025-09-20 00:39:37', '2025-09-20 04:44:39', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(7, 7, 'bh4iusgsmlnkclv84u34sucqv3', '2025-09-20 04:45:27', '2025-09-20 08:43:14', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(8, 1, 'des37cdf0ajp9fq9cuguh63n2u', '2025-09-20 04:48:52', '2025-09-20 05:56:09', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(9, 1, 'b33s5f9tigalmpd86c51prngv8', '2025-09-20 05:56:19', '2025-09-20 06:58:18', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(10, 1, '5q05479as317fvduivmf0ts9ro', '2025-09-20 06:59:02', '2025-09-20 08:31:05', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(11, 1, 'vmjldc67706v1vsvmlcpugmag6', '2025-09-20 08:33:56', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(12, 7, 'qtaftii1o1sgm2smelfd6i38qv', '2025-09-20 08:44:24', '2025-09-20 08:44:31', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(13, 7, 'uv8dt8424mt9rqpeoq2700ukiv', '2025-09-20 09:02:07', '2025-09-20 09:04:33', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(14, 7, '4uurns34k73e0cbr4r8n28rali', '2025-09-20 09:07:56', '2025-09-20 10:29:23', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(15, 1, 'ursbnjeo3gmvb8s2hhke8hir0e', '2025-09-20 10:55:35', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(16, 1, '5q3sk9f1jvtl0qmdk6t603g6e4', '2025-09-29 19:52:38', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(17, 1, 'bnd7qgahq43hpgd73m8suns3c6', '2025-09-30 14:59:04', '2025-10-01 22:03:54', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(18, 1, 'h3qvg1sepakuqjnqhts6eqeu00', '2025-10-01 22:04:15', '2025-10-01 22:27:53', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(19, 1, 'nvqokpene8hv1nip6kd47rvpj3', '2025-10-01 22:28:53', '2025-10-01 22:34:45', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(20, 1, '5ofr0nva071vgnbskuvdcof4ld', '2025-10-02 05:18:28', '2025-10-02 13:36:15', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(21, 1, 'ebvumunglemin495o01s4egvtq', '2025-10-02 13:38:12', '2025-10-02 13:41:28', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(22, 1, '6v9knupl09pima25gcr22c6oti', '2025-10-02 13:42:21', '2025-10-02 15:28:24', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(23, 1, 't230ocvlshtchb989s1i5qs3m4', '2025-10-02 15:51:47', '2025-10-02 15:56:13', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(24, 1, 'q3o82j458mi80ch2a090egpc01', '2025-10-02 15:56:50', '2025-10-02 16:03:01', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(25, 1, 'ieqr37cb2pv6o35uouhv5bv546', '2025-10-02 16:08:16', '2025-10-02 16:31:11', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(26, 1, 'nk50rouakb10g4ds360n3gm79f', '2025-10-02 17:05:14', '2025-10-02 17:51:30', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(27, 7, 'ku855b718nqj64cj2phjphcgs7', '2025-10-02 17:52:57', '2025-10-03 13:13:41', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(28, 1, '62i7q5m76dn7f335817tp7oceg', '2025-10-02 18:38:55', '2025-10-03 13:13:55', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(29, 1, '26jmrj5t8qjeadk4ap9b52l69l', '2025-10-06 10:12:44', '2025-10-06 21:18:30', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(30, 1, 'm2osfgm0lckbjjkbqt68hhkilh', '2025-10-06 21:19:47', '2025-10-06 23:33:03', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(31, 1, 'khq0fdt78r70bo4dsgeu4rjs9k', '2025-10-06 23:35:31', '2025-10-07 04:23:20', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(32, 7, 'es5iaejgqbnq0t5232kin7to80', '2025-10-07 04:23:52', '2025-10-07 05:22:46', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(33, 1, 'mbcidok2qmkpjkovousg9id30r', '2025-10-07 04:40:48', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0', 0),
-(34, 7, 'einn91kqs7embtf5saqir6l7e5', '2025-10-07 05:23:08', '2025-10-07 05:32:31', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(35, 7, 'fqv7vqb4dnnnta0rfsvo7ltd9d', '2025-10-07 05:32:59', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(36, 7, 'nefrc4hmvr2qan2s1e9sodhd12', '2025-10-07 05:36:23', '2025-10-07 08:40:02', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(37, 1, 'uojuhabupeo6c6oengqrv5vn0q', '2025-10-07 09:00:54', '2025-10-07 09:01:19', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(38, 7, 'cu2vrgdmpd9m7vt32ek9ogcu8s', '2025-10-07 09:10:29', '2025-10-07 09:58:10', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(39, 1, '8p0en16m9bungqc80qv4gbibsp', '2025-10-07 09:58:50', '2025-10-07 10:07:44', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(40, 1, 'bc6uush3ffdnrveijrjabttr65', '2025-10-07 10:08:54', '2025-10-07 10:10:38', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(41, 1, '3vjndlm3hs435ve4g3jobq8jq1', '2025-10-07 11:15:25', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0', 1),
-(42, 7, '549h1jmu43lu27dl7qi6edeka7', '2025-10-07 11:23:35', '2025-10-07 13:32:22', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(43, 7, 'fvbv0evppkm0k731uejbvrh5uq', '2025-10-07 14:18:31', '2025-10-07 14:18:46', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(44, 7, 'tv52v5nkfsqaibjqrb5p14qvjh', '2025-10-07 15:11:07', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 1);
 
 --
 -- Indexes for dumped tables
@@ -806,7 +654,7 @@ ALTER TABLE `user_sessions`
 -- AUTO_INCREMENT for table `audit_log`
 --
 ALTER TABLE `audit_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `burials`
@@ -878,7 +726,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `user_sessions`
 --
 ALTER TABLE `user_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- Constraints for dumped tables
