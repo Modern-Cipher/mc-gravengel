@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 07, 2025 at 10:30 AM
+-- Generation Time: Oct 07, 2025 at 04:32 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,30 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Database: `gravengel`
 --
-
--- --------------------------------------------------------
-
---
--- Table structure for table `audit_log`
---
-
-CREATE TABLE `audit_log` (
-  `id` int(11) NOT NULL,
-  `user_id` int(11) DEFAULT NULL,
-  `username` varchar(80) DEFAULT NULL,
-  `action_type` varchar(50) NOT NULL,
-  `status` enum('success','failure') NOT NULL,
-  `details` text DEFAULT NULL,
-  `ip_address` varchar(64) DEFAULT NULL,
-  `timestamp` datetime NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `audit_log`
---
-
-INSERT INTO `audit_log` (`id`, `user_id`, `username`, `action_type`, `status`, `details`, `ip_address`, `timestamp`) VALUES
-(1, 1, 'Genesys Xx', 'restore_attempted', 'failure', 'Error restoring from gravengel_backup_2025-10-07_10-24-21.sql: SQLSTATE[HY000]: General error: 2014 Cannot execute queries while there are pending result sets. Consider unsetting the previous PDOStatement or calling PDOStatement::closeCursor()', '::1', '2025-10-07 16:25:56');
 
 -- --------------------------------------------------------
 
@@ -90,7 +66,7 @@ INSERT INTO `burials` (`id`, `plot_id`, `burial_id`, `transaction_id`, `deceased
 (25, 1127, 'B-CF3C12', '20251006-624', 'asdas', 'asdasd', 'asd', 'Sr.', '7', 'male', '2018-06-06', '2025-10-06', 'dfgg', 'A', 'Columbarium', 'asfasf', 'Spouse', '09695760172', 'interment1@gmail.com', 'Poblacion', 5000.00, '2025-10-06 14:07:00', '2030-10-06 14:07:00', '', 1, 1, 1, '2025-10-06 12:14:53'),
 (26, 1129, 'B-C9F19E', '20251006-614', 'TESTING3', 'TESTING3', 'TESTING3', 'I', '15', 'male', '2010-02-11', '2025-10-06', 'TESTING3', 'B', 'Apartment', 'TESTING3', 'Child', '0969 576 0172', 'interment1@gmail.com', 'Poblacion, Brgy. Balanac, City of Ligao, Albay, 3011', 5000.00, '2025-10-06 14:45:00', '2030-10-06 14:45:00', 'Death Certificate with registry number, Voter&#039;s ID, Cedula, Sulat Kahilingan', 1, 1, 1, '2025-10-06 13:53:39'),
 (27, 1126, 'B-589902', '20251006-781', 'PRINTEST', 'PRINTEST', 'PRINTEST', 'Sr.', '33', 'male', '1992-06-11', '2025-10-06', 'PRINTEST', 'D', 'Crypt', 'PRINTEST', 'Spouse', '0969 576 0172', 'minionm219@gmail.com', 'Poblacion, Brgy. Aurora Pob., Jovellar, Albay, 3011', 5000.00, '2030-10-06 06:58:00', '2035-10-06 06:58:00', 'Death Certificate with registry number, Voter&#039;s ID, Cedula', 1, 1, 7, '2025-10-06 15:57:22'),
-(28, 1124, 'B-923227', '20251007-197', 'staffadd', 'staffadd', 'staffadd', 'Sr.', '28', 'male', '1997-02-07', '2025-10-07', 'staffadd', 'B', 'Apartment', 'staffadd', 'Relative', '0969 576 0172', 'minionm219@gmail.com', 'Poblacion, Brgy. Muslim Area, Maluso, Basilan, 3011', 5000.00, '2025-10-07 07:16:00', '2030-10-07 07:16:00', 'Voter&#039;s ID, Sulat Kahilingan', 0, 7, 1, '2025-10-07 07:16:43'),
+(28, 1124, 'B-923227', '20251007-197', 'staffadd', 'staffadd', 'staffadd', 'Sr.', '28', 'male', '1997-02-07', '2025-10-07', 'staffadd', 'B', 'Apartment', 'staffadd', 'Relative', '0969 576 0172', 'minionm219@gmail.com', 'Poblacion, Brgy. Muslim Area, Maluso, Basilan, 3011', 5000.00, '2025-10-07 07:16:00', '2030-10-07 07:16:00', 'Voter&#039;s ID, Sulat Kahilingan', 1, 7, NULL, '2025-10-07 07:16:43'),
 (29, 1125, 'B-F25179', '20251007-076', 'Anna', 'H', 'Santos', '', '28', 'female', '1997-08-07', '2025-10-09', 'Heart Attack', 'A', 'Apartment', 'Michael Santos', 'Spouse', '0987 654 3211', 'minionm219@gmail.com', 'street, Brgy. Dampol, Plaridel, Bulacan, 3004', 5000.00, '2030-10-07 09:27:00', '2035-10-07 09:27:00', 'Death Certificate with registry number, Barangay Indigency for Burial Assistance, Voter&#039;s ID, Cedula, Sulat Kahilingan', 0, 7, 7, '2025-10-07 09:27:38');
 
 -- --------------------------------------------------------
@@ -305,25 +281,7 @@ CREATE TABLE `password_resets` (
 --
 
 INSERT INTO `password_resets` (`id`, `user_id`, `token`, `expires_at`, `used_at`, `created_at`) VALUES
-(15, 7, '0a98d5bfee0ef997312d091edf2190fdd153c9510831854883f26b27962f8f62', '2025-10-07 02:30:19', NULL, '2025-10-07 00:30:19'),
-(16, 7, 'feec001a983079bdd0982b68050dc29c87081e55fad5e622015a19081f563318', '2025-10-08 07:17:12', NULL, '2025-10-07 13:17:12'),
-(17, 7, '62289c48840b11e2bd2945dbd3e6fa1b1a1797b7e2ab700aa119b2c6080ed8bc', '2025-10-08 07:27:40', NULL, '2025-10-07 13:27:40'),
-(18, 7, '0d3d2042a4b8af7569cac7d1d798b1a879a980a098a89468ac0f1f2d71b58537', '2025-10-08 07:29:56', NULL, '2025-10-07 13:29:56'),
-(19, 7, '8ea56387724b90dc20ec5830542b22c5797e75fd59ea3e0894a2ff684e428224', '2025-10-08 07:32:30', NULL, '2025-10-07 13:32:30'),
-(20, 7, '28d64bd6a053520ee646034073210ce56a819462453fe924c01fadb2de460c85', '2025-10-08 07:58:02', NULL, '2025-10-07 13:58:02'),
-(21, 7, '28fe7f9bfe883195978475f10621a99706ed262b2a000f6d70746278d7b34a05', '2025-10-08 08:02:11', NULL, '2025-10-07 14:02:11'),
-(22, 7, 'a2156fbde596f0521cc3b05f5294adfb93950b32356f7c2c1b089f369e1725da', '2025-10-08 08:06:01', NULL, '2025-10-07 14:06:01'),
-(23, 7, '61f4d68cc1419c1fe62369bb12e6aaafac61435ab62b131ca382c20b152c3d73', '2025-10-08 08:10:31', NULL, '2025-10-07 14:10:31'),
-(24, 7, 'da870938340c90175a66888c871687a3ef600fd82aec838e655b9fc2aed5374b', '2025-10-08 08:18:54', NULL, '2025-10-07 14:18:54'),
-(25, 7, 'df7c4f8fe329aa93223d85abc5c97d9e81ca12cfc227fff624d9730f7a8eff8c', '2025-10-08 08:29:48', NULL, '2025-10-07 14:29:48'),
-(26, 7, '21a9319fedad862ffa973601f9dc2a1b436afebe29f529f2fe48d9fae2cae982', '2025-10-08 08:33:53', NULL, '2025-10-07 14:33:53'),
-(27, 7, '2acbbcec26c62859cfe97e0b1981e655b16435e9cab0a3ae92e6c9f322cd9813', '2025-10-08 09:06:05', NULL, '2025-10-07 15:06:05'),
-(28, 7, '10ab4e67e53c0ad486bfdfd81739dc2e3bc718151d1b9cc17f9ed1a14bbd9ce4', '2025-10-08 09:08:52', '2025-10-07 15:10:32', '2025-10-07 15:08:52'),
-(29, 7, '5dcadbdc622a74118bc11be9a13185202ab51d2b904bb358d7b6d51e3e3b7d65', '2025-10-08 09:14:54', NULL, '2025-10-07 15:14:54'),
-(30, 7, 'd9cda0a9240d3015bf33c53276b3d5a1cf161d087c8ab71a596d1bb89378380d', '2025-10-08 09:16:43', NULL, '2025-10-07 15:16:43'),
-(31, 7, '2c927aec2aa09470e4b40147fdda98b5a647644111fe5990284740fe090565ce', '2025-10-08 09:20:31', NULL, '2025-10-07 15:20:31'),
-(32, 7, '113486a5be0aac813c43877e69b2c48ab94f68e564ea5f4acb82edf9ed01c652', '2025-10-08 09:22:57', NULL, '2025-10-07 15:22:57'),
-(33, 7, '3204657f8646e333375f5fb80c0e8180376a52baacae1881127ee5b477f60e47', '2025-10-08 09:27:57', NULL, '2025-10-07 15:27:57');
+(15, 7, '0a98d5bfee0ef997312d091edf2190fdd153c9510831854883f26b27962f8f62', '2025-10-07 02:30:19', NULL, '2025-10-07 00:30:19');
 
 -- --------------------------------------------------------
 
@@ -448,7 +406,7 @@ INSERT INTO `plots` (`id`, `map_block_id`, `plot_number`, `status`) VALUES
 (789, 2, 'Blk-B022', 'vacant'),
 (790, 2, 'Blk-B023', 'vacant'),
 (791, 2, 'Blk-B024', 'vacant'),
-(1124, 1, 'BlockA001', 'vacant'),
+(1124, 1, 'BlockA001', 'occupied'),
 (1125, 1, 'BlockA002', 'vacant'),
 (1126, 1, 'BlockA003', 'occupied'),
 (1127, 1, 'BlockA004', 'occupied'),
@@ -580,10 +538,9 @@ CREATE TABLE `staff_details` (
 --
 
 INSERT INTO `staff_details` (`id`, `user_id`, `staff_id`, `designation`) VALUES
-(1, 1, 'S-001', 'System Administrator.'),
+(1, 1, 'S-001', 'System Administrator'),
 (7, 7, 'S-002', 'Manager Staff'),
-(8, 8, 'S-003', 'developer'),
-(9, 9, 'S-2510-258', 'test');
+(8, 8, 'S-003', 'developer');
 
 -- --------------------------------------------------------
 
@@ -615,10 +572,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `role`, `first_name`, `last_name`, `sex`, `phone`, `address`, `profile_image`, `is_active`, `must_change_pwd`, `last_login_at`, `created_at`, `updated_at`) VALUES
-(1, 'admin', 'menarddelacruz.basc@gmail.com', '$2y$10$4TQk2MKdQp2R/hZbxAcl6.hzO.WHxAgNrlZ3/3Z7PydmTS3szo8DW', 'admin', 'Genesys', 'Xx', NULL, '', '', 'Screenshot_2025-07-17_004536_cc3528.png', 1, 0, '2025-10-07 11:15:25', '2025-09-19 13:20:45', '2025-10-07 12:53:40'),
-(7, 'minionm2', 'minionm219@gmail.com', '$2y$10$I/jQeHXo91un/T3qKfXyyOuUF/lqrIs3o5fazEZR2nChj5orikAbO', 'staff', 'minion', 'minion', NULL, '0987 654 3221', '', 'Screenshot_2025-10-01_114346_fd9043.png', 1, 0, '2025-10-07 15:11:07', '2025-09-20 04:31:29', '2025-10-07 15:11:07'),
-(8, 'Orion', 'lovecano30@gmail.com', '$2y$10$cQ.ZuO8jQykPGmCmhY1mbuaL9AhdiRyh7HSjEVKnWQy/ODtm6y1P6', 'staff', 'Orion Seal', 'Cano', NULL, '0987 654 3765', NULL, NULL, 1, 1, NULL, '2025-09-20 09:17:55', '2025-10-07 13:16:57'),
-(9, 'test', 'test@gmail.com', '$2y$10$ZffZiIQFXVAmQRmxNZyukeQx1eeRKAjJ5pEiJNA3oqRj2oyE5x8Km', 'staff', 'test', 'test', NULL, '0987 654 3211', NULL, NULL, 1, 1, NULL, '2025-10-07 13:19:29', '2025-10-07 13:19:29');
+(1, 'admin', 'menarddelacruz.basc@gmail.com', '$2y$10$dHdP2hrbUX/zeM07zDeAc.UbTjYmrwUrX61aoTAE7BgGlTg28yKia', 'admin', 'Genesys', 'X', NULL, '', '', 'cemeteryMap_73469a.png', 1, 1, '2025-10-07 10:08:54', '2025-09-19 13:20:45', '2025-10-07 10:08:54'),
+(7, 'minionm2', 'minionm219@gmail.com', '$2y$10$wD5dRXBCbKY1tQmzpbNxcer6Gn2Yy0VNUSlLpsi8PkAHeDR/sSh/i', 'staff', 'minion', 'minion', NULL, '0987 654 3221', '', NULL, 1, 0, '2025-10-07 09:10:29', '2025-09-20 04:31:29', '2025-10-07 09:10:29'),
+(8, 'Orion', 'lovecano30@gmail.com', '$2y$10$cQ.ZuO8jQykPGmCmhY1mbuaL9AhdiRyh7HSjEVKnWQy/ODtm6y1P6', 'staff', 'Orion Seal', 'Cano', NULL, '0987 654 3765', NULL, NULL, 1, 1, NULL, '2025-09-20 09:17:55', '2025-10-06 23:51:10');
 
 -- --------------------------------------------------------
 
@@ -681,23 +637,11 @@ INSERT INTO `user_sessions` (`id`, `user_id`, `session_id`, `login_at`, `logout_
 (37, 1, 'uojuhabupeo6c6oengqrv5vn0q', '2025-10-07 09:00:54', '2025-10-07 09:01:19', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
 (38, 7, 'cu2vrgdmpd9m7vt32ek9ogcu8s', '2025-10-07 09:10:29', '2025-10-07 09:58:10', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
 (39, 1, '8p0en16m9bungqc80qv4gbibsp', '2025-10-07 09:58:50', '2025-10-07 10:07:44', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(40, 1, 'bc6uush3ffdnrveijrjabttr65', '2025-10-07 10:08:54', '2025-10-07 10:10:38', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(41, 1, '3vjndlm3hs435ve4g3jobq8jq1', '2025-10-07 11:15:25', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0', 1),
-(42, 7, '549h1jmu43lu27dl7qi6edeka7', '2025-10-07 11:23:35', '2025-10-07 13:32:22', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(43, 7, 'fvbv0evppkm0k731uejbvrh5uq', '2025-10-07 14:18:31', '2025-10-07 14:18:46', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0),
-(44, 7, 'tv52v5nkfsqaibjqrb5p14qvjh', '2025-10-07 15:11:07', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 1);
+(40, 1, 'bc6uush3ffdnrveijrjabttr65', '2025-10-07 10:08:54', '2025-10-07 10:10:38', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 0);
 
 --
 -- Indexes for dumped tables
 --
-
---
--- Indexes for table `audit_log`
---
-ALTER TABLE `audit_log`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_action_type` (`action_type`);
 
 --
 -- Indexes for table `burials`
@@ -803,12 +747,6 @@ ALTER TABLE `user_sessions`
 --
 
 --
--- AUTO_INCREMENT for table `audit_log`
---
-ALTER TABLE `audit_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
 -- AUTO_INCREMENT for table `burials`
 --
 ALTER TABLE `burials`
@@ -842,7 +780,7 @@ ALTER TABLE `notification_user`
 -- AUTO_INCREMENT for table `password_resets`
 --
 ALTER TABLE `password_resets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `plots`
@@ -866,19 +804,19 @@ ALTER TABLE `renewals`
 -- AUTO_INCREMENT for table `staff_details`
 --
 ALTER TABLE `staff_details`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `user_sessions`
 --
 ALTER TABLE `user_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- Constraints for dumped tables
