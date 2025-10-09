@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 07, 2025 at 02:37 PM
+-- Generation Time: Oct 09, 2025 at 06:09 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,22 @@ SET time_zone = "+00:00";
 --
 -- Database: `gravengel`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `activity_log`
+--
+
+CREATE TABLE `activity_log` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `username` varchar(80) DEFAULT NULL,
+  `action_type` varchar(50) NOT NULL,
+  `details` text DEFAULT NULL,
+  `ip_address` varchar(64) DEFAULT NULL,
+  `timestamp` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -49,6 +65,7 @@ CREATE TABLE `burials` (
   `plot_id` int(11) NOT NULL,
   `burial_id` varchar(50) NOT NULL,
   `transaction_id` varchar(32) DEFAULT NULL,
+  `parent_burial_id` varchar(50) DEFAULT NULL,
   `deceased_first_name` varchar(80) DEFAULT NULL,
   `deceased_middle_name` varchar(80) DEFAULT NULL,
   `deceased_last_name` varchar(80) DEFAULT NULL,
@@ -95,7 +112,7 @@ CREATE TABLE `map_blocks` (
 --
 
 INSERT INTO `map_blocks` (`id`, `block_key`, `title`, `coords`, `offset_x`, `offset_y`) VALUES
-(1, 'ltls-001', 'BlockA', '166,243,216,652', 0, 0),
+(1, 'ltls-001', 'Blk-A', '166,243,216,652', 0, 0),
 (2, 'ltrs-002', 'Blk-B', '256,247,216,645', 0, 0),
 (3, 'ltls-003', 'Block-C', '317,238,284,640', 0, 0),
 (4, 'ltrs-004', 'ltrs-004', '362,638,319,238', 0, 0),
@@ -371,54 +388,72 @@ INSERT INTO `plots` (`id`, `map_block_id`, `plot_number`, `status`) VALUES
 (789, 2, 'Blk-B022', 'vacant'),
 (790, 2, 'Blk-B023', 'vacant'),
 (791, 2, 'Blk-B024', 'vacant'),
-(1124, 1, 'BlockA001', 'vacant'),
-(1125, 1, 'BlockA002', 'vacant'),
-(1126, 1, 'BlockA003', 'vacant'),
-(1127, 1, 'BlockA004', 'vacant'),
-(1128, 1, 'BlockA005', 'vacant'),
-(1129, 1, 'BlockA006', 'vacant'),
-(1130, 1, 'BlockA007', 'vacant'),
-(1131, 1, 'BlockA008', 'vacant'),
-(1132, 1, 'BlockA009', 'vacant'),
-(1133, 1, 'BlockA010', 'vacant'),
-(1134, 1, 'BlockA011', 'vacant'),
-(1135, 1, 'BlockA012', 'vacant'),
-(1136, 1, 'BlockA013', 'vacant'),
-(1137, 1, 'BlockA014', 'vacant'),
-(1138, 1, 'BlockA015', 'vacant'),
-(1139, 1, 'BlockA016', 'vacant'),
-(1140, 1, 'BlockA017', 'vacant'),
-(1141, 1, 'BlockA018', 'vacant'),
-(1142, 1, 'BlockA019', 'vacant'),
-(1143, 1, 'BlockA020', 'vacant'),
-(1144, 1, 'BlockA021', 'vacant'),
-(1145, 1, 'BlockA022', 'vacant'),
-(1146, 1, 'BlockA023', 'vacant'),
-(1147, 1, 'BlockA024', 'vacant'),
-(1148, 1, 'BlockA025', 'vacant'),
-(1149, 1, 'BlockA026', 'vacant'),
-(1150, 1, 'BlockA027', 'vacant'),
-(1151, 1, 'BlockA028', 'vacant'),
-(1152, 1, 'BlockA029', 'vacant'),
-(1153, 1, 'BlockA030', 'vacant'),
-(1154, 1, 'BlockA031', 'vacant'),
-(1155, 1, 'BlockA032', 'vacant'),
-(1156, 1, 'BlockA033', 'vacant'),
-(1157, 1, 'BlockA034', 'vacant'),
-(1158, 1, 'BlockA035', 'vacant'),
-(1159, 1, 'BlockA036', 'vacant'),
-(1160, 1, 'BlockA037', 'vacant'),
-(1161, 1, 'BlockA038', 'vacant'),
-(1162, 1, 'BlockA039', 'vacant'),
-(1163, 1, 'BlockA040', 'vacant'),
-(1164, 1, 'BlockA041', 'vacant'),
-(1165, 1, 'BlockA042', 'vacant'),
-(1166, 1, 'BlockA043', 'vacant'),
-(1167, 1, 'BlockA044', 'vacant'),
-(1168, 1, 'BlockA045', 'vacant'),
-(1190, 1, 'BlockA046', 'vacant'),
-(1191, 1, 'BlockA047', 'vacant'),
-(1192, 1, 'BlockA048', 'vacant');
+(1124, 1, 'Blk-A001', 'vacant'),
+(1125, 1, 'Blk-A002', 'vacant'),
+(1126, 1, 'Blk-A003', 'vacant'),
+(1127, 1, 'Blk-A004', 'vacant'),
+(1128, 1, 'Blk-A005', 'vacant'),
+(1129, 1, 'Blk-A006', 'vacant'),
+(1130, 1, 'Blk-A007', 'vacant'),
+(1131, 1, 'Blk-A008', 'vacant'),
+(1132, 1, 'Blk-A009', 'vacant'),
+(1133, 1, 'Blk-A010', 'vacant'),
+(1134, 1, 'Blk-A011', 'vacant'),
+(1135, 1, 'Blk-A012', 'vacant'),
+(1136, 1, 'Blk-A013', 'vacant'),
+(1137, 1, 'Blk-A014', 'vacant'),
+(1138, 1, 'Blk-A015', 'vacant'),
+(1139, 1, 'Blk-A016', 'vacant'),
+(1140, 1, 'Blk-A017', 'vacant'),
+(1141, 1, 'Blk-A018', 'vacant'),
+(1142, 1, 'Blk-A019', 'vacant'),
+(1143, 1, 'Blk-A020', 'vacant'),
+(1144, 1, 'Blk-A021', 'vacant'),
+(1145, 1, 'Blk-A022', 'vacant'),
+(1146, 1, 'Blk-A023', 'vacant'),
+(1147, 1, 'Blk-A024', 'vacant'),
+(1148, 1, 'Blk-A025', 'vacant'),
+(1149, 1, 'Blk-A026', 'vacant'),
+(1150, 1, 'Blk-A027', 'vacant'),
+(1151, 1, 'Blk-A028', 'vacant'),
+(1152, 1, 'Blk-A029', 'vacant'),
+(1153, 1, 'Blk-A030', 'vacant'),
+(1154, 1, 'Blk-A031', 'vacant'),
+(1155, 1, 'Blk-A032', 'vacant'),
+(1156, 1, 'Blk-A033', 'vacant'),
+(1157, 1, 'Blk-A034', 'vacant'),
+(1158, 1, 'Blk-A035', 'vacant'),
+(1159, 1, 'Blk-A036', 'vacant'),
+(1160, 1, 'Blk-A037', 'vacant'),
+(1161, 1, 'Blk-A038', 'vacant'),
+(1162, 1, 'Blk-A039', 'vacant'),
+(1163, 1, 'Blk-A040', 'vacant'),
+(1164, 1, 'Blk-A041', 'vacant'),
+(1165, 1, 'Blk-A042', 'vacant'),
+(1166, 1, 'Blk-A043', 'vacant'),
+(1167, 1, 'Blk-A044', 'vacant'),
+(1168, 1, 'Blk-A045', 'vacant'),
+(1190, 1, 'Blk-A046', 'vacant'),
+(1191, 1, 'Blk-A047', 'vacant'),
+(1192, 1, 'Blk-A048', 'vacant'),
+(1193, 1, 'Blk-A049', 'vacant'),
+(1194, 1, 'Blk-A050', 'vacant'),
+(1195, 1, 'Blk-A051', 'vacant'),
+(1196, 1, 'Blk-A052', 'vacant'),
+(1197, 1, 'Blk-A053', 'vacant'),
+(1198, 1, 'Blk-A054', 'vacant'),
+(1199, 1, 'Blk-A055', 'vacant'),
+(1200, 1, 'Blk-A056', 'vacant'),
+(1201, 1, 'Blk-A057', 'vacant'),
+(1202, 1, 'Blk-A058', 'vacant'),
+(1203, 1, 'Blk-A059', 'vacant'),
+(1204, 1, 'Blk-A060', 'vacant'),
+(1205, 1, 'Blk-A061', 'vacant'),
+(1206, 1, 'Blk-A062', 'vacant'),
+(1207, 1, 'Blk-A063', 'vacant'),
+(1208, 1, 'Blk-A064', 'vacant'),
+(1209, 1, 'Blk-A065', 'vacant'),
+(1210, 1, 'Blk-A066', 'vacant');
 
 -- --------------------------------------------------------
 
@@ -438,12 +473,29 @@ CREATE TABLE `plot_layouts` (
 --
 
 INSERT INTO `plot_layouts` (`id`, `map_block_id`, `modal_rows`, `modal_cols`) VALUES
-(1, 1, 3, 16),
+(1, 1, 3, 22),
 (10, 2, 3, 8),
 (12, 3, 3, 3),
 (17, 13, 4, 8),
 (18, 18, 4, 8),
 (20, 12, 2, 4);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `remember_me_tokens`
+--
+
+CREATE TABLE `remember_me_tokens` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `selector` char(24) NOT NULL,
+  `validator_hash` char(64) NOT NULL,
+  `expires_at` datetime NOT NULL,
+  `user_agent` varchar(255) DEFAULT NULL,
+  `ip_address` varchar(64) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -516,7 +568,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `role`, `first_name`, `last_name`, `sex`, `phone`, `address`, `profile_image`, `is_active`, `must_change_pwd`, `last_login_at`, `created_at`, `updated_at`) VALUES
-(1, 'admin', 'menarddelacruz.basc@gmail.com', '$2y$10$Si22RpmgHwLc2OyUSYmv1O0JfgTjka9qYyclYiaow4PdtMFtgf30y', 'admin', 'Genesys', 'Xx', NULL, '', '', 'Screenshot_2025-07-17_004536_cc3528.png', 1, 0, '2025-10-07 20:22:15', '2025-09-19 13:20:45', '2025-10-07 20:22:15');
+(1, 'admin', 'cano.orionseal.bsit@gmail.com', '$2y$10$Si22RpmgHwLc2OyUSYmv1O0JfgTjka9qYyclYiaow4PdtMFtgf30y', 'admin', 'Genesys', 'Xx', NULL, '', '', NULL, 1, 1, NULL, '2025-09-19 13:20:45', '2025-10-09 12:08:45');
 
 -- --------------------------------------------------------
 
@@ -540,6 +592,14 @@ CREATE TABLE `user_sessions` (
 --
 
 --
+-- Indexes for table `activity_log`
+--
+ALTER TABLE `activity_log`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_user_id` (`user_id`),
+  ADD KEY `idx_action_type` (`action_type`);
+
+--
 -- Indexes for table `audit_log`
 --
 ALTER TABLE `audit_log`
@@ -557,7 +617,8 @@ ALTER TABLE `burials`
   ADD KEY `plot_id` (`plot_id`),
   ADD KEY `created_by_user_id` (`created_by_user_id`),
   ADD KEY `updated_by_user_id` (`updated_by_user_id`),
-  ADD KEY `idx_interment_email` (`interment_email`);
+  ADD KEY `idx_interment_email` (`interment_email`),
+  ADD KEY `idx_parent_burial_id` (`parent_burial_id`);
 
 --
 -- Indexes for table `map_blocks`
@@ -615,6 +676,14 @@ ALTER TABLE `plot_layouts`
   ADD UNIQUE KEY `map_block_id_unique` (`map_block_id`);
 
 --
+-- Indexes for table `remember_me_tokens`
+--
+ALTER TABLE `remember_me_tokens`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `selector` (`selector`),
+  ADD KEY `fk_rmt_user` (`user_id`);
+
+--
 -- Indexes for table `renewals`
 --
 ALTER TABLE `renewals`
@@ -651,16 +720,22 @@ ALTER TABLE `user_sessions`
 --
 
 --
+-- AUTO_INCREMENT for table `activity_log`
+--
+ALTER TABLE `activity_log`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
+
+--
 -- AUTO_INCREMENT for table `audit_log`
 --
 ALTER TABLE `audit_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `burials`
 --
 ALTER TABLE `burials`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT for table `map_blocks`
@@ -690,19 +765,25 @@ ALTER TABLE `notification_user`
 -- AUTO_INCREMENT for table `password_resets`
 --
 ALTER TABLE `password_resets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT for table `plots`
 --
 ALTER TABLE `plots`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1193;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1233;
 
 --
 -- AUTO_INCREMENT for table `plot_layouts`
 --
 ALTER TABLE `plot_layouts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+
+--
+-- AUTO_INCREMENT for table `remember_me_tokens`
+--
+ALTER TABLE `remember_me_tokens`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `renewals`
@@ -714,19 +795,19 @@ ALTER TABLE `renewals`
 -- AUTO_INCREMENT for table `staff_details`
 --
 ALTER TABLE `staff_details`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `user_sessions`
 --
 ALTER TABLE `user_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=86;
 
 --
 -- Constraints for dumped tables
@@ -769,6 +850,12 @@ ALTER TABLE `plots`
 --
 ALTER TABLE `plot_layouts`
   ADD CONSTRAINT `fk_map_block` FOREIGN KEY (`map_block_id`) REFERENCES `map_blocks` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `remember_me_tokens`
+--
+ALTER TABLE `remember_me_tokens`
+  ADD CONSTRAINT `fk_rmt_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `staff_details`

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= htmlspecialchars($data['title'] ?? 'Reset Password') ?> · Gravengel</title>
+  <title><?= htmlspecialchars($data['title'] ?? 'Reset Password') ?> | Gravengel</title>
   <script>window.URLROOT = '<?= URLROOT ?>';</script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   

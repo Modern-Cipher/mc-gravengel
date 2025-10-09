@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Login · Gravengel</title>
+  <title>Login | Gravengel</title>
   <script>window.URLROOT = '<?= URLROOT ?>';</script>
   <link rel="stylesheet" href="<?= URLROOT ?>/public/css/login.css?v=<?= time() ?>">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -34,15 +34,19 @@
 
       <form id="login-form" method="post" action="<?= URLROOT ?>/auth/doLogin" novalidate>
         <label for="identifier">Username or Email</label>
-        <input id="identifier" name="identifier" type="text" placeholder="Enter username or email" required>
+        <input id="identifier" name="identifier" type="text" placeholder="Enter username or email" required autocomplete="username">
 
         <label for="password">Password</label>
         <div class="password-field">
-          <input id="password" name="password" type="password" placeholder="Enter password" required>
+          <input id="password" name="password" type="password" placeholder="Enter password" required autocomplete="current-password">
           <button type="button" class="toggle-pass" aria-label="Show/Hide">👁</button>
         </div>
 
-        <div class="login-actions">
+        <div class="login-actions" style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <label style="display:inline-flex;align-items:center;gap:8px;user-select:none">
+            <input id="remember_me" name="remember_me" type="checkbox" value="1">
+            <span>Remember me</span>
+          </label>
           <a class="forgot-link" href="<?= URLROOT ?>/auth/forgot">Forgot Password</a>
         </div>
 

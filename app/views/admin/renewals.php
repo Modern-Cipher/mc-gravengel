@@ -44,8 +44,13 @@
 </style>
 
 <div class="container-fluid py-4">
-    <h2 class="mb-4">Renewals Management</h2>
-
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Renewals Management</h2>
+        <div class="input-group input-group-sm" style="max-width:350px;">
+            <span class="input-group-text bg-light"><i class="fas fa-search"></i></span>
+            <input type="search" id="renewalSearchInput" class="form-control" placeholder="Search Plot, Deceased, or IRH Name...">
+        </div>
+    </div>
     <div class="card mb-5">
         <div class="card-header" style="background-color: var(--g-maroon-dark, #6a1818); color: #fff;">
             <h5 class="mb-0"><i class="fas fa-list-alt me-2"></i>All Active Rentals</h5>
@@ -71,46 +76,46 @@
         </div>
     </div>
 
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Renewal History</h5>
-        <a href="<?= URLROOT ?>/admin/printRenewalHistory" target="_blank" class="btn btn-sm btn-secondary">
-            <i class="fas fa-print me-1"></i> Generate Report
-        </a>
-    </div>
-    <div class="card-body">
-        <div class="table-wrapper">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Transaction ID</th>
-                        <th>Payment Date</th>
-                        <th>Amount</th>
-                        <th>Payer Name</th>
-                        <th>New Expiry</th>
-                        <th>Processed By</th>
-                        <th>Receipt Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($data['history'])): ?>
-                        <tr><td colspan="7" class="text-center text-muted">No renewal history found.</td></tr>
-                    <?php else: foreach($data['history'] as $item): ?>
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-history me-2"></i>Renewal History</h5>
+            <button id="generateReportBtn" class="btn btn-sm btn-secondary">
+                <i class="fas fa-print me-1"></i> Generate Report
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-wrapper">
+                <table class="table table-striped">
+                    <thead>
                         <tr>
-                            <td><?= htmlspecialchars($item->transaction_id ?? '') ?></td>
-                            <td><?= date('M d, Y', strtotime($item->payment_date)) ?></td>
-                            <td>₱ <?= number_format($item->payment_amount ?? 0, 2) ?></td>
-                            <td><?= htmlspecialchars($item->payer_name ?? 'N/A') ?></td>
-                            <td><?= date('M d, Y', strtotime($item->new_expiry_date)) ?></td>
-                            <td><?= htmlspecialchars($item->processed_by ?? '') ?></td>
-                            <td><?= htmlspecialchars($item->receipt_email_status ?? 'N/A') ?></td>
+                            <th>Transaction ID</th>
+                            <th>Payment Date</th>
+                            <th>Amount</th>
+                            <th>Payer Name</th>
+                            <th>New Expiry</th>
+                            <th>Processed By</th>
+                            <th>Receipt Status</th>
                         </tr>
-                    <?php endforeach; endif; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($data['history'])): ?>
+                            <tr><td colspan="7" class="text-center text-muted">No renewal history found.</td></tr>
+                        <?php else: foreach($data['history'] as $item): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($item->transaction_id ?? '') ?></td>
+                                <td><?= date('M d, Y', strtotime($item->payment_date)) ?></td>
+                                <td>₱ <?= number_format($item->payment_amount ?? 0, 2) ?></td>
+                                <td><?= htmlspecialchars($item->payer_name ?? 'N/A') ?></td>
+                                <td><?= date('M d, Y', strtotime($item->new_expiry_date)) ?></td>
+                                <td><?= htmlspecialchars($item->processed_by ?? '') ?></td>
+                                <td><?= htmlspecialchars($item->receipt_email_status ?? 'N/A') ?></td>
+                            </tr>
+                        <?php endforeach; endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
 </div>
 
 <div class="modal fade" id="renewalModal" tabindex="-1">
@@ -124,12 +129,10 @@
                 <form id="renewalForm">
                     <input type="hidden" id="modal_burial_id" name="burial_id">
                     <input type="hidden" id="modal_plot_id" name="plot_id">
-                    
                     <h6 class="mb-3">Burial Details</h6>
                     <p><strong>Deceased:</strong> <span id="modal_deceased_name"></span></p>
                     <p><strong>Current Expiry Date:</strong> <span id="modal_expiry_date"></span></p>
                     <hr>
-                    
                     <h6 class="mb-3">Interment Right Holder (IRH) Details</h6>
                     <div class="input-group mb-2">
                         <span class="input-group-text" style="width: 120px;">IRH Name</span>
@@ -142,7 +145,6 @@
                         <button class="btn btn-outline-secondary copy-btn" type="button" data-copy-source="modal_irh_email" data-copy-target="payer_email" title="Copy to Payer's Email"><i class="fas fa-copy"></i> Copy</button>
                     </div>
                     <hr>
-                    
                     <h6 class="mb-3">Payer's Information</h6>
                     <div class="mb-3">
                         <label for="payer_name" class="form-label">Payer's Full Name <span class="text-danger">*</span></label>
@@ -174,15 +176,34 @@
         </div>
     </div>
 </div>
-
+<style>
+    .scroll-spacer-dummy {
+   
+    height: 1200px; 
+    opacity: 0;             
+    visibility: hidden;    
+    pointer-events: none;  
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+</style>
+<div class="row">
+    <div class="col-12">
+        <div class="scroll-spacer-dummy">
+            </div>
+    </div>
+</div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // All JavaScript logic remains the same. No changes needed here.
     const allBurials = <?= json_encode($data['all_burials'] ?? []) ?>;
     const renewalModal = new bootstrap.Modal(document.getElementById('renewalModal'));
     const modalEl = document.getElementById('renewalModal');
     const form = document.getElementById('renewalForm');
     const paymentDateInput = document.getElementById('payment_date');
     const renewalTableBody = document.getElementById('for-renewal-table');
+    const searchInput = document.getElementById('renewalSearchInput');
 
     const themedSwal = Swal.mixin({
         customClass: {
@@ -196,10 +217,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const e = (str) => { if (str === null || str === undefined) return ''; const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }; return String(str).replace(/[&<>"']/g, (m) => map[m]); };
     const formatDate = (dateString) => { if (!dateString) return ''; const date = new Date(dateString); return isNaN(date) ? '' : date.toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }); };
     
+    const debounce = (fn, ms = 300) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+
     const createTableRow = (item, status) => {
         const deceasedName = e(((item.deceased_first_name || '') + ' ' + (item.deceased_last_name || '')).trim());
         const plotLabel = e(((item.block_title || 'N/A') + ' - ' + (item.plot_number || 'N/A')).trim());
-
         return `
             <tr data-burial-id="${e(item.burial_id)}"
                 data-plot-id="${e(item.plot_id)}"
@@ -217,24 +239,20 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
     
-    const calculateAndRender = () => {
+    const calculateAndRender = (recordsToRender = allBurials) => {
         const recordsToDisplay = [];
         const now = new Date();
         now.setHours(0, 0, 0, 0);
-
-        if (!Array.isArray(allBurials)) {
-             renewalTableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error: Invalid data received from server.</td></tr>';
-             console.error("Data received is not an array:", allBurials);
+        if (!Array.isArray(recordsToRender)) {
+             renewalTableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error: Invalid data.</td></tr>';
              return;
         }
-
-        allBurials.forEach(item => {
+        recordsToRender.forEach(item => {
             if (!item.expiry_date) return;
             const expiry = new Date(item.expiry_date);
             expiry.setHours(0, 0, 0, 0);
             const diffTime = expiry.getTime() - now.getTime();
             const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-            
             let status;
             if (diffDays < 0) { status = { text: `Expired ${Math.abs(diffDays)} days ago`, badge: 'bg-danger' };
             } else if (diffDays === 0) { status = { text: 'Expires Today', badge: 'bg-danger' };
@@ -242,12 +260,15 @@ document.addEventListener('DOMContentLoaded', () => {
             } else { status = { text: `Expires in ${diffDays} days`, badge: 'bg-secondary' }; }
             recordsToDisplay.push({ ...item, status: status });
         });
-        
         if (recordsToDisplay.length > 0) {
             recordsToDisplay.sort((a, b) => new Date(a.expiry_date) - new Date(b.expiry_date));
             renewalTableBody.innerHTML = recordsToDisplay.map(rec => createTableRow(rec, rec.status)).join('');
         } else {
-            renewalTableBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No active burial records found.</td></tr>';
+            if (searchInput && searchInput.value.trim() !== '') {
+                renewalTableBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No matching records found.</td></tr>';
+            } else {
+                renewalTableBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No active burial records found.</td></tr>';
+            }
         }
     };
 
@@ -256,9 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = e.target.closest('tr');
             const burialId = row.dataset.burialId;
             const record = allBurials.find(b => b.burial_id === burialId);
-            
             form.reset();
-
             if (record) {
                 document.getElementById('modal_burial_id').value = record.burial_id;
                 document.getElementById('modal_plot_id').value = record.plot_id;
@@ -269,7 +288,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('payer_name').value = record.interment_full_name || '';
                 document.getElementById('payer_email').value = record.interment_email || '';
             }
-            
             paymentDateInput.valueAsDate = new Date();
             renewalModal.show();
         }
@@ -294,14 +312,12 @@ document.addEventListener('DOMContentLoaded', () => {
             allowOutsideClick: false,
             didOpen: () => { themedSwal.showLoading(); }
         });
-
         try {
             const response = await fetch(url, {
                 method: 'POST',
                 body: new URLSearchParams(formData)
             });
             const result = await response.json();
-
             if (result.ok) {
                 if (url.includes('processRenewal')) {
                     themedSwal.fire({
@@ -334,21 +350,19 @@ document.addEventListener('DOMContentLoaded', () => {
             themedSwal.fire('Network Error', 'Could not connect to the server. Please try again.', 'error');
         }
     };
-
     document.getElementById('confirmRenewalBtn').addEventListener('click', () => {
         if (!form.checkValidity()) { form.reportValidity(); return; }
         handleFormSubmit('<?= URLROOT ?>/admin/processRenewal', new FormData(form));
     });
-
     document.getElementById('vacateBtn').addEventListener('click', async () => {
         const burialId = document.getElementById('modal_burial_id').value;
         const deceasedName = document.getElementById('modal_deceased_name').textContent;
         const result = await themedSwal.fire({
             title: 'Are you sure?',
-            text: `This will archive the record for ${deceasedName} and mark their plot as vacant. This action cannot be undone.`,
+            text: `This will archive the record for ${deceasedName}. This action cannot be undone.`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Yes, vacate the plot!',
+            confirmButtonText: 'Yes, vacate this record!',
             customClass: {
                 confirmButton: 'btn btn-danger mx-2',
                 cancelButton: 'btn btn-secondary mx-2'
@@ -357,13 +371,61 @@ document.addEventListener('DOMContentLoaded', () => {
         if (result.isConfirmed) {
             const formData = new FormData();
             formData.append('burial_id', burialId);
-            // --- ITO ANG INAYOS ---
-            // Tinanggal ang sobrang 'new FormData()'
             handleFormSubmit('<?= URLROOT ?>/admin/processVacate', formData);
         }
     });
 
     calculateAndRender();
+
+    const generateReportBtn = document.getElementById('generateReportBtn');
+    if (generateReportBtn) {
+        generateReportBtn.addEventListener('click', () => {
+            themedSwal.fire({
+                title: 'Generating Report...',
+                html: 'Preparing the print preview. Please wait.',
+                allowOutsideClick: false,
+                didOpen: () => { themedSwal.showLoading(); }
+            });
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = '0';
+            iframe.src = '<?= URLROOT ?>/admin/printRenewalHistory';
+            document.body.appendChild(iframe);
+            iframe.onload = function() {
+                try {
+                    themedSwal.close();
+                    iframe.contentWindow.print();
+                } catch (error) {
+                    themedSwal.fire('Error', 'Could not generate the print preview.', 'error');
+                } finally {
+                    setTimeout(() => { document.body.removeChild(iframe); }, 1000);
+                }
+            };
+            iframe.onerror = function() {
+                themedSwal.fire('Error', 'Failed to load the report page.', 'error');
+                if (document.body.contains(iframe)) { document.body.removeChild(iframe); }
+            };
+        });
+    }
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce((e) => {
+            const query = e.target.value.trim().toLowerCase();
+            if (!query) {
+                calculateAndRender(allBurials);
+                return;
+            }
+            const filteredBurials = allBurials.filter(item => {
+                const deceasedName = ((item.deceased_first_name || '') + ' ' + (item.deceased_last_name || '')).trim().toLowerCase();
+                const plotLabel = ((item.block_title || '') + ' - ' + (item.plot_number || '')).trim().toLowerCase();
+                const irhName = (item.interment_full_name || '').toLowerCase();
+                return deceasedName.includes(query) || plotLabel.includes(query) || irhName.includes(query);
+            });
+            calculateAndRender(filteredBurials);
+        }));
+    }
 });
 </script>
 

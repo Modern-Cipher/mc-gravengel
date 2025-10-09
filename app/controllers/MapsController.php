@@ -98,6 +98,25 @@ public function publicBurial($burialId = null) {
 
 
 
+// GET /maps/getPlotBurials/{plotId}
+public function getPlotBurials($plotId = 0)
+{
+    header('Content-Type: application/json; charset=utf-8');
+
+    if (!isset($plotId) || !is_numeric($plotId) || $plotId <= 0) {
+        echo json_encode(['ok' => false, 'error' => 'Invalid plot id']); 
+        return;
+    }
+
+    try {
+        $burialModel = $this->model('Burial');
+        $rows = $burialModel->getBurialsByPlot((int)$plotId); // see Burial model method below
+        echo json_encode(['ok' => true, 'burials' => $rows]);
+    } catch (\Throwable $e) {
+        http_response_code(500);
+        echo json_encode(['ok' => false, 'error' => 'Server error']);
+    }
+}
 
 
   }

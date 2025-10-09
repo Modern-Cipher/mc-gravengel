@@ -21,18 +21,41 @@ document.addEventListener('DOMContentLoaded', function () {
   const val = (x) => (x === undefined || x === null ? '' : String(x));
   const getFormObject = (form) => Object.fromEntries(new FormData(form).entries());
   
-  // --- ADD STAFF ---
+  const validateInput = (inputEl, regex) => {
+    if (regex.test(inputEl.value)) {
+      inputEl.classList.remove('is-invalid');
+    } else {
+      inputEl.classList.add('is-invalid');
+    }
+  };
+
+  const formatPhoneNumber = (inputEl) => {
+    let value = inputEl.value.replace(/\D/g, '');
+    if (value.startsWith('9')) { value = '0' + value; }
+    
+    let formattedValue = '';
+    if (value.length > 0) { formattedValue = value.substring(0, 4); }
+    if (value.length > 4) { formattedValue += ' ' + value.substring(4, 7); }
+    if (value.length > 7) { formattedValue += ' ' + value.substring(7, 11); }
+    
+    inputEl.value = formattedValue;
+    validateInput(inputEl, phoneRegex);
+  };
+  
+  document.querySelectorAll('input[name="phone"], input[id="edit-phone"]').forEach(phoneInput => {
+      phoneInput.addEventListener('input', () => formatPhoneNumber(phoneInput));
+  });
+
+  document.querySelectorAll('input[name="email"], input[id="edit-email"]').forEach(emailInput => {
+      emailInput.addEventListener('input', () => validateInput(emailInput, emailRegex));
+  });
+
   addStaffForm?.addEventListener('submit', function(e) {
     e.preventDefault();
     const data = getFormObject(this);
 
-    // Validation
-    const required = ['first_name', 'last_name', 'username', 'email', 'phone', 'designation'];
-    for (const k of required) {
-        if (!data[k] || val(data[k]).trim() === '') {
-            SwalMaroon.fire('Invalid Input', 'Please fill in all required fields.', 'error');
-            return;
-        }
+    if (Array.from(this.querySelectorAll('[required]')).some(el => !el.value.trim())) {
+        return SwalMaroon.fire('Invalid Input', 'Please fill in all required fields.', 'error');
     }
     if (!usernameRegex.test(data.username)) return SwalMaroon.fire('Invalid Input', 'Username must only contain letters and numbers.', 'error');
     if (!emailRegex.test(data.email)) return SwalMaroon.fire('Invalid Input', 'Please enter a valid email address.', 'error');
@@ -70,7 +93,6 @@ document.addEventListener('DOMContentLoaded', function () {
       });
   });
   
-  // --- EDIT STAFF ---
   editUserModal?.addEventListener('show.bs.modal', function (event) {
     const userData = JSON.parse(event.relatedTarget.dataset.user || '{}');
     this.querySelector('#edit-user-id').value       = val(userData.id);
@@ -81,15 +103,14 @@ document.addEventListener('DOMContentLoaded', function () {
     this.querySelector('#edit-phone').value         = val(userData.phone || '');
     this.querySelector('#edit-staff_id').value      = val(userData.staff_id || '');
     this.querySelector('#edit-designation').value   = val(userData.designation || '');
-    
-    // Store original data for comparison on submit
-    editUserForm.dataset.original = JSON.stringify(userData);
+    this.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
   });
   
   editUserForm?.addEventListener('submit', function(e) {
       e.preventDefault();
-      const currentData = getFormObject(this);
-      const originalData = JSON.parse(this.dataset.original || '{}');
+      const data = getFormObject(this);
+      if (!emailRegex.test(data.email)) return SwalMaroon.fire('Invalid Input', 'Please enter a valid email address.', 'error');
+      if (!phoneRegex.test(data.phone)) return SwalMaroon.fire('Invalid Input', 'Please enter a valid phone number in the format 0912 345 6789.', 'error');
       
       SwalMaroon.fire({ title:'Saving changes...', html:'Please wait...', allowOutsideClick:false, showConfirmButton:false, didOpen:()=>Swal.showLoading() });
 
@@ -108,7 +129,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
   });
 
-  // --- Search Filter ---
   userSearchInput?.addEventListener('input', function () {
     const q = this.value.toLowerCase();
     userTableBody.querySelectorAll('tr').forEach(row => {
@@ -116,14 +136,13 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // --- Event Delegation for Actions (Reset Password, Toggle Status) ---
+  // --- [FIXED & COMPLETE] Event Delegation for Actions ---
   document.addEventListener('click', async (e) => {
     // RESET PASSWORD
     const resetBtn = e.target.closest('.reset-pwd-btn');
     if (resetBtn) {
         const userId = resetBtn.dataset.userId;
         const email = resetBtn.dataset.email;
-
         const { isConfirmed } = await SwalMaroon.fire({
             title: 'Send Reset Link?',
             html: `A password reset link will be emailed to <strong>${email}</strong>.`,
@@ -134,7 +153,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!isConfirmed) return;
 
         SwalMaroon.fire({ title:'Sending...', html:'Please wait...', allowOutsideClick:false, showConfirmButton:false, didOpen:()=>Swal.showLoading() });
-        
         const fd = new FormData(); 
         fd.append('user_id', userId); 
         fd.append('email', email);
@@ -171,7 +189,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!isConfirmed) { toggle.checked = !isChecked; return; }
 
         SwalMaroon.fire({ title:'Updating...', allowOutsideClick:false, showConfirmButton:false, didOpen:()=>Swal.showLoading() });
-        
         const fd = new FormData(); 
         fd.append('id', userId); 
         fd.append('is_active', nextState);

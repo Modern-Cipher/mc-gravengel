@@ -1,6 +1,6 @@
-// public/js/profile.js — ADMIN (single save, preview rollback, today's activity)
+// public/js/profile.js
 document.addEventListener('DOMContentLoaded', () => {
-  const MAROON = getComputedStyle(document.documentElement).getPropertyValue('--maroon') || '#7b1d1d';
+  const MAROON = getComputedStyle(document.documentElement).getPropertyValue('--maroon').trim() || '#800000';
 
   const profileForm        = document.getElementById('profileForm');
   const saveBtn            = document.getElementById('edit-save-btn');
@@ -16,9 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalEl            = document.getElementById('editProfileModal');
   const bsModal            = modalEl ? new bootstrap.Modal(modalEl) : null;
 
-  const actList            = document.getElementById('my-activity-list');
-  const actCount           = document.getElementById('act-count');
-  const resetRecentBtn     = document.getElementById('reset-recent-btn');
+  const actList          = document.getElementById('my-activity-list');
+  const actCount         = document.getElementById('act-count');
+  const printActivityBtn = document.getElementById('print-activity-btn');
 
   let originalAvatarSrc = modalAvatarImg && modalAvatarImg.tagName === 'IMG' ? modalAvatarImg.src : (mainAvatarImg?.src || null);
   let savedOnce = false;
@@ -124,41 +124,42 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Recent activity for TODAY only
-  async function loadToday(){
+  // Recent activity
+  async function loadRecentActivity(){
     if (!actList) return;
     try{
-      const res  = await fetch(`${window.URLROOT}/admin/myActivity?scope=today&limit=50`);
+      const res  = await fetch(`${window.URLROOT}/admin/myActivity`);
       const json = await toJSON(res);
       const rows = Array.isArray(json?.rows) ? json.rows : [];
       actList.innerHTML = '';
 
       if (!rows.length){
-        actList.innerHTML = `<li class="activity-item text-muted">No activity recorded today.</li>`;
+        actList.innerHTML = `<li class="activity-item text-muted">No activity recorded.</li>`;
         actCount.textContent = '0 records';
         return;
       }
       rows.forEach(r=>{
         const li = document.createElement('li');
         li.className = 'activity-item';
-        li.innerHTML = `${(r.action_text || r.kind || 'Activity')}<br><small class="text-muted">${formatDT(r.ts)}</small>`;
+        const safeText = (r.action_text || r.kind || 'Activity').replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        li.innerHTML = `${safeText}<br><small class="text-muted">${formatDT(r.ts)}</small>`;
         actList.appendChild(li);
       });
-      actCount.textContent = `${rows.length} record(s)`;
+      actCount.textContent = `Showing last ${rows.length} record(s)`;
     }catch(err){
       actList.innerHTML = `<li class="activity-item text-danger">Failed to load activity.</li>`;
       actCount.textContent = '';
       console.error("Activity Load Error:", err);
     }
   }
-  loadToday();
+  loadRecentActivity();
 
   function formatDT(s){
     if (!s) return '—';
     try {
       const d = new Date(s.replace(' ', 'T'));
       return d.toLocaleString('en-US', {
-        month: 'short', day: 'numeric',
+        month: 'short', day: 'numeric', year: 'numeric',
         hour: 'numeric', minute: '2-digit', hour12: true
       });
     } catch {
@@ -166,21 +167,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Reset visible list (session-only)
-  resetRecentBtn?.addEventListener('click', async () => {
-    const q = await Swal.fire({
-      icon: 'question',
-      title: 'Reload Recent Activity?',
-      html: 'This will just refresh the list of today\'s activities.',
-      showCancelButton: true,
-      confirmButtonText: 'Reload',
-      cancelButtonText: 'Cancel',
-      confirmButtonColor: MAROON
-    });
-    if (!q.isConfirmed) return;
-    
-    // The backend endpoint is just a placeholder. The real action is reloading the data.
-    loadToday();
+  /**
+   * [UPDATED] Print button functionality.
+   * Fetches report HTML and prints it via a hidden iframe. No new tab.
+   */
+  printActivityBtn?.addEventListener('click', async () => {
+    waitDlg('Preparing Report', 'Please wait while we generate your activity report...');
+
+    try {
+      const printUrl = `${window.URLROOT}/admin/printMyActivity`;
+      const res = await fetch(printUrl);
+
+      if (!res.ok) {
+        throw new Error(`Server responded with status: ${res.status}`);
+      }
+
+      const reportHtml = await res.text();
+      Swal.close();
+
+      const iframe = document.createElement('iframe');
+      iframe.style.cssText = 'position:absolute;width:0;height:0;border:0;';
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentWindow.document;
+      doc.open();
+      doc.write(reportHtml);
+      doc.close();
+
+      iframe.onload = () => {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        setTimeout(() => document.body.removeChild(iframe), 1000);
+      };
+
+    } catch (err) {
+      Swal.close();
+      console.error('Print Error:', err);
+      errDlg('Failed to generate the print report. Please check the network connection and try again.');
+    }
   });
 
   // Zoom main avatar

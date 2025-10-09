@@ -15,6 +15,18 @@
 .fc .exp-holder{
   display:block; margin-top:.15rem; font-size:.72rem; color:#5a5a5a; font-weight:600;
 }
+  /* --- INVISIBLE DUMMY SPACER CSS --- */
+.scroll-spacer-dummy {
+   
+    height: 1200px; 
+    opacity: 0;             
+    visibility: hidden;    
+    pointer-events: none;  
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
 </style>
 
 <div class="main-content-header mb-4">
@@ -83,6 +95,12 @@
 
     <div class="col-lg-5">
         <div id="calendar-container"></div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-12">
+        <div class="scroll-spacer-dummy">
+            </div>
     </div>
 </div>
 

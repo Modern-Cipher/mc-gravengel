@@ -5,7 +5,6 @@
 
 <style>
   .records-wrap { margin-top:.25rem }
-  .search-input { max-width:300px; padding:.38rem .6rem; }
   .action-btn{
     display:inline-flex; align-items:center; justify-content:center;
     gap:.45rem; white-space:nowrap; min-width:130px;
@@ -13,8 +12,7 @@
   }
   .action-btn i{ font-size:15px }
   .action-btn .btn-text{ display:inline }
-  @media (max-width: 576px){
-    .search-input{ max-width:46vw }
+  @media (max-width: 768px){
     .action-btn{ min-width:auto; padding:.42rem .58rem }
     .action-btn .btn-text{ display:none }
   }
@@ -40,40 +38,46 @@
   #termsModal .modal-body{ max-height:60vh; overflow:auto; }
   #editModal .modal-body{ max-height:80vh; overflow-y:auto; }
   #editModal .form-label .text-danger{ font-weight:bold; }
-
-  /* Print preview modal table */
-  #reportModal .table th, #reportModal .table td { font-size:.92rem; }
 </style>
-<style>
-  /* Hardening para sa clickability ng icons */
-  td.actions { position: relative; z-index: 1; }
-  td.actions i { pointer-events: auto; }
-</style>
-
-
 <div class="records-wrap">
-  <div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <h2 class="mb-0">Burial Records</h2>
-
-    <div class="d-flex align-items-center">
-      <input id="tableSearch" type="search" class="form-control form-control-sm search-input"
-             placeholder="Search name, burial id, plot, email…">
-
-      <button id="addBurialBtn" type="button" class="btn btn-danger btn-sm ms-2 action-btn">
+    <div class="d-flex align-items-center gap-2">
+      <button id="addBurialBtn" type="button" class="btn btn-danger btn-sm action-btn">
         <i class="fas fa-plus"></i><span class="btn-text">Add Burial</span>
       </button>
-
-      <a class="btn btn-warning btn-sm ms-2 action-btn" title="Archive"
-         href="<?= URLROOT ?>/staff/archivedBurials">
+      <a class="btn btn-warning btn-sm action-btn" title="Archive" href="<?= URLROOT ?>/staff/archivedBurials">
         <i class="fas fa-box-archive fa-archive"></i><span class="btn-text">Archive</span>
       </a>
-
-      <button id="genReportBtn" class="btn btn-info btn-sm text-white ms-2 action-btn">
+      <button id="genReportBtn" class="btn btn-info btn-sm text-white action-btn">
         <i class="fas fa-file-export"></i><span class="btn-text">Generate Report</span>
       </button>
     </div>
   </div>
 
+  <div class="card mb-3">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-lg-5 col-md-12">
+                <label for="tableSearch" class="form-label mb-1"><small>Search</small></label>
+                <input type="search" id="tableSearch" class="form-control form-control-sm" placeholder="Search name, burial id, plot, email…">
+            </div>
+            <div class="col-lg-2 col-md-3 col-sm-6">
+                <label for="dateFrom" class="form-label mb-1"><small>Rental Date From</small></label>
+                <input type="date" id="dateFrom" class="form-control form-control-sm">
+            </div>
+            <div class="col-lg-2 col-md-3 col-sm-6">
+                <label for="dateTo" class="form-label mb-1"><small>Rental Date To</small></label>
+                <input type="date" id="dateTo" class="form-control form-control-sm">
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <button id="resetFiltersBtn" class="btn btn-secondary btn-sm w-100">
+                    <i class="fas fa-sync-alt me-1"></i> Reset Filters
+                </button>
+            </div>
+        </div>
+    </div>
+  </div>
   <div class="card p-3">
     <div class="table-responsive">
       <table id="burialTable" class="table table-hover align-middle mb-0">
@@ -92,21 +96,19 @@
         </thead>
         <tbody>
         <?php if (!empty($data['records'])): ?>
-          <?php
-          $fmtHuman = function($dt){ return $dt ? date("D-F d, Y \\a\\t h:i A", strtotime($dt)) : ''; };
-          ?>
+          <?php $fmtHuman = function($dt){ return $dt ? date("M d, Y, h:i A", strtotime($dt)) : ''; }; ?>
           <?php foreach ($data['records'] as $r): ?>
             <?php
               $yearsTxt = '—';
               if (!empty($r->rental_date) && !empty($r->expiry_date)) {
-                try{ $yearsTxt = (new DateTime($r->rental_date))->diff(new DateTime($r->expiry_date))->y.' yr'; }
-                catch(Exception $e){ $yearsTxt = '5 yr'; }
+                try{ $yearsTxt = (new DateTime($r->rental_date))->diff(new DateTime($r->expiry_date))->y.' yr'; } catch(Exception $e){ $yearsTxt = '5 yr'; }
               } elseif (!empty($r->expiry_date)) { $yearsTxt = '5 yr'; }
               $expiryLabel = $fmtHuman($r->expiry_date ?? null);
               $email = $r->interment_email ?? '';
               $emailDisp = $email !== '' ? htmlspecialchars($email) : '<span class="text-muted">—</span>';
+              $rentalDateAttr = !empty($r->rental_date) ? date('Y-m-d', strtotime($r->rental_date)) : '';
             ?>
-            <tr data-burial-id="<?= htmlspecialchars($r->burial_id) ?>">
+            <tr data-burial-id="<?= htmlspecialchars($r->burial_id) ?>" data-rental-date="<?= $rentalDateAttr ?>">
               <td><span class="badge badge-soft"><?= htmlspecialchars($r->plot_number ?? '') ?></span></td>
               <td class="fw-semibold"><?= htmlspecialchars($r->burial_id) ?></td>
               <td><?= htmlspecialchars(trim(($r->deceased_first_name ?? '').' '.($r->deceased_last_name ?? ''))) ?></td>
@@ -121,24 +123,24 @@
               </td>
               <td title="<?= htmlspecialchars($email) ?>"><?= $emailDisp ?></td>
               <td class="text-center actions">
-                <i class="fas fa-eye i-view"           data-bs-toggle="tooltip" title="View"    data-action="view"></i>
-                <i class="fas fa-print i-print"        data-bs-toggle="tooltip" title="Print"   data-action="print"></i>
-                <i class="fas fa-qrcode i-qr"          data-bs-toggle="tooltip" title="QR"      data-action="qr"></i>
+                <i class="fas fa-eye i-view" data-bs-toggle="tooltip" title="View" data-action="view"></i>
+                <i class="fas fa-print i-print" data-bs-toggle="tooltip" title="Print" data-action="print"></i>
+                <i class="fas fa-qrcode i-qr" data-bs-toggle="tooltip" title="QR" data-action="qr"></i>
                 <i class="fas fa-box-archive fa-archive i-archive" data-bs-toggle="tooltip" title="Archive" data-action="archive"></i>
-                <i class="fas fa-trash-alt i-del"      data-bs-toggle="tooltip" title="Delete"  data-action="delete"></i>
+                <!-- <i class="fas fa-trash-alt i-del" data-bs-toggle="tooltip" title="Delete" data-action="delete"></i> -->
               </td>
             </tr>
           <?php endforeach; ?>
         <?php else: ?>
-          <tr><td colspan="9" class="text-center py-4 text-muted">No burial records found.</td></tr>
+          <tr id="no-records-row"><td colspan="9" class="text-center py-4 text-muted">No burial records found.</td></tr>
         <?php endif; ?>
+        <tr id="no-results-row" style="display: none;"><td colspan="9" class="text-center py-4 text-muted">No matching records found for the selected filters.</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 </div>
 
-<!-- Print Picker -->
 <div class="modal fade" id="printPicker" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -156,7 +158,6 @@
   </div>
 </div>
 
-<!-- Report Modal -->
 <div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
@@ -177,7 +178,6 @@
   </div>
 </div>
 
-<!-- View Modal -->
 <div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
@@ -198,7 +198,6 @@
   </div>
 </div>
 
-<!-- Edit Modal -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
@@ -381,7 +380,6 @@
   </div>
 </div>
 
-<!-- QR Modal -->
 <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-sm modal-dialog-centered">
     <div class="modal-content">
@@ -394,7 +392,6 @@
   </div>
 </div>
 
-<!-- Terms (Add Burial gating) -->
 <div class="modal fade" id="termsModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
@@ -426,125 +423,229 @@
     </div>
   </div>
 </div>
-
+<style>
+    .scroll-spacer-dummy {
+   
+    height: 1200px; 
+    opacity: 0;             
+    visibility: hidden;    
+    pointer-events: none;  
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+</style>
+<div class="row">
+    <div class="col-12">
+        <div class="scroll-spacer-dummy">
+            </div>
+    </div>
+</div>
 
 <script>
-(function(){
-  // ===== Helpers =====
-  const $  = (sel, root=document) => root.querySelector(sel);
-  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-  const byId = (id) => document.getElementById(id);
-
-  // Lazy Bootstrap modal getter (safe kahit maagang tumakbo ang script)
-  function modal(id){
-    const el = byId(id);
-    if (!el) return null;
-    try { return bootstrap.Modal.getOrCreateInstance(el); }
-    catch(e){ return null; } // bootstrap not ready yet? handler can retry on next click
-  }
-
-  // SweetAlert maroon theme
+(() => {
+  // --- SWEETALERT THEME ---
   const themedSwal = Swal.mixin({
-    customClass: { confirmButton: 'btn btn-danger mx-2', cancelButton: 'btn btn-secondary mx-2' },
-    buttonsStyling: false
+      customClass: {
+          confirmButton: 'btn btn-danger mx-2',
+          cancelButton: 'btn btn-secondary mx-2'
+      },
+      buttonsStyling: false
   });
-  const toast = (title,icon='success') =>
-    themedSwal.fire({toast:true,position:'top-end',showConfirmButton:false,timer:1700,icon,title});
 
-  // Init tooltips (best-effort)
-  try { $$('[data-bs-toggle="tooltip"]').forEach(el => { try{ new bootstrap.Tooltip(el);}catch(_){}}); } catch(_){}
+  [...document.querySelectorAll('[data-bs-toggle="tooltip"]')].forEach(el => new bootstrap.Tooltip(el));
 
-  // ===== State =====
-  const table = byId('burialTable');
+  const table = document.getElementById('burialTable');
+  const printPicker = new bootstrap.Modal('#printPicker');
+  const reportModal = new bootstrap.Modal('#reportModal');
+  const viewModal   = new bootstrap.Modal('#viewModal');
+  const editModal   = new bootstrap.Modal('#editModal');
+  const qrModal     = new bootstrap.Modal('#qrModal');
+  const viewToEditBtn = document.getElementById('viewToEditBtn');
+  const e = id => document.getElementById(id);
   let currentBurialId = '';
 
-  // ===== Utils =====
-  const pad = n => String(n).padStart(2,'0');
-  const fromDbToInput = (val) => val ? val.substring(0,16).replace(' ','T') : '';
+  // --- [START] FILTERING AND PRINTING LOGIC ---
+  const searchInput = e('tableSearch');
+  const dateFromInput = e('dateFrom');
+  const dateToInput = e('dateTo');
+  const resetBtn = e('resetFiltersBtn');
+  const genReportBtn = e('genReportBtn');
+  const noResultsRow = e('no-results-row');
+  const noRecordsRow = e('no-records-row');
 
-  function calculateAge(dateBornStr){
-    if (!dateBornStr) return '';
-    const b = new Date(dateBornStr), t = new Date();
-    let a = t.getFullYear() - b.getFullYear();
-    const m = t.getMonth() - b.getMonth();
-    if (m < 0 || (m === 0 && t.getDate() < b.getDate())) a--;
-    return a >= 0 ? a : 0;
-  }
-  function calculateExpiry(rentalDateStr){
-    if (!rentalDateStr) return { date:'', display:'' };
-    const start = new Date(rentalDateStr);
-    if (isNaN(start)) return { date:'', display:'' };
-    const exp = new Date(start); exp.setFullYear(exp.getFullYear() + 5);
-    return {
-      date: `${exp.getFullYear()}-${pad(exp.getMonth()+1)}-${pad(exp.getDate())}T${pad(exp.getHours())}:${pad(exp.getMinutes())}`,
-      display: exp.toLocaleString('en-US',{year:'numeric',month:'long',day:'numeric',hour:'numeric',minute:'numeric',hour12:true})
-    };
-  }
+  const debounce = (fn, ms = 300) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+  
+  function applyFilters() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const fromDate = dateFromInput.value;
+      const toDate = dateToInput.value;
+      let visibleRowCount = 0;
 
-  // ===== Search filter =====
-  const searchEl = byId('tableSearch');
-  if (searchEl && table){
-    searchEl.addEventListener('input', (ev)=>{
-      const term = (ev.target.value || '').toLowerCase();
-      $$('#burialTable tbody tr').forEach(tr => {
-        tr.style.display = tr.innerText.toLowerCase().includes(term) ? '' : 'none';
+      table.querySelectorAll('tbody tr:not(#no-results-row):not(#no-records-row)').forEach(tr => {
+          const textContent = tr.innerText.toLowerCase();
+          const rentalDate = tr.dataset.rentalDate;
+          const textMatch = searchTerm === '' || textContent.includes(searchTerm);
+          
+          let dateMatch = true;
+          if (fromDate && (!rentalDate || rentalDate < fromDate)) { dateMatch = false; }
+          if (toDate && (!rentalDate || rentalDate > toDate)) { dateMatch = false; }
+
+          if (textMatch && dateMatch) {
+              tr.style.display = '';
+              visibleRowCount++;
+          } else {
+              tr.style.display = 'none';
+          }
       });
-    });
+      
+      const hasActiveFilters = searchTerm || fromDate || toDate;
+      if (noResultsRow) noResultsRow.style.display = (visibleRowCount === 0 && hasActiveFilters) ? '' : 'none';
+      if (noRecordsRow) noRecordsRow.style.display = (visibleRowCount === 0 && !hasActiveFilters) ? '' : 'none';
   }
 
-  // ===== Add Burial gating (Terms & Conditions) =====
-  const addBurialBtn = byId('addBurialBtn');
-  const agreeCheck   = byId('agreeCheck');
-  const proceedBtn   = byId('proceedBtn');
-  if (addBurialBtn && agreeCheck && proceedBtn){
-    addBurialBtn.addEventListener('click', ()=>{
-      agreeCheck.checked = false; proceedBtn.disabled = true;
-      const m = modal('termsModal'); if (m) m.show();
-    });
-    agreeCheck.addEventListener('change', ()=>{ proceedBtn.disabled = !agreeCheck.checked; });
-    proceedBtn.addEventListener('click', ()=>{
-      const m = modal('termsModal'); if (m) m.hide();
-      window.location = "<?= URLROOT ?>/staff/addBurial";
-    });
+  searchInput.addEventListener('input', debounce(applyFilters));
+  dateFromInput.addEventListener('change', applyFilters);
+  dateToInput.addEventListener('change', applyFilters);
+
+  resetBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      dateFromInput.value = '';
+      dateToInput.value = '';
+      applyFilters();
+  });
+
+  const pad = n => String(n).padStart(2,'0');
+  
+  const fromDbToInput = (val) => {
+    if(!val) return '';
+    return val.substring(0,16).replace(' ','T');
+  };
+
+  const calculateAge = (dateBornStr) => {
+    if (!dateBornStr) return '';
+    const birthDate = new Date(dateBornStr);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age >= 0 ? age : 0;
+  };
+
+  const calculateExpiry = (rentalDateStr) => {
+    if (!rentalDateStr) return { date: '', display: '' };
+    const start = new Date(rentalDateStr);
+    if (isNaN(start.getTime())) return { date: '', display: '' };
+    const exp = new Date(start);
+    exp.setFullYear(exp.getFullYear() + 5);
+    const hiddenValue = `${exp.getFullYear()}-${pad(exp.getMonth()+1)}-${pad(exp.getDate())}T${pad(exp.getHours())}:${pad(exp.getMinutes())}`;
+    const displayValue = exp.toLocaleString('en-US',{year:'numeric',month:'long',day:'numeric',hour:'numeric',minute:'numeric',hour12:true});
+    return { date: hiddenValue, display: displayValue };
+  };
+
+  function collectReqs(){
+    const vals = Array.from(document.querySelectorAll('.e_req:checked')).map(c=>c.value);
+    e('e_requirements').value = vals.join(', ');
   }
 
-  // ===== Report (visible rows) =====
-  const genReportBtn = byId('genReportBtn');
-  const reportBody   = byId('reportBody');
-  const reportPrint  = byId('reportPrintBtn');
-
-  if (genReportBtn && reportBody){
-    genReportBtn.addEventListener('click', ()=>{
-      const rows = (table ? Array.from(table.querySelectorAll('tbody tr')) : [])
-        .filter(tr => tr.style.display !== 'none');
-
-      const head = `
-        <thead><tr>
-          <th>Plot</th><th>Burial ID</th><th>Name</th>
-          <th>Grave Level & Type</th><th>Age</th><th>Sex</th>
-          <th>Rental</th><th>IRH Email</th>
-        </tr></thead>`;
-
-      const body = rows.map(tr=>{
-        const tds = tr.querySelectorAll('td,th');
-        const get = (i) => (tds[i]?.innerText || '').trim();
-        return `<tr>
-          <td>${get(0)}</td><td>${get(1)}</td><td>${get(2)}</td>
-          <td>${get(3)}</td><td>${get(4)}</td><td>${get(5)}</td>
-          <td>${get(6)}</td><td>${get(7)}</td>
-        </tr>`;
-      }).join('');
-
-      reportBody.innerHTML = `<table class="table table-bordered">${head}<tbody>${body}</tbody></table>`;
-      const rm = modal('reportModal'); if (rm) rm.show();
+  function setReqs(reqsString){
+    const decodedString = (reqsString || '').replace(/&#039;/g, "'");
+    const reqs = decodedString.split(',').map(s => s.trim()).filter(Boolean);
+    document.querySelectorAll('.e_req').forEach(ch => {
+        ch.checked = reqs.includes(ch.value);
     });
   }
+  
+  e('e_date_born').addEventListener('change', function() {
+    e('e_age').value = calculateAge(this.value);
+  });
+  e('e_rental_date').addEventListener('change', function() {
+    const { date, display } = calculateExpiry(this.value);
+    e('e_expiry_date_display').value = display;
+    e('e_expiry_date').value = date;
+  });
 
-  if (reportPrint && reportBody){
-    reportPrint.addEventListener('click', ()=>{
-      const w = window.open('', '_blank');
-      const html = `
-        <html><head><title>Burial Records Report</title>
+  const ePhone = e('e_interment_contact_number');
+  ePhone.addEventListener('input', ev=>{
+    let d = ev.target.value.replace(/\D/g,'').slice(0,11);
+    ev.target.value = d.length<=4?d : d.length<=7? d.slice(0,4)+' '+d.slice(4) : d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7);
+  });
+  const isPH = v => /^09\d{2}\s\d{3}\s\d{4}$/.test((v||'').trim());
+
+  const tosModal = new bootstrap.Modal(e('termsModal'));
+  e('addBurialBtn').addEventListener('click', () => {
+    e('agreeCheck').checked = false; e('proceedBtn').disabled = true; tosModal.show();
+  });
+  e('agreeCheck').addEventListener('change', () => { e('proceedBtn').disabled = !e('agreeCheck').checked; });
+  e('proceedBtn').addEventListener('click', () => { tosModal.hide(); window.location = "<?= URLROOT ?>/staff/addBurial"; });
+
+  e('tableSearch').addEventListener('input', (ev) => {
+    const term = ev.target.value.toLowerCase();
+    table.querySelectorAll('tbody tr').forEach(tr => tr.style.display = tr.innerText.toLowerCase().includes(term) ? '' : 'none');
+  });
+
+  const api='https://psgc.gitlab.io/api';
+  const e_selProv=e('e_addr_province'), e_selCity=e('e_addr_city'), e_selBrgy=e('e_addr_brgy');
+  
+  function fill(sel,list,ph='Select'){ sel.innerHTML=`<option value="">${ph}</option>`; list.forEach(x=>{const o=document.createElement('option');o.value=x.code||x.id||x.name;o.textContent=x.name;sel.appendChild(o);}); }
+  
+  fetch(`${api}/provinces/`).then(r=>r.json()).then(list=>{ list.sort((a,b)=>a.name.localeCompare(b.name)); fill(e_selProv,list); });
+  
+  e_selProv.addEventListener('change',()=>{ e_selCity.disabled=true; e_selBrgy.disabled=true; fill(e_selCity,[]); fill(e_selBrgy,[]); const c=e_selProv.value; if(!c)return; fetch(`${api}/provinces/${c}/cities-municipalities/`).then(r=>r.json()).then(list=>{ list.sort((a,b)=>a.name.localeCompare(b.name)); fill(e_selCity,list); e_selCity.disabled=false; }); });
+  
+  e_selCity.addEventListener('change',()=>{ e_selBrgy.disabled=true; fill(e_selBrgy,[]); const c=e_selCity.value; if(!c)return; fetch(`${api}/cities-municipalities/${c}/barangays/`).then(r=>r.json()).then(list=>{ list.sort((a,b)=>a.name.localeCompare(b.name)); fill(e_selBrgy,list); e_selBrgy.disabled=false; }); });
+  
+  function bakeAddressForEdit(){
+      const parts = [ 
+          e('e_addr_line').value.trim(), 
+          e('e_addr_brgy').value ? 'Brgy. '+e('e_addr_brgy').selectedOptions[0].text : '', 
+          e('e_addr_city').value ? e('e_addr_city').selectedOptions[0].text : '', 
+          e('e_addr_province').value ? e('e_addr_province').selectedOptions[0].text : '', 
+          e('e_addr_zip').value.trim() 
+      ].filter(Boolean);
+      
+      const newAddress = parts.join(', ');
+      if (newAddress) {
+          e('e_interment_address').value = newAddress;
+      }
+  }
+
+  e('genReportBtn').addEventListener('click', () => {
+    const rows = Array.from(table.querySelectorAll('tbody tr')).filter(tr => tr.style.display !== 'none');
+    const head = `
+      <thead><tr>
+        <th>Plot</th><th>Burial ID</th><th>Name</th>
+        <th>Grave Level & Type</th><th>Age</th><th>Sex</th>
+        <th>Rental</th><th>IRH Email</th>
+      </tr></thead>`;
+    const body = rows.map(tr=>{
+      const tds = tr.querySelectorAll('td,th');
+      const plot   = tds[0].innerText.trim();
+      const bid    = tds[1].innerText.trim();
+      const name   = tds[2].innerText.trim();
+      const grave  = tds[3].innerText.trim();
+      const age    = tds[4].innerText.trim();
+      const sex    = tds[5].innerText.trim();
+      const rental = tds[6].innerText.trim();
+      const email  = tds[7].innerText.trim();
+      return `<tr>
+        <td>${plot}</td><td>${bid}</td><td>${name}</td>
+        <td>${grave}</td><td>${age}</td><td>${sex}</td>
+        <td>${rental}</td><td>${email}</td>
+      </tr>`;
+    }).join('');
+    e('reportBody').innerHTML = `<table class="table table-bordered">${head}<tbody>${body}</tbody></table>`;
+    reportModal.show();
+  });
+
+  e('reportPrintBtn').addEventListener('click', () => {
+    const w = window.open('', '_blank');
+    const html = `
+      <html>
+        <head>
+          <title>Burial Records Report</title>
           <style>
             body{font-family:Arial, Helvetica, sans-serif;padding:16px}
             h3{margin:0 0 10px 0}
@@ -553,290 +654,176 @@
             th{background:#eee}
             @media print { @page{ size: A4 landscape; margin:12mm } }
           </style>
-        </head><body>
-          <h3>Burial Records</h3>${reportBody.innerHTML}
-        </body></html>`;
-      w.document.write(html); w.document.close(); w.focus(); w.print(); w.close();
-    });
-  }
-
-  // ===== Global delegation for action icons =====
-  document.addEventListener('click', async (ev)=>{
-    const icon = ev.target.closest('td.actions i[data-action]');
-    if (!icon) return;
-
-    const tr = icon.closest('tr');
-    if (!tr) return;
-    currentBurialId = tr.getAttribute('data-burial-id') || tr.dataset.burialId || '';
-
-    const action = icon.dataset.action;
-    if (!currentBurialId && action !== 'print') return;
-
-    if (action === 'view')    return handleView(currentBurialId);
-    if (action === 'print')   { const m = modal('printPicker'); if (m) m.show(); return; }
-    if (action === 'qr')      return showQr(currentBurialId);
-    if (action === 'archive') return confirmArchive(currentBurialId, tr);
-    if (action === 'delete')  return confirmDelete(currentBurialId, tr);
+        </head>
+        <body>
+          <h3>Burial Records</h3>
+          ${e('reportBody').innerHTML}
+        </body>
+      </html>`;
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    w.print();
+    w.close();
   });
 
-  // Print picker buttons -> staff routes
-  const printPicker = byId('printPicker');
-  if (printPicker){
-    printPicker.addEventListener('click', (ev)=>{
-      const btn = ev.target.closest('button[data-print]'); if(!btn) return;
-      const m = modal('printPicker'); if (m) m.hide();
-      const what = btn.dataset.print;
-      let baseUrl = '';
-      if (what==='form')     baseUrl='<?= URLROOT ?>/staff/printBurialForm/'+encodeURIComponent(currentBurialId);
-      if (what==='contract') baseUrl='<?= URLROOT ?>/staff/printContract/'+encodeURIComponent(currentBurialId);
-      if (what==='qr')       baseUrl='<?= URLROOT ?>/staff/printQrTicket/'+encodeURIComponent(currentBurialId);
-      if (baseUrl) window.open(baseUrl + '?autoprint=1', '_blank');
-    });
+  table.addEventListener('click', async (ev) => {
+    const icon = ev.target.closest('i[data-action]'); if (!icon) return;
+    const tr = icon.closest('tr');
+    currentBurialId = tr.dataset.burialId;
+
+    if (icon.dataset.action === 'view')    return handleView(currentBurialId);
+    if (icon.dataset.action === 'print')   return printPicker.show();
+    if (icon.dataset.action === 'qr')      return showQr(currentBurialId);
+    if (icon.dataset.action === 'archive') return confirmArchive(currentBurialId, tr);
+    if (icon.dataset.action === 'delete')  return confirmDelete(currentBurialId, tr);
+  });
+
+  if (viewToEditBtn) {
+    viewToEditBtn.addEventListener('click', () => { viewModal.hide(); loadEdit(currentBurialId); });
   }
 
-  // ===== View =====
+  document.getElementById('printPicker').addEventListener('click', (ev)=>{
+    const btn = ev.target.closest('button[data-print]'); if(!btn) return;
+    printPicker.hide();
+    const what = btn.dataset.print;
+    let baseUrl = '';
+    if (what==='form')     baseUrl='<?= URLROOT ?>/staff/printBurialForm/'+encodeURIComponent(currentBurialId);
+    if (what==='contract') baseUrl='<?= URLROOT ?>/staff/printContract/'+encodeURIComponent(currentBurialId);
+    if (what==='qr')       baseUrl='<?= URLROOT ?>/staff/printQrTicket/'+encodeURIComponent(currentBurialId);
+    
+    if (baseUrl) {
+      window.open(baseUrl + '?autoprint=1', '_blank');
+    }
+  });
+
   async function handleView(id){
-    try{
-      const r = await fetch('<?= URLROOT ?>/staff/getBurialDetails/'+encodeURIComponent(id), {credentials:'same-origin'});
-      const d = await r.json();
-      if (!d) return toast('Could not load record','error');
+    const d = await fetch('<?= URLROOT ?>/staff/getBurialDetails/'+encodeURIComponent(id), {credentials:'same-origin'})
+      .then(r=>r.json()).catch(()=>null);
+    if(!d){ return toast('Could not load record','error'); }
 
-      const neatPlot = [d.block_title, d.plot_number].filter(Boolean).join(' - ') || '';
-      const row=(k,v)=>`<tr><th class="text-nowrap pe-3">${k}</th><td>${v??''}</td></tr>`;
-      const html = `
-        <table class="table table-sm mb-0">
-          ${row('Burial ID', d.burial_id)}
-          ${row('Plot', neatPlot)}
-          ${row('Deceased', [d.deceased_first_name,d.deceased_middle_name,d.deceased_last_name,d.deceased_suffix].filter(Boolean).join(' '))}
-          ${row('Date Born', d.date_born||'')}
-          ${row('Date Died', d.date_died||'')}
-          ${row('Age / Sex', (d.age||'')+' '+(d.sex||''))}
-          ${row('Cause of Death', d.cause_of_death||'')}
-          ${row('Grave', (d.grave_level||'-')+' / '+(d.grave_type||'-'))}
-          ${row('IRH', d.interment_full_name||'')}
-          ${row('Relationship', d.interment_relationship||'')}
-          ${row('Contact', d.interment_contact_number||'')}
-          ${row('Email', d.interment_email||'')}
-          ${row('Address', d.interment_address||'')}
-          ${row('Payment Amount', '₱ ' + Number(d.payment_amount||0).toLocaleString('en-US',{minimumFractionDigits: 2}))}
-          ${row('Rental', d.rental_date||'')}
-          ${row('Expiry', d.expiry_date||'')}
-          ${row('Requirements', (d.requirements || '').replace(/&#039;/g, "'").replace(/, /g, '<br>'))}
-        </table>`;
-      const viewBody = byId('viewBody'); if (viewBody) viewBody.innerHTML = html;
-      const vm = modal('viewModal'); if (vm) vm.show();
-    }catch(_){
-      toast('Could not load record','error');
-    }
+    const neatPlot = [d.block_title, d.plot_number].filter(Boolean).join(' - ') || '';
+    const row=(k,v)=>`<tr><th class="text-nowrap pe-3">${k}</th><td>${v??''}</td></tr>`;
+    const html = `
+      <table class="table table-sm mb-0">
+        ${row('Burial ID', d.burial_id)}
+        ${row('Plot', neatPlot)}
+        ${row('Deceased', [d.deceased_first_name,d.deceased_middle_name,d.deceased_last_name,d.deceased_suffix].filter(Boolean).join(' '))}
+        ${row('Date Born', d.date_born||'')}
+        ${row('Date Died', d.date_died||'')}
+        ${row('Age / Sex', (d.age||'')+' '+(d.sex||''))}
+        ${row('Cause of Death', d.cause_of_death||'')}
+        ${row('Grave', (d.grave_level||'-')+' / '+(d.grave_type||'-'))}
+        ${row('IRH', d.interment_full_name||'')}
+        ${row('Relationship', d.interment_relationship||'')}
+        ${row('Contact', d.interment_contact_number||'')}
+        ${row('Email', d.interment_email||'')}
+        ${row('Address', d.interment_address||'')}
+        ${row('Payment Amount', '₱ ' + Number(d.payment_amount||0).toLocaleString('en-US',{minimumFractionDigits: 2}))}
+        ${row('Rental', d.rental_date||'')}
+        ${row('Expiry', d.expiry_date||'')}
+        ${row('Requirements', (d.requirements || '').replace(/&#039;/g, "'").replace(/, /g, '<br>'))}
+      </table>`;
+    e('viewBody').innerHTML = html;
+    viewModal.show();
   }
 
-  // View → Edit button
-  const viewToEditBtn = byId('viewToEditBtn');
-  if (viewToEditBtn){
-    viewToEditBtn.addEventListener('click', ()=>{
-      const vm = modal('viewModal'); if (vm) vm.hide();
-      if (currentBurialId) loadEdit(currentBurialId);
-    });
-  }
-
-  // ===== Edit loader & saver =====
   async function loadEdit(id){
-    try{
-      const r = await fetch('<?= URLROOT ?>/staff/getBurialDetails/'+encodeURIComponent(id), {credentials:'same-origin'});
-      const d = await r.json();
-      if(!d) return toast('Could not load record','error');
+    const d = await fetch('<?= URLROOT ?>/staff/getBurialDetails/'+encodeURIComponent(id), {credentials:'same-origin'})
+      .then(r=>r.json()).catch(()=>null);
+    if(!d){ return toast('Could not load record','error'); }
 
-      const setVal = (id, v) => { const el = byId(id); if (el) el.value = v ?? ''; };
-      setVal('e_burial_id', d.burial_id);
-      setVal('e_burial_id_display', d.burial_id);
-      setVal('e_plot_id', d.plot_id || '');
-      setVal('e_plot_label', [d.block_title, d.plot_number].filter(Boolean).join(' - '));
-      setVal('e_deceased_first_name', d.deceased_first_name);
-      setVal('e_deceased_middle_name', d.deceased_middle_name);
-      setVal('e_deceased_last_name', d.deceased_last_name);
-      setVal('e_deceased_suffix', d.deceased_suffix);
-      setVal('e_date_born', d.date_born ? d.date_born.substring(0,10) : '');
-      setVal('e_date_died', d.date_died ? d.date_died.substring(0,10) : '');
-      setVal('e_age', calculateAge(byId('e_date_born')?.value) || d.age || '');
-      setVal('e_sex', d.sex);
-      setVal('e_grave_level', d.grave_level);
-      setVal('e_grave_type', d.grave_type);
-      setVal('e_cause_of_death', d.cause_of_death);
-      setVal('e_interment_full_name', d.interment_full_name);
-      setVal('e_interment_relationship', d.interment_relationship);
-      setVal('e_interment_contact_number', (d.interment_contact_number||'').replace(/(\d{4})(\d{3})(\d{4})/, '$1 $2 $3'));
-      setVal('e_interment_email', d.interment_email);
-      setVal('e_interment_address', d.interment_address);
-      const curAddr = byId('e_current_address_display'); if (curAddr) curAddr.textContent = d.interment_address || 'No address saved.';
-      setVal('e_payment_amount', (d.payment_amount ?? '0'));
-      setVal('e_rental_date', fromDbToInput(d.rental_date || ''));
-      const exp = calculateExpiry(byId('e_rental_date')?.value);
-      setVal('e_expiry_date', exp.date);
-      setVal('e_expiry_date_display', exp.display || (d.expiry_date ? new Date(d.expiry_date).toLocaleString('en-US',{year:'numeric',month:'long',day:'numeric',hour:'numeric',minute:'numeric',hour12:true}) : ''));
+    e('e_burial_id').value = d.burial_id;
+    e('e_burial_id_display').value = d.burial_id;
+    e('e_plot_id').value = d.plot_id || '';
+    e('e_plot_label').value = [d.block_title, d.plot_number].filter(Boolean).join(' - ');
+    e('e_deceased_first_name').value = d.deceased_first_name||'';
+    e('e_deceased_middle_name').value = d.deceased_middle_name||'';
+    e('e_deceased_last_name').value = d.deceased_last_name||'';
+    e('e_deceased_suffix').value = d.deceased_suffix||'';
+    e('e_date_born').value = d.date_born ? d.date_born.substring(0, 10) : '';
+    e('e_date_died').value = d.date_died ? d.date_died.substring(0, 10) : '';
+    e('e_age').value = calculateAge(e('e_date_born').value) || d.age || '';
+    e('e_sex').value = d.sex||'';
+    e('e_grave_level').value = d.grave_level||'';
+    e('e_grave_type').value = d.grave_type||'';
+    e('e_cause_of_death').value = d.cause_of_death||'';
+    e('e_interment_full_name').value = d.interment_full_name||'';
+    e('e_interment_relationship').value = d.interment_relationship||'';
+    e('e_interment_contact_number').value = d.interment_contact_number ? d.interment_contact_number.replace(/(\d{4})(\d{3})(\d{4})/, '$1 $2 $3') : '';
+    e('e_interment_email').value = d.interment_email || '';
+    e('e_interment_address').value = d.interment_address||'';
+    e('e_current_address_display').textContent = d.interment_address || 'No address saved.';
+    e('e_payment_amount').value = d.payment_amount ?? '0';
+    e('e_rental_date').value = fromDbToInput(d.rental_date || '');
+    const { date: expDateVal, display: expDateDisp } = calculateExpiry(e('e_rental_date').value);
+    e('e_expiry_date').value = expDateVal;
+    e('e_expiry_date_display').value = expDateDisp || (d.expiry_date ? new Date(d.expiry_date).toLocaleString('en-US',{ year:'numeric',month:'long',day:'numeric',hour:'numeric',minute:'numeric',hour12:true}) : '');
+    setReqs(d.requirements);
+    editModal.show();
+  }
 
-      // requirements
-      (function(reqsString){
-        const s = (reqsString || '').replace(/&#039;/g, "'");
-        const reqs = s.split(',').map(x=>x.trim()).filter(Boolean);
-        $$('.e_req').forEach(ch => ch.checked = reqs.includes(ch.value));
-      })(d.requirements);
-
-      const em = modal('editModal'); if (em) em.show();
-    }catch(_){
-      toast('Could not load record','error');
+  document.getElementById('saveEdit').addEventListener('click', async ()=>{
+    const form = document.getElementById('editForm');
+    let formOk = true;
+    ['e_deceased_first_name','e_deceased_last_name','e_date_died','e_interment_full_name','e_interment_relationship','e_payment_amount']
+      .forEach(id => {
+        const el = e(id);
+        if (!el.value.trim()) { formOk=false; el.classList.add('is-invalid'); }
+        else { el.classList.remove('is-invalid'); }
+      });
+    const emailEl = e('e_interment_email');
+    const email = (emailEl.value||'').trim();
+    if (email && (email.length > 150 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+      emailEl.classList.add('is-invalid'); formOk = false;
+      toast('Please enter a valid email (max 150 chars).','error');
+    } else { emailEl.classList.remove('is-invalid'); }
+    if (ePhone.value && !isPH(ePhone.value)){ ePhone.classList.add('is-invalid'); formOk=false; toast('Please enter a valid PH mobile number.','error'); }
+    else { ePhone.classList.remove('is-invalid'); }
+    if (!formOk) return;
+    collectReqs();
+    bakeAddressForEdit(); 
+    const formData = new FormData(form);
+    formData.set('age', e('e_age').value);
+    const resp = await fetch('<?= URLROOT ?>/staff/updateBurial', {
+      method:'POST',
+      credentials:'same-origin',
+      body: new URLSearchParams(formData)
+    }).then(r=>r.json()).catch(()=>({ok:false, message:'Network or server error.'}));
+    if(resp && resp.ok){
+      editModal.hide();
+      toast('Saved successfully','success');
+      setTimeout(()=>location.reload(), 800);
+    }else{
+      themedSwal.fire({icon:'error',title:'Update Failed',text: (resp && resp.message) ? resp.message : 'An unknown error occurred.'});
     }
-  }
+  });
 
-  const saveBtn = byId('saveEdit');
-  if (saveBtn){
-    saveBtn.addEventListener('click', async ()=>{
-      const form = byId('editForm'); if(!form) return;
-      let ok = true;
-      ['e_deceased_first_name','e_deceased_last_name','e_date_died','e_interment_full_name','e_interment_relationship','e_payment_amount']
-        .forEach(id => { const el = byId(id); if (!el || !el.value.trim()) { ok=false; el && el.classList.add('is-invalid'); } else { el.classList.remove('is-invalid'); } });
-
-      const emailEl = byId('e_interment_email');
-      const email = (emailEl?.value || '').trim();
-      if (email && (email.length > 150 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
-        emailEl?.classList.add('is-invalid'); ok=false; toast('Please enter a valid email (max 150 chars).','error');
-      } else { emailEl?.classList.remove('is-invalid'); }
-
-      const phoneEl = byId('e_interment_contact_number');
-      const isPH = v => /^09\d{2}\s\d{3}\s\d{4}$/.test((v||'').trim());
-      if (phoneEl && phoneEl.value && !isPH(phoneEl.value)){ phoneEl.classList.add('is-invalid'); ok=false; toast('Please enter a valid PH mobile number.','error'); }
-      else { phoneEl?.classList.remove('is-invalid'); }
-
-      // requirements hidden
-      const reqHidden = byId('e_requirements');
-      if (reqHidden) reqHidden.value = $$('.e_req:checked').map(c=>c.value).join(', ');
-
-      // bake address (only if may laman)
-      (function bakeAddressForEdit(){
-        const prov = byId('e_addr_province'), city = byId('e_addr_city'), brgy = byId('e_addr_brgy');
-        const parts = [
-          (byId('e_addr_line')?.value || '').trim(),
-          (brgy && brgy.value) ? 'Brgy. ' + brgy.selectedOptions[0].text : '',
-          (city && city.value) ? city.selectedOptions[0].text : '',
-          (prov && prov.value) ? prov.selectedOptions[0].text : '',
-          (byId('e_addr_zip')?.value || '').trim()
-        ].filter(Boolean);
-        const newAddress = parts.join(', ');
-        const hidden = byId('e_interment_address');
-        if (hidden && newAddress) hidden.value = newAddress;
-      })();
-
-      if (!ok) return;
-
-      const formData = new FormData(form);
-      formData.set('age', byId('e_age')?.value || '');
-      try{
-        const r = await fetch('<?= URLROOT ?>/staff/updateBurial', {
-          method:'POST', credentials:'same-origin', body: new URLSearchParams(formData)
-        });
-        const resp = await r.json();
-        if(resp && resp.ok){
-          const em = modal('editModal'); if (em) em.hide();
-          toast('Saved successfully','success');
-          setTimeout(()=>location.reload(), 800);
-        }else{
-          themedSwal.fire({icon:'error',title:'Update Failed',text:(resp && resp.message) ? resp.message : 'An unknown error occurred.'});
-        }
-      }catch(_){
-        themedSwal.fire({icon:'error',title:'Update Failed',text:'Network or server error.'});
-      }
-    });
-  }
-
-  // ===== QR =====
   function showQr(id){
-    const img = byId('qrImg'), meta = byId('qrMeta');
-    if (img) img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(id);
-    if (meta) meta.innerText = id;
-    const qm = modal('qrModal'); if (qm) qm.show();
+    const url='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(id);
+    e('qrImg').src=url; e('qrMeta').innerText=id; qrModal.show();
   }
 
-  // ===== Archive / Delete =====
   async function confirmArchive(id, row){
     const ans = await themedSwal.fire({icon:'question', title:'Archive this record?', text:'It will be moved to Archived Burials. You can restore it anytime.', showCancelButton:true, confirmButtonText:'Archive'});
     if(!ans.isConfirmed) return;
-    try{
-      const r = await fetch('<?= URLROOT ?>/staff/archiveBurial/'+encodeURIComponent(id), {
-        method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}, credentials:'same-origin'
-      });
-      const res = await r.json();
-      if(res.ok){ row.style.transition='opacity .2s'; row.style.opacity='0'; setTimeout(()=>row.remove(), 200); toast('Archived','success'); }
-      else { themedSwal.fire({icon:'error',title:'Archive failed',text:res.message||'Please try again.'}); }
-    }catch(_){
-      themedSwal.fire({icon:'error',title:'Archive failed',text:'Network or server error.'});
-    }
+    const res = await fetch('<?= URLROOT ?>/staff/archiveBurial/'+encodeURIComponent(id), {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}, credentials:'same-origin'}).then(r=>r.json()).catch(()=>({ok:false}));
+    if(res.ok){ row.style.transition='opacity .2s'; row.style.opacity='0'; setTimeout(()=>row.remove(), 200); toast('Archived','success'); }
+    else{ themedSwal.fire({icon:'error',title:'Archive failed',text:res.message||'Please try again.'}); }
   }
 
   async function confirmDelete(id, row){
     const ans = await themedSwal.fire({icon:'warning', title:'Delete record?', text:'This action cannot be undone and will free up the plot.', showCancelButton:true, confirmButtonText:'Delete'});
     if(!ans.isConfirmed) return;
-    try{
-      const r = await fetch('<?= URLROOT ?>/staff/deleteBurial/'+encodeURIComponent(id), {
-        method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}, credentials:'same-origin'
-      });
-      const res = await r.json();
-      if(res.ok){ row.style.transition='opacity .2s'; row.style.opacity='0'; setTimeout(()=>row.remove(), 200); toast('Deleted','success'); }
-      else { themedSwal.fire({icon:'error',title:'Delete failed',text:res.message||'Please try again.'}); }
-    }catch(_){
-      themedSwal.fire({icon:'error',title:'Delete failed',text:'Network or server error.'});
-    }
+    const res = await fetch('<?= URLROOT ?>/staff/deleteBurial/'+encodeURIComponent(id), {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}, credentials:'same-origin'}).then(r=>r.json()).catch(()=>({ok:false}));
+    if(res.ok){ row.style.transition='opacity .2s'; row.style.opacity='0'; setTimeout(()=>row.remove(), 200); toast('Deleted','success'); }
+    else{ themedSwal.fire({icon:'error',title:'Delete failed',text:res.message||'Please try again.'}); }
   }
 
-  // ===== Field reactions (safe binds) =====
-  const born = byId('e_date_born');
-  const rent = byId('e_rental_date');
-  if (born) born.addEventListener('change', () => { const ageEl = byId('e_age'); if (ageEl) ageEl.value = calculateAge(born.value); });
-  if (rent)  rent.addEventListener('change', () => {
-    const {date, display} = calculateExpiry(rent.value);
-    const expDisplay = byId('e_expiry_date_display'), expHidden = byId('e_expiry_date');
-    if (expDisplay) expDisplay.value = display;
-    if (expHidden)  expHidden.value  = date;
-  });
-
-  // Phone mask
-  const phoneEl = byId('e_interment_contact_number');
-  if (phoneEl){
-    phoneEl.addEventListener('input', ev=>{
-      let d = ev.target.value.replace(/\D/g,'').slice(0,11);
-      ev.target.value = d.length<=4?d : d.length<=7? d.slice(0,4)+' '+d.slice(4) : d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7);
-    });
+  function toast(title,icon='success'){
+    themedSwal.fire({toast:true,position:'top-end',showConfirmButton:false,timer:1700,icon,title});
   }
-
-  // ===== PSGC cascading (optional; keeps your original feature) =====
-  (function initPSGC(){
-    const api='https://psgc.gitlab.io/api';
-    const prov=byId('e_addr_province'), city=byId('e_addr_city'), brgy=byId('e_addr_brgy');
-    if (!prov || !city || !brgy) return;
-    function fill(sel,list,ph='Select'){
-      sel.innerHTML=`<option value="">${ph}</option>`;
-      list.forEach(x=>{const o=document.createElement('option');o.value=x.code||x.id||x.name;o.textContent=x.name;sel.appendChild(o);});
-    }
-    fetch(`${api}/provinces/`).then(r=>r.json()).then(list=>{
-      list.sort((a,b)=>a.name.localeCompare(b.name)); fill(prov,list);
-    }).catch(()=>{});
-    prov.addEventListener('change',()=>{
-      city.disabled=true; brgy.disabled=true; fill(city,[]); fill(brgy,[]);
-      const c=prov.value; if(!c) return;
-      fetch(`${api}/provinces/${c}/cities-municipalities/`).then(r=>r.json()).then(list=>{
-        list.sort((a,b)=>a.name.localeCompare(b.name)); fill(city,list); city.disabled=false;
-      }).catch(()=>{});
-    });
-    city.addEventListener('change',()=>{
-      brgy.disabled=true; fill(brgy,[]);
-      const c=city.value; if(!c) return;
-      fetch(`${api}/cities-municipalities/${c}/barangays/`).then(r=>r.json()).then(list=>{
-        list.sort((a,b)=>a.name.localeCompare(b.name)); fill(brgy,list); brgy.disabled=false;
-      }).catch(()=>{});
-    });
-  })();
-
 })();
 </script>
-
-
 
 <?php require APPROOT . '/views/includes/staff_footer.php'; ?>

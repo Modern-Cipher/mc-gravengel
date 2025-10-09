@@ -10,31 +10,38 @@ class StaffController extends Controller
     private $mapModel;
     private $burialModel;
     private $renewalModel;
-    
+    private $activityLogModel; // <-- IDINAGDAG
+
     public function __construct()
     {
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (empty($_SESSION['user'])) {
-            header('Location: ' . URLROOT . '/auth/login'); exit;
+            header('Location: ' . URLROOT . '/auth/login');
+            exit;
         }
 
         // Allow both admin and staff to access this controller (full features).
         $role = $_SESSION['user']['role'] ?? '';
         if (!in_array($role, ['staff'], true)) {
-            header('Location: ' . URLROOT . '/auth/login'); exit;
+            header('Location: ' . URLROOT . '/auth/login');
+            exit;
         }
 
         $this->userModel    = $this->model('User');
         $this->mapModel     = $this->model('Map');
         $this->burialModel  = $this->model('Burial');
         $this->renewalModel = $this->model('Renewal');
+        $this->activityLogModel = $this->model('ActivityLog'); // <-- ITO ANG IDINAGDAG
 
         // IMPORTANT: Unlike AdminController, walang block dito.
         // Staff can call everything; visibility via menu na lang sa UI.
     }
 
     /* =================== NAV / LANDING =================== */
-    public function index() { redirect('staff/burialRecords'); }
+    public function index()
+    {
+        redirect('staff/burialRecords');
+    }
 
     public function dashboard()
     {
@@ -44,10 +51,10 @@ class StaffController extends Controller
             'name'            => $_SESSION['user']['name'] ?? 'Staff',
             'must_change_pwd' => (int)($_SESSION['user']['must_change_pwd'] ?? 0),
             'metrics'         => [
-                'active'   => method_exists($this->burialModel,'countActive')             ? (int)$this->burialModel->countActive()             : 0,
-                'expired'  => method_exists($this->burialModel,'countExpired')            ? (int)$this->burialModel->countExpired()            : 0,
-                'todayTx'  => method_exists($this->burialModel,'countTodayTransactions')  ? (int)$this->burialModel->countTodayTransactions()  : 0,
-                'staff'    => method_exists($this->userModel,'countStaffUsers')           ? (int)$this->userModel->countStaffUsers()           : 0,
+                'active'   => method_exists($this->burialModel, 'countActive')             ? (int)$this->burialModel->countActive()             : 0,
+                'expired'  => method_exists($this->burialModel, 'countExpired')            ? (int)$this->burialModel->countExpired()            : 0,
+                'todayTx'  => method_exists($this->burialModel, 'countTodayTransactions')  ? (int)$this->burialModel->countTodayTransactions()  : 0,
+                'staff'    => method_exists($this->userModel, 'countStaffUsers')           ? (int)$this->userModel->countStaffUsers()           : 0,
             ],
         ]);
     }
@@ -56,32 +63,49 @@ class StaffController extends Controller
     public function cemeteryMap()
     {
         $blocks = $this->mapModel->getAllBlocks();
-        $this->view('staff/cemetery_map', ['title'=>'Cemetery Map','blocks'=>$blocks]);
+        $this->view('staff/cemetery_map', ['title' => 'Cemetery Map', 'blocks' => $blocks]);
+    }
+
+    public function getOccupantsForPlot($plot_id = 0)
+    {
+        header('Content-Type: application/json');
+        $plot_id = (int)$plot_id;
+        if ($plot_id <= 0) {
+            echo json_encode(['ok' => false, 'message' => 'Invalid Plot ID.']);
+            return;
+        }
+
+        $occupants = $this->burialModel->getActiveOccupantsByPlotId($plot_id);
+
+        echo json_encode(['ok' => true, 'occupants' => $occupants]);
     }
 
     public function userAccounts()
     {
         $uid   = $_SESSION['user']['id'];
         $users = $this->userModel->getAllUsersExcluding($uid);
-        $this->view('staff/user_accounts', ['title'=>'User Accounts','users'=>$users]);
+        $this->view('staff/user_accounts', ['title' => 'User Accounts', 'users' => $users]);
     }
 
     public function profile()
     {
         $uid  = $_SESSION['user']['id'];
         $user = $this->userModel->findById($uid);
-        $this->view('staff/profile', ['title'=>'My Profile','user'=>$user]);
+        $this->view('staff/profile', ['title' => 'My Profile', 'user' => $user]);
     }
 
     public function contact_us()
     {
-        $this->view('staff/contact_us', ['title'=>'Contact Us']);
+        $this->view('staff/contact_us', ['title' => 'Contact Us']);
     }
 
     /* =================== MAP =================== */
     public function updateBlock()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST'){ redirect('staff/cemeteryMap'); return; }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('staff/cemeteryMap');
+            return;
+        }
 
         $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
         $data = [
@@ -93,8 +117,8 @@ class StaffController extends Controller
             'modal_cols' => (int)$_POST['modal_cols'],
         ];
         if ($this->mapModel->updateBlock($data)) {
-            $_SESSION['flash_message']='Block details saved successfully!';
-            $_SESSION['flash_type']='success';
+            $_SESSION['flash_message'] = 'Block details saved successfully!';
+            $_SESSION['flash_type'] = 'success';
             redirect('staff/cemeteryMap');
         } else {
             die('Something went wrong');
@@ -105,8 +129,9 @@ class StaffController extends Controller
     public function addStaff()
     {
         header('Content-Type: application/json');
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST'){
-            echo json_encode(['success'=>false,'message'=>'Invalid request method.']); return;
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+            return;
         }
 
         $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
@@ -120,11 +145,13 @@ class StaffController extends Controller
             'designation' => trim($_POST['designation'] ?? ''),
         ];
 
-        if (in_array('', [$data['first_name'],$data['last_name'],$data['username'],$data['email'],$data['staff_id'],$data['designation']], true)){
-            echo json_encode(['success'=>false,'message'=>'Please fill in all required fields.']); return;
+        if (in_array('', [$data['first_name'], $data['last_name'], $data['username'], $data['email'], $data['staff_id'], $data['designation']], true)) {
+            echo json_encode(['success' => false, 'message' => 'Please fill in all required fields.']);
+            return;
         }
         if ($this->userModel->findByUsernameOrEmail($data['username'])) {
-            echo json_encode(['success'=>false,'message'=>'Username or email is already taken.']); return;
+            echo json_encode(['success' => false, 'message' => 'Username or email is already taken.']);
+            return;
         }
 
         $temp_password           = substr(bin2hex(random_bytes(8)), 0, 16);
@@ -134,16 +161,17 @@ class StaffController extends Controller
         $user_id = $this->userModel->addStaffUser($data);
         if ($user_id) {
             $emailHelper = new EmailHelper();
-            $email_data  = ['full_name'=>$data['first_name'].' '.$data['last_name'], 'temp_password'=>$temp_password];
+            $email_data  = ['full_name' => $data['first_name'] . ' ' . $data['last_name'], 'temp_password' => $temp_password];
             $body        = $this->view('emails/welcome_staff', $email_data, true);
             $ok          = $emailHelper->sendEmail($data['email'], $email_data['full_name'], 'Welcome to Plaridel Public Cemetery System!', $body);
 
-            echo json_encode($ok===true
-                ? ['success'=>true,'message'=>'Staff account created and welcome email sent!','temp_password'=>$temp_password,'user'=>$email_data]
-                : ['success'=>false,'message'=>'Account created, but failed to send welcome email. '.$ok]
+            echo json_encode(
+                $ok === true
+                    ? ['success' => true, 'message' => 'Staff account created and welcome email sent!', 'temp_password' => $temp_password, 'user' => $email_data]
+                    : ['success' => false, 'message' => 'Account created, but failed to send welcome email. ' . $ok]
             );
         } else {
-            echo json_encode(['success'=>false,'message'=>'Failed to create user account.']);
+            echo json_encode(['success' => false, 'message' => 'Failed to create user account.']);
         }
     }
 
@@ -152,15 +180,22 @@ class StaffController extends Controller
     {
         header('Content-Type: application/json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            echo json_encode(['success'=>false,'message'=>'Invalid request method.']); return;
+            echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+            return;
         }
 
         $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
         $id    = (int)($_POST['id'] ?? 0);
-        if ($id <= 0) { echo json_encode(['success'=>false,'message'=>'Missing user id.']); return; }
+        if ($id <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Missing user id.']);
+            return;
+        }
 
         $current = $this->userModel->findById($id);
-        if (!$current) { echo json_encode(['success'=>false,'message'=>'User not found.']); return; }
+        if (!$current) {
+            echo json_encode(['success' => false, 'message' => 'User not found.']);
+            return;
+        }
 
         $incoming = [
             'first_name'  => trim($_POST['first_name']  ?? ''),
@@ -179,13 +214,17 @@ class StaffController extends Controller
             $old = isset($current->$k) ? (string)$current->$k : '';
             if ($old !== $v) $changes[$k] = $v;
         }
-        if (empty($changes)) { echo json_encode(['success'=>true,'message'=>'No changes detected.']); return; }
+        if (empty($changes)) {
+            echo json_encode(['success' => true, 'message' => 'No changes detected.']);
+            return;
+        }
 
         if (isset($changes['username']) || isset($changes['email'])) {
             $check = $changes['username'] ?? $current->username;
             $exists = $this->userModel->findByUsernameOrEmail($check);
             if ($exists && (int)$exists->id !== $id) {
-                echo json_encode(['success'=>false,'message'=>'Username or email is already taken.']); return;
+                echo json_encode(['success' => false, 'message' => 'Username or email is already taken.']);
+                return;
             }
         }
 
@@ -198,106 +237,98 @@ class StaffController extends Controller
         } elseif (method_exists($this->userModel, 'updateById')) {
             $ok = (bool)$this->userModel->updateById($id, $changes);
         } else {
-            echo json_encode(['success'=>false,'message'=>'Update method not available in User model.']); return;
+            echo json_encode(['success' => false, 'message' => 'Update method not available in User model.']);
+            return;
         }
 
-        echo json_encode($ok ? ['success'=>true,'message'=>'User details updated.']
-                             : ['success'=>false,'message'=>'Failed to update user.']);
+        echo json_encode($ok ? ['success' => true, 'message' => 'User details updated.']
+            : ['success' => false, 'message' => 'Failed to update user.']);
     }
 
     /* =================== BURIALS =================== */
     public function burialRecords()
     {
         $records = $this->burialModel->getAllBurialRecords(); // is_active = 1
-        $this->view('staff/burial_records', ['title'=>'Burial Records','records'=>$records]);
+        $this->view('staff/burial_records', ['title' => 'Burial Records', 'records' => $records]);
     }
 
     public function addBurial()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $plots = $this->burialModel->getVacantPlotsFromPlots();
-            $this->view('staff/add_burial', ['plots'=>$plots]);
-            return;
-        }
+        // --- POST REQUEST: I-handle ang form submission ---
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            header('Content-Type: application/json');
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
-        header('Content-Type: application/json');
-        $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $parentBurialId = trim($_POST['parent_burial_id'] ?? '') ?: null;
 
-        $burialIdIncoming = trim($_POST['burial_id'] ?? '');
-        $interment_email  = trim($_POST['interment_email'] ?? '');
+            $data = [
+                'plot_id'                  => (int)($_POST['plot_id'] ?? 0),
+                'parent_burial_id'         => $parentBurialId,
+                'deceased_first_name'      => trim($_POST['deceased_first_name'] ?? ''),
+                'deceased_middle_name'     => trim($_POST['deceased_middle_name'] ?? ''),
+                'deceased_last_name'       => trim($_POST['deceased_last_name'] ?? ''),
+                'deceased_suffix'          => trim($_POST['deceased_suffix'] ?? ''),
+                'age'                      => trim($_POST['age'] ?? ''),
+                'sex'                      => $_POST['sex'] ?? '',
+                'date_born'                => $_POST['date_born'] ?: null,
+                'date_died'                => $_POST['date_died'] ?: null,
+                'cause_of_death'           => trim($_POST['cause_of_death'] ?? ''),
+                'grave_level'              => $_POST['grave_level'] ?? '',
+                'grave_type'               => $_POST['grave_type'] ?? '',
+                'interment_full_name'      => trim($_POST['interment_full_name'] ?? ''),
+                'interment_relationship'   => $_POST['interment_relationship'] ?? '',
+                'interment_contact_number' => $_POST['interment_contact_number'] ?? '',
+                'interment_address'        => trim($_POST['interment_address'] ?? ''),
+                'interment_email'          => trim($_POST['interment_email'] ?? '') ?: null,
+                'payment_amount'           => (float)($_POST['payment_amount'] ?? 0),
+                'rental_date'              => $_POST['rental_date'] ?: null,
+                'expiry_date'              => $_POST['expiry_date'] ?: null,
+                'requirements'             => $_POST['requirements'] ?? '',
+                'created_by_user_id'       => $_SESSION['user']['id'] ?? null,
+            ];
 
-        // Basic optional email validation (format + max length 150)
-        if ($interment_email !== '') {
-            if (strlen($interment_email) > 150) {
-                echo json_encode(['ok'=>false,'message'=>'Interment email must be at most 150 characters.']); return;
+            foreach (['plot_id', 'deceased_first_name', 'deceased_last_name', 'date_died', 'interment_full_name', 'interment_relationship'] as $k) {
+                if (empty($data[$k])) {
+                    echo json_encode(['ok' => false, 'message' => 'Missing required field: ' . $k]);
+                    return;
+                }
             }
-            if (!filter_var($interment_email, FILTER_VALIDATE_EMAIL)) {
-                echo json_encode(['ok'=>false,'message'=>'Please enter a valid interment email address.']); return;
-            }
-        }
-
-        $data = [
-            'plot_id'                  => (int)($_POST['plot_id'] ?? 0),
-            'deceased_first_name'      => trim($_POST['deceased_first_name'] ?? ''),
-            'deceased_middle_name'     => trim($_POST['deceased_middle_name'] ?? ''),
-            'deceased_last_name'       => trim($_POST['deceased_last_name'] ?? ''),
-            'deceased_suffix'          => trim($_POST['deceased_suffix'] ?? ''),
-            'age'                      => trim($_POST['age'] ?? ''),
-            'sex'                      => $_POST['sex'] ?? '',
-            'date_born'                => $_POST['date_born'] ?: null,
-            'date_died'                => $_POST['date_died'] ?: null,
-            'cause_of_death'           => trim($_POST['cause_of_death'] ?? ''),
-            'grave_level'              => $_POST['grave_level'] ?? '',
-            'grave_type'               => $_POST['grave_type'] ?? '',
-            'interment_full_name'      => trim($_POST['interment_full_name'] ?? ''),
-            'interment_relationship'   => $_POST['interment_relationship'] ?? '',
-            'interment_contact_number' => $_POST['interment_contact_number'] ?? '',
-            'interment_address'        => trim($_POST['interment_address'] ?? ''),
-            'interment_email'          => ($interment_email === '') ? null : $interment_email, // NEW
-            'payment_amount'           => (float)($_POST['payment_amount'] ?? 0),
-            'rental_date'              => $_POST['rental_date'] ?: null,
-            'expiry_date'              => $_POST['expiry_date'] ?: null,
-            'requirements'             => $_POST['requirements'] ?? '',
-        ];
-
-        foreach (['plot_id','deceased_first_name','deceased_last_name','date_died','interment_full_name','interment_relationship'] as $k){
-            if (empty($data[$k])) { echo json_encode(['ok'=>false,'message'=>'Missing required field: '.$k]); return; }
-        }
-
-        $uid = $_SESSION['user']['id'] ?? null;
-
-        if ($burialIdIncoming === '') {
-            $data['created_by_user_id'] = $uid;
 
             $res = $this->burialModel->create($data);
-            if (!$res) { echo json_encode(['ok'=>false,'message'=>'Failed to save']); return; }
+            if (!$res) {
+                $this->logActivity('create_burial_failed', "Attempted to create burial for Plot ID: {$data['plot_id']}"); // LOG FAILURE
+                echo json_encode(['ok' => false, 'message' => 'Failed to save burial record.']);
+                return;
+            }
+            $this->logActivity('create_burial', "Created burial record {$res['burial_id']} for Plot ID: {$data['plot_id']}"); // LOG SUCCESS
 
-            $transactionId = $res['transaction_id'] ?? ($this->makeTransactionId($res['insert_id'] ?? 0));
             echo json_encode([
                 'ok' => true,
                 'message' => 'Saved',
-                'burial_id' => $res['burial_id'] ?? null,
-                'transaction_id' => $transactionId
+                'burial_id' => $res['burial_id'],
+                'transaction_id' => $res['transaction_id']
             ]);
-        } else {
-            $data['burial_id']          = $burialIdIncoming;
-            $data['updated_by_user_id'] = $uid;
-
-            $ok = $this->burialModel->updateBurial($data);
-            if (!$ok) { echo json_encode(['ok'=>false,'message'=>'Failed to update']); return; }
-
-            $r = $this->burialModel->findAnyByBurialId($burialIdIncoming);
-            $transactionId = $r->transaction_id ?? $this->makeTransactionId($r->id ?? 0);
-
-            echo json_encode([
-                'ok' => true,
-                'message' => 'Updated',
-                'burial_id' => $burialIdIncoming,
-                'transaction_id' => $transactionId
-            ]);
+            return;
         }
-    }
 
+        // --- GET REQUEST: I-display ang form na may tamang data ---
+        $all_plots = $this->burialModel->getAllPlotsForDropdown();
+
+        $plots_grouped = [
+            'vacant' => [],
+            'occupied' => []
+        ];
+
+        foreach ($all_plots as $plot) {
+            $plots_grouped[$plot->status][] = $plot;
+        }
+
+        $data = [
+            'plots_grouped' => $plots_grouped
+        ];
+
+        $this->view('staff/add_burial', $data);
+    }
     /**
      * Handles updating a burial record from the edit modal.
      * It fetches the current record and merges submitted form data over it
@@ -310,29 +341,29 @@ class StaffController extends Controller
             echo json_encode(['ok' => false, 'message' => 'Invalid request method.']);
             return;
         }
-    
+
         $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-    
+
         $burialId = trim($_POST['burial_id'] ?? '');
         if (empty($burialId)) {
             echo json_encode(['ok' => false, 'message' => 'Missing burial ID.']);
             return;
         }
-    
+
         // 1. Fetch the existing record to serve as a base, preventing data loss
         $existingRecord = $this->burialModel->findAnyByBurialId($burialId);
         if (!$existingRecord) {
             echo json_encode(['ok' => false, 'message' => 'Burial record not found.']);
             return;
         }
-    
+
         // 2. Validate incoming email, if provided
         $interment_email  = trim($_POST['interment_email'] ?? '');
         if ($interment_email !== '' && !filter_var($interment_email, FILTER_VALIDATE_EMAIL)) {
             echo json_encode(['ok' => false, 'message' => 'Please enter a valid email address.']);
             return;
         }
-    
+
         // 3. Prepare an array of the submitted data for merging
         $submittedData = [
             'burial_id'                => $burialId,
@@ -360,13 +391,14 @@ class StaffController extends Controller
             'requirements'             => trim($_POST['requirements'] ?? ''),
             'updated_by_user_id'       => $_SESSION['user']['id'] ?? null,
         ];
-    
+
         // 4. Merge the submitted data over the existing record.
         // This ensures any fields not submitted by the form retain their original values.
         $finalData = array_merge((array)$existingRecord, $submittedData);
-    
+
         // 5. Pass the complete, final data to the model for updating.
         if ($this->burialModel->updateBurial($finalData)) {
+            $this->logActivity('update_burial', "Updated burial record ID: {$burialId}"); // LOG ACTION
             echo json_encode(['ok' => true, 'message' => 'Record updated successfully!']);
         } else {
             // The model's execute() returns true on success, false on failure.
@@ -375,6 +407,37 @@ class StaffController extends Controller
         }
     }
 
+    public function getPrimaryBurialForPlot($plot_id = 0)
+    {
+        header('Content-Type: application/json');
+        $plot_id = (int)$plot_id;
+        if ($plot_id > 0) {
+            $primary = $this->burialModel->getPrimaryBurialForPlot($plot_id);
+            if ($primary) {
+                echo json_encode(['ok' => true, 'parent_burial_id' => $primary->burial_id]);
+                return;
+            }
+        }
+        echo json_encode(['ok' => false, 'message' => 'No active primary burial found for this plot.']);
+    }
+
+    public function getPlotDetailsForForm($plot_id = 0)
+    {
+        header('Content-Type: application/json');
+        $plot_id = (int)$plot_id;
+        if ($plot_id <= 0) {
+            echo json_encode(['ok' => false, 'message' => 'Invalid Plot ID.']);
+            return;
+        }
+
+        $details = $this->burialModel->getDetailsForBurialForm($plot_id);
+
+        if ($details) {
+            echo json_encode(['ok' => true, 'details' => $details]);
+        } else {
+            echo json_encode(['ok' => false, 'message' => 'Could not retrieve plot details.']);
+        }
+    }
 
     private function makeTransactionId($suffixInt): string
     {
@@ -387,28 +450,43 @@ class StaffController extends Controller
     public function burialJson($burial_id)
     {
         header('Content-Type: application/json');
-        if (!$burial_id) { echo json_encode(['ok'=>false,'message'=>'No id']); return; }
+        if (!$burial_id) {
+            echo json_encode(['ok' => false, 'message' => 'No id']);
+            return;
+        }
         $r = $this->burialModel->findAnyByBurialId($burial_id);
-        if (!$r) { echo json_encode(['ok'=>false,'message'=>'Not found']); return; }
-        echo json_encode(['ok'=>true,'data'=>$r]);
+        if (!$r) {
+            echo json_encode(['ok' => false, 'message' => 'Not found']);
+            return;
+        }
+        echo json_encode(['ok' => true, 'data' => $r]);
     }
 
     public function printBurialForm($burial_id)
     {
         $rec = $this->burialModel->findAnyByBurialId($burial_id);
-        if (!$rec) { echo '<h3 style="padding:16px">Burial record not found.</h3>'; return; }
+        if (!$rec) {
+            echo '<h3 style="padding:16px">Burial record not found.</h3>';
+            return;
+        }
         $this->view('staff/print_burial_form', ['r' => $rec]);
     }
     public function printContract($burial_id)
     {
         $rec = $this->burialModel->findAnyByBurialId($burial_id);
-        if (!$rec) { echo '<h3 style="padding:16px">Burial record not found.</h3>'; return; }
+        if (!$rec) {
+            echo '<h3 style="padding:16px">Burial record not found.</h3>';
+            return;
+        }
         $this->view('staff/print_contract', ['r' => $rec]);
     }
     public function printQrTicket($burial_id)
     {
         $rec = $this->burialModel->findAnyByBurialId($burial_id);
-        if (!$rec) { echo '<h3 style="padding:16px">Burial record not found.</h3>'; return; }
+        if (!$rec) {
+            echo '<h3 style="padding:16px">Burial record not found.</h3>';
+            return;
+        }
         $this->view('staff/print_qr_ticket', ['r' => $rec]);
     }
 
@@ -416,7 +494,10 @@ class StaffController extends Controller
     public function getBurialDetails($burial_id)
     {
         header('Content-Type: application/json');
-        if (empty($burial_id)) { echo json_encode(['error'=>'No burial ID']); return; }
+        if (empty($burial_id)) {
+            echo json_encode(['error' => 'No burial ID']);
+            return;
+        }
         $r = $this->burialModel->findAnyByBurialId($burial_id);
         echo json_encode($r);
     }
@@ -429,35 +510,54 @@ class StaffController extends Controller
     {
         header('Content-Type: application/json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            echo json_encode(['ok'=>false,'message'=>'Invalid method']); return;
+            echo json_encode(['ok' => false, 'message' => 'Invalid method']);
+            return;
         }
         $burial_id = trim($burial_id ?? '');
-        if ($burial_id === '') { echo json_encode(['ok'=>false,'message'=>'Missing burial id']); return; }
+        if ($burial_id === '') {
+            echo json_encode(['ok' => false, 'message' => 'Missing burial id']);
+            return;
+        }
 
         $ok = $this->burialModel->deleteByBurialId($burial_id);
-        echo json_encode(['ok'=>$ok, 'message'=>$ok?'Deleted':'Failed to delete']);
+        if ($ok) {
+            $this->logActivity('delete_burial', "Permanently deleted Burial ID: " . htmlspecialchars($burial_id)); // LOG ACTION
+        }
+        echo json_encode(['ok' => $ok, 'message' => $ok ? 'Deleted' : 'Failed to delete']);
     }
 
     public function archivedBurials()
     {
         $records = $this->burialModel->getAllBurialRecordsArchived(); // is_active = 0
-        $this->view('staff/archived_burials', ['title'=>'Archived Burials','records'=>$records]);
+        $this->view('staff/archived_burials', ['title' => 'Archived Burials', 'records' => $records]);
     }
 
     public function archiveBurial($burial_id)
     {
         header('Content-Type: application/json');
-        if (empty($burial_id)) { echo json_encode(['ok'=>false,'message'=>'No burial ID']); return; }
+        if (empty($burial_id)) {
+            echo json_encode(['ok' => false, 'message' => 'No burial ID']);
+            return;
+        }
         $ok = $this->burialModel->archiveByBurialId($burial_id);
-        echo json_encode(['ok'=>(bool)$ok, 'message'=>$ok?'Archived':'Archive failed']);
+        if ($ok) {
+            $this->logActivity('archive_burial', "Archived Burial ID: " . htmlspecialchars($burial_id)); // LOG ACTION
+        }
+        echo json_encode(['ok' => (bool)$ok, 'message' => $ok ? 'Archived' : 'Archive failed']);
     }
 
     public function restoreBurial($burial_id)
     {
         header('Content-Type: application/json');
-        if (empty($burial_id)) { echo json_encode(['ok'=>false,'message'=>'No burial ID']); return; }
+        if (empty($burial_id)) {
+            echo json_encode(['ok' => false, 'message' => 'No burial ID']);
+            return;
+        }
         $ok = $this->burialModel->restoreByBurialId($burial_id);
-        echo json_encode(['ok'=>(bool)$ok, 'message'=>$ok?'Restored':'Restore failed']);
+        if ($ok) {
+            $this->logActivity('restore_burial', "Restored Burial ID: " . htmlspecialchars($burial_id)); // LOG ACTION
+        }
+        echo json_encode(['ok' => (bool)$ok, 'message' => $ok ? 'Restored' : 'Restore failed']);
     }
 
     /* =================== LOGS & REPORTS =================== */
@@ -466,95 +566,17 @@ class StaffController extends Controller
         $this->view('staff/logs_reports', ['title' => 'Logs & Reports']);
     }
 
-    public function fetchActivityLogs()
+   public function fetchActivityLogs()
     {
         header('Content-Type: application/json');
-
-        $from = $_GET['from'] ?? '';
-        $to   = $_GET['to']   ?? '';
-        $q    = trim($_GET['q'] ?? '');
-
-        $db = new Database();
-        $parts = [];
-
-        // Create
-        $parts[] = "
-          SELECT
-            sd.staff_id AS staff_id,
-            u.username  AS username,
-            b.created_at AS ts,
-            CONCAT('Added Burial Record ', b.burial_id, ' for ', mb.title, ' — ', p.plot_number) AS action_text,
-            'create_burial' AS kind
-          FROM burials b
-          JOIN plots p        ON p.id = b.plot_id
-          JOIN map_blocks mb  ON mb.id = p.map_block_id
-          LEFT JOIN users u   ON u.id = b.created_by_user_id
-          LEFT JOIN staff_details sd ON sd.user_id = u.id
-          WHERE 1=1
-        ";
-
-        // Update (no updated_at in schema)
-        $parts[] = "
-          SELECT
-            sd.staff_id AS staff_id,
-            u.username  AS username,
-            NULL AS ts,
-            CONCAT('Updated Burial Record ', b.burial_id, ' (', mb.title, ' — ', p.plot_number, ') — timestamp not available') AS action_text,
-            'update_burial' AS kind
-          FROM burials b
-          JOIN plots p        ON p.id = b.plot_id
-          JOIN map_blocks mb  ON mb.id = p.map_block_id
-          LEFT JOIN users u   ON u.id = b.updated_by_user_id
-          LEFT JOIN staff_details sd ON sd.user_id = u.id
-          WHERE b.updated_by_user_id IS NOT NULL
-        ";
-
-        // Login
-        $parts[] = "
-          SELECT
-            sd.staff_id AS staff_id,
-            u.username  AS username,
-            us.login_at AS ts,
-            'User login' AS action_text,
-            'login' AS kind
-          FROM user_sessions us
-          JOIN users u        ON u.id = us.user_id
-          LEFT JOIN staff_details sd ON sd.user_id = u.id
-          WHERE us.login_at IS NOT NULL
-        ";
-
-        // Logout
-        $parts[] = "
-          SELECT
-            sd.staff_id AS staff_id,
-            u.username  AS username,
-            us.logout_at AS ts,
-            'User logout' AS action_text,
-            'logout' AS kind
-          FROM user_sessions us
-          JOIN users u        ON u.id = us.user_id
-          LEFT JOIN staff_details sd ON sd.user_id = u.id
-          WHERE us.logout_at IS NOT NULL
-        ";
-
-        $sql  = "SELECT * FROM (".implode(" UNION ALL ", $parts).") X WHERE 1=1";
-        $bind = [];
-
-        if ($from !== '') { $sql .= " AND (ts IS NULL OR DATE(ts) >= :dfrom)"; $bind[':dfrom'] = $from; }
-        if ($to   !== '') { $sql .= " AND (ts IS NULL OR DATE(ts) <= :dto)";   $bind[':dto']   = $to;   }
-
-        if ($q !== '') {
-            $sql .= " AND (COALESCE(staff_id,'') LIKE :qq OR COALESCE(username,'') LIKE :qq OR COALESCE(action_text,'') LIKE :qq)";
-            $bind[':qq'] = "%{$q}%";
-        }
-
-        $sql .= " ORDER BY (ts IS NULL), ts DESC";
-
-        $db->query($sql);
-        foreach ($bind as $k=>$v) $db->bind($k,$v);
-        $rows = $db->resultSet();
-
-        echo json_encode(['ok'=>true,'rows'=>$rows]);
+        $filters = [
+            'from' => $_GET['from'] ?? '',
+            'to'   => $_GET['to']   ?? '',
+            'q'    => trim($_GET['q'] ?? '')
+        ];
+        // Gamitin ang bagong model para kunin ang logs mula sa 'activity_log' table
+        $logs = $this->activityLogModel->getLogs($filters);
+        echo json_encode(['ok' => true, 'rows' => $logs]);
     }
 
     public function fetchTransactionReports()
@@ -602,8 +624,14 @@ class StaffController extends Controller
         ";
 
         $bind = [];
-        if ($from !== '') { $sql .= " AND DATE(b.rental_date) >= :rfrom"; $bind[':rfrom'] = $from; }
-        if ($to   !== '') { $sql .= " AND DATE(b.rental_date) <= :rto";   $bind[':rto']   = $to;   }
+        if ($from !== '') {
+            $sql .= " AND DATE(b.rental_date) >= :rfrom";
+            $bind[':rfrom'] = $from;
+        }
+        if ($to   !== '') {
+            $sql .= " AND DATE(b.rental_date) <= :rto";
+            $bind[':rto']   = $to;
+        }
 
         if ($q !== '') {
             $sql .= " AND (
@@ -621,10 +649,10 @@ class StaffController extends Controller
         $sql .= " ORDER BY b.rental_date DESC, b.created_at DESC";
 
         $db->query($sql);
-        foreach ($bind as $k=>$v) $db->bind($k,$v);
+        foreach ($bind as $k => $v) $db->bind($k, $v);
         $rows = $db->resultSet();
 
-        echo json_encode(['ok'=>true,'rows'=>$rows]);
+        echo json_encode(['ok' => true, 'rows' => $rows]);
     }
 
     /* ---------- JSON: dashboard cards counters ---------- */
@@ -637,9 +665,9 @@ class StaffController extends Controller
             $today   = method_exists($this->burialModel, 'countTodayTransactions') ? (int)$this->burialModel->countTodayTransactions() : 0;
             $staff   = method_exists($this->userModel,   'countStaffUsers') ? (int)$this->userModel->countStaffUsers() : 0;
 
-            echo json_encode(['ok'=>true, 'active'=>$active, 'expired'=>$expired, 'today'=>$today, 'staff'=>$staff]);
+            echo json_encode(['ok' => true, 'active' => $active, 'expired' => $expired, 'today' => $today, 'staff' => $staff]);
         } catch (Throwable $e) {
-            echo json_encode(['ok'=>false, 'message'=>'Failed to load cards']);
+            echo json_encode(['ok' => false, 'message' => 'Failed to load cards']);
         }
     }
 
@@ -714,20 +742,22 @@ class StaffController extends Controller
         exit;
     }
 
-    public function renewals() {
-        $all_active_burials = $this->renewalModel->getBurialsForRenewal(); 
+    public function renewals()
+    {
+        $all_active_burials = $this->renewalModel->getBurialsForRenewal();
         $history = $this->renewalModel->getRenewalHistory();
-        
+
         $data = [
             'title' => 'Renewals',
-            'all_burials' => $all_active_burials, 
+            'all_burials' => $all_active_burials,
             'history' => $history
         ];
-        
+
         $this->view('staff/renewals', $data);
     }
 
-    public function processRenewal() {
+    public function processRenewal()
+    {
         header('Content-Type: application/json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['ok' => false, 'message' => 'Invalid request method.']);
@@ -735,9 +765,9 @@ class StaffController extends Controller
         }
 
         $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-        
+
         $burial = $this->renewalModel->getDetailedBurialForRenewal($_POST['burial_id']);
-        
+
         if (!$burial) {
             echo json_encode(['ok' => false, 'message' => 'Burial record not found or is inactive.']);
             return;
@@ -771,11 +801,12 @@ class StaffController extends Controller
         $result = $this->renewalModel->createRenewal($data);
 
         if ($result && isset($result['ok']) && $result['ok']) {
+             $this->logActivity('process_renewal', "Renewed Burial ID: {$data['burial_id']}"); // LOG ACTION
             $email_status = $data['receipt_email_status'];
 
             if (!empty($data['payer_email'])) {
-                if (!class_exists('EmailHelper')) { 
-                    require_once APPROOT . '/helpers/Email.php'; 
+                if (!class_exists('EmailHelper')) {
+                    require_once APPROOT . '/helpers/Email.php';
                 }
 
                 $email_data_payload = [
@@ -789,36 +820,36 @@ class StaffController extends Controller
                 ];
 
                 $data_for_template = ['emailData' => $email_data_payload];
-                
+
                 $body = $this->view('emails/renewal_confirmation', $data_for_template, true);
                 $subject = 'Official Receipt for Your Renewal - Plaridel Public Cemetery';
 
                 $emailHelper = new EmailHelper();
                 $email_ok = $emailHelper->sendEmail($data['payer_email'], $data['payer_name'], $subject, $body);
 
-                $email_status = ($email_ok === true) ? 'Sent successfully.' : 'Failed: '.$email_ok;
+                $email_status = ($email_ok === true) ? 'Sent successfully.' : 'Failed: ' . $email_ok;
                 $this->renewalModel->updateEmailStatus($result['transaction_id'], $email_status);
             }
 
             echo json_encode([
-                'ok' => true, 
-                'message' => 'Renewal successful! Rental period updated.', 
+                'ok' => true,
+                'message' => 'Renewal successful! Rental period updated.',
                 'email_status' => $email_status,
                 'burial_id' => $burial->burial_id
             ]);
-
         } else {
             echo json_encode(['ok' => false, 'message' => 'Failed to process renewal in database.']);
         }
     }
 
-    public function processVacate() {
+    public function processVacate()
+    {
         header('Content-Type: application/json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['ok' => false, 'message' => 'Invalid request method.']);
             return;
         }
-        
+
         // Kukunin muna natin ang kumpletong detalye para magamit sa email
         $burial = $this->renewalModel->getDetailedBurialForRenewal($_POST['burial_id']);
         if (!$burial) {
@@ -828,14 +859,15 @@ class StaffController extends Controller
 
         // Ituloy ang pag-vacate ng plot
         $ok = $this->renewalModel->vacatePlot($burial->burial_id, $burial->plot_id, $_SESSION['user']['id']);
-        
+
         if ($ok) {
+            $this->logActivity('vacate_plot', "Vacated record for Burial ID: {$burial->burial_id}"); // LOG ACTION
             $email_status = 'Not sent (no email on record).';
 
             // Kung successful ang pag-vacate AT may email, magpadala ng notification
             if (!empty($burial->interment_email)) {
-                if (!class_exists('EmailHelper')) { 
-                    require_once APPROOT . '/helpers/Email.php'; 
+                if (!class_exists('EmailHelper')) {
+                    require_once APPROOT . '/helpers/Email.php';
                 }
 
                 $email_data_payload = [
@@ -846,7 +878,7 @@ class StaffController extends Controller
                 ];
 
                 $data_for_template = ['emailData' => $email_data_payload];
-                
+
                 $body = $this->view('emails/vacate_confirmation', $data_for_template, true);
                 $subject = 'Confirmation of Plot Vacation - Plaridel Public Cemetery';
 
@@ -858,11 +890,10 @@ class StaffController extends Controller
 
             // Mag-reply sa request na may kasamang email status
             echo json_encode([
-                'ok' => true, 
+                'ok' => true,
                 'message' => 'Plot has been vacated and record is archived.',
                 'email_status' => $email_status
             ]);
-
         } else {
             echo json_encode(['ok' => false, 'message' => 'Failed to vacate plot.']);
         }
@@ -873,19 +904,24 @@ class StaffController extends Controller
     {
         header('Content-Type: application/json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            echo json_encode(['success'=>false,'message'=>'Invalid method']); return;
+            echo json_encode(['success' => false, 'message' => 'Invalid method']);
+            return;
         }
 
         $id        = (int)($_POST['id'] ?? 0);
         $is_active = (int)($_POST['is_active'] ?? 0);
 
-        if ($id <= 0) { echo json_encode(['success'=>false,'message'=>'Missing user id']); return; }
+        if ($id <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Missing user id']);
+            return;
+        }
 
         $ok = $this->userModel->toggleUserActiveStatus($id, $is_active);
 
-        echo json_encode($ok
-            ? ['success'=>true,'message'=>'User status updated.']
-            : ['success'=>false,'message'=>'Failed to update user status.']
+        echo json_encode(
+            $ok
+                ? ['success' => true, 'message' => 'User status updated.']
+                : ['success' => false, 'message' => 'Failed to update user status.']
         );
     }
 
@@ -893,73 +929,76 @@ class StaffController extends Controller
     {
         header('Content-Type: application/json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            echo json_encode(['success' => false, 'message' => 'Invalid method']); return;
+            echo json_encode(['success' => false, 'message' => 'Invalid method']);
+            return;
         }
-    
+
         $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
         $userId = $_POST['user_id'] ?? null;
         $email  = $_POST['email'] ?? null;
-    
+
         if (!$userId || !$email) {
-            echo json_encode(['success' => false, 'message' => 'Missing parameters']); return;
+            echo json_encode(['success' => false, 'message' => 'Missing parameters']);
+            return;
         }
-    
+
         try {
-            $db = new Database(); 
-    
+            $db = new Database();
+
             // 1. Fetch user to get name and ID
             $db->query("SELECT id, email, first_name, last_name, role FROM users WHERE id = :id LIMIT 1");
             $db->bind(':id', $userId);
             $user = $db->single();
-    
+
             // Validation: Check user, email, and ensure the role is 'staff'
             if (!$user || strcasecmp($user->email, $email) !== 0 || $user->role !== 'staff') {
-                echo json_encode(['success' => false, 'message' => 'User not authorized for password reset.']); return;
+                echo json_encode(['success' => false, 'message' => 'User not authorized for password reset.']);
+                return;
             }
-    
+
             // 2. TOKEN GENERATION (RAW token)
-            $rawToken = bin2hex(random_bytes(32)); 
+            $rawToken = bin2hex(random_bytes(32));
             $expires  = (new DateTime('+2 hours', new DateTimeZone('Asia/Manila')))->format('Y-m-d H:i:s');
-            
+
             // Delete old tokens
             $db->query('DELETE FROM password_resets WHERE user_id = :user_id OR expires_at < NOW()');
             $db->bind(':user_id', $userId);
             $db->execute();
-            
+
             // Insert the RAW token
             $db->query('INSERT INTO password_resets (user_id, token, expires_at) VALUES (:u, :t, :e)');
             $db->bind(':u', $userId);
             $db->bind(':t', $rawToken); // RAW token
             $db->bind(':e', $expires);
             $db->execute();
-    
+
             // 3. Set the final link
-            $reset_link = URLROOT . "/auth/resetPassword?token={$rawToken}"; 
-            
+            $reset_link = URLROOT . "/auth/resetPassword?token={$rawToken}";
+
             // 4. Prepare data for the RE-USED TEMPLATE (emails/reset_password)
             $email_data_payload = [
-                'full_name'  => $user->first_name, 
-                'reset_link' => $reset_link,       
+                'full_name'  => $user->first_name,
+                'reset_link' => $reset_link,
             ];
-            
-            if (!class_exists('EmailHelper')) { 
-                require_once APPROOT . '/helpers/Email.php'; 
+
+            if (!class_exists('EmailHelper')) {
+                require_once APPROOT . '/helpers/Email.php';
             }
-            
-            $body = $this->view('emails/reset_password', ['data' => $email_data_payload], true); 
+
+            $body = $this->view('emails/reset_password', ['data' => $email_data_payload], true);
             $subject = 'Password Reset Request - Plaridel Public Cemetery System';
-    
+
             $emailHelper = new EmailHelper();
-            $recipient_name = $user->first_name . ' ' . $user->last_name; 
+            $recipient_name = $user->first_name . ' ' . $user->last_name;
             $sent = $emailHelper->sendEmail($user->email, $recipient_name, $subject, $body);
-    
+
             if ($sent !== true) {
                 error_log("Failed to send reset email: " . $sent);
-                echo json_encode(['success' => false, 'message' => 'Failed to send email. Mailer Error: ' . $sent]); return;
+                echo json_encode(['success' => false, 'message' => 'Failed to send email. Mailer Error: ' . $sent]);
+                return;
             }
-    
+
             echo json_encode(['success' => true, 'message' => 'A password reset link was emailed.']);
-    
         } catch (Throwable $e) {
             error_log("Unexpected resetPassword error: " . $e->getMessage());
             echo json_encode(['success' => false, 'message' => 'Unexpected error. Please check server logs.']);
@@ -969,64 +1008,111 @@ class StaffController extends Controller
 
 
     // Pang-kuha ng recent activity ng staff
-    public function myActivity() {
+    public function myActivity()
+    {
         header('Content-Type: application/json');
+        if (empty($_SESSION['user']['id'])) {
+            echo json_encode(['ok' => false, 'rows' => [], 'message' => 'Not authenticated.']);
+            return;
+        }
         $user_id = (int)$_SESSION['user']['id'];
 
         $db = new Database();
-        $parts = [];
+        
+        $sql = "
+            SELECT * FROM (
+                -- Mula sa regular activity log
+                SELECT
+                    timestamp AS ts,
+                    details AS action_text,
+                    action_type AS kind
+                FROM activity_log
+                WHERE user_id = :user_id
 
-        // Magdagdag dito ng mga queries para sa activity ng staff, katulad ng sa AdminController
-        // Halimbawa:
-        $parts[] = "
-          SELECT
-            us.login_at AS ts,
-            'Logged in to the system' AS action_text,
-            'login' AS kind
-          FROM user_sessions us
-          WHERE us.user_id = :user_id AND us.login_at IS NOT NULL
+                UNION ALL
+
+                -- Mula sa audit log (kung staff ay may access dito)
+                SELECT
+                    timestamp AS ts,
+                    CONCAT('Status: ', status, '. Details: ', details) AS action_text,
+                    action_type AS kind
+                FROM audit_log
+                WHERE user_id = :user_id
+            ) AS AllActivities
+            ORDER BY ts DESC
+            LIMIT 100 -- Limit to last 100 activities for performance
         ";
-
-        // Maaari kang magdagdag ng iba pang activities tulad ng pag-add ng records, etc.
-
-        $sql  = "SELECT * FROM (".implode(" UNION ALL ", $parts).") X WHERE DATE(X.ts) = CURDATE() ORDER BY X.ts DESC LIMIT 50";
 
         $db->query($sql);
         $db->bind(':user_id', $user_id);
 
         try {
             $rows = $db->resultSet();
-            echo json_encode(['ok'=>true, 'rows'=>$rows]);
+            echo json_encode(['ok' => true, 'rows' => $rows]);
         } catch (Exception $e) {
             error_log("Staff myActivity Error: " . $e->getMessage());
-            echo json_encode(['ok'=>false, 'rows' => [], 'message' => 'A database error occurred.']);
+            echo json_encode(['ok' => false, 'rows' => [], 'message' => 'A database error occurred.']);
         }
     }
 
+    /**
+     * [BAGO] Gumagawa ng printable report ng LAHAT ng activity ng staff.
+     */
+    public function printMyActivity()
+    {
+        if (empty($_SESSION['user']['id'])) {
+            redirect('auth/login');
+        }
+        $user_id = (int)$_SESSION['user']['id'];
+        $user_name = $_SESSION['user']['name'];
 
-    // Idagdag itong function sa loob ng StaffController class
+        $db = new Database();
+        
+        $sql = "
+            SELECT * FROM (
+                SELECT timestamp AS ts, details AS action_text, action_type AS kind FROM activity_log WHERE user_id = :user_id
+                UNION ALL
+                SELECT timestamp AS ts, CONCAT('Status: ', status, '. Details: ', details) AS action_text, action_type AS kind FROM audit_log WHERE user_id = :user_id
+            ) AS AllActivities
+            ORDER BY ts DESC
+        ";
 
-public function printRenewalHistory()
-{
-    $history = $this->renewalModel->getRenewalHistory();
-    $data = [
-        'title' => 'Renewal History Report',
-        'history' => $history
-    ];
-    $this->view('staff/print_renewals', $data);
-}
+        $db->query($sql);
+        $db->bind(':user_id', $user_id);
+        $activities = $db->resultSet();
+
+        $data = [
+            'title' => 'User Activity Report',
+            'user_name' => $user_name,
+            'activities' => $activities
+        ];
+
+        // Gumagamit ng bagong view file para sa staff printing
+        $this->view('staff/print_my_activity', $data);
+    }
+
+    public function printRenewalHistory()
+    {
+        $history = $this->renewalModel->getRenewalHistory();
+        $data = [
+            'title' => 'Renewal History Report',
+            'history' => $history
+        ];
+        $this->view('staff/print_renewals', $data);
+    }
 
 
-// app/controllers/StaffController.php
+    // app/controllers/StaffController.php
 
-// Idagdag itong dalawang functions sa loob ng "class StaffController"
+    // Idagdag itong dalawang functions sa loob ng "class StaffController"
 
     /**
      * Endpoint para sa data ng rental status chart.
      */
-    public function getDashboardChartData() {
+    public function getDashboardChartData()
+    {
         header('Content-Type: application/json');
-        
+
         if (!method_exists($this->burialModel, 'countNewRentalsThisMonth')) {
             echo json_encode(['ok' => false, 'message' => 'Required model methods are missing.']);
             return;
@@ -1047,7 +1133,8 @@ public function printRenewalHistory()
     /**
      * Endpoint para sa data ng financial chart.
      */
-    public function getFinancialChartData() {
+    public function getFinancialChartData()
+    {
         header('Content-Type: application/json');
 
         if (!method_exists($this->burialModel, 'getDailyTransactionTotals')) {
@@ -1057,8 +1144,8 @@ public function printRenewalHistory()
 
         try {
             $dailyData = $this->burialModel->getDailyTransactionTotals(7);
-            
-            $labels = array_map(function($date) {
+
+            $labels = array_map(function ($date) {
                 return date('M d', strtotime($date));
             }, array_keys($dailyData));
 
@@ -1067,6 +1154,82 @@ public function printRenewalHistory()
             echo json_encode(['ok' => true, 'labels' => $labels, 'data' => $data]);
         } catch (Exception $e) {
             echo json_encode(['ok' => false, 'message' => 'Failed to fetch financial data.']);
+        }
+    }
+
+    // Helper function para mas madali ang pag-log ng actions
+    private function logActivity($action, $details = '')
+    {
+        if (isset($_SESSION['user'])) {
+            $this->activityLogModel->log($_SESSION['user']['id'], $_SESSION['user']['name'], $action, $details);
+        }
+    }
+
+
+
+       public function sendDeveloperReport()
+    {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['ok' => false, 'message' => 'Invalid request method.']);
+            return;
+        }
+
+        $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+        // Kumuha ng kumpletong user data (kasama ang designation)
+        $current_user_id = $_SESSION['user']['id'] ?? null;
+        $current_user_details = null;
+        if ($current_user_id) {
+            // Asumihin na may method ang User model para kunin ang user at ang kanyang staff details
+            // Gagamit tayo ng findById para kunin ang basic info
+            $current_user_details = $this->userModel->findById($current_user_id);
+        }
+
+        $data = [
+            'reporter_name'     => trim($_POST['reporter_name'] ?? ''),
+            'reporter_email'    => trim($_POST['reporter_email'] ?? ''),
+            'contact_number'    => trim($_POST['contact_number'] ?? ''),
+            'subject'           => trim($_POST['subject'] ?? ''),
+            'message'           => trim($_POST['message'] ?? ''),
+            'developer_email'   => trim($_POST['developer_email'] ?? 'cano.orionseal.bsit@gmail.com'),
+            
+            // Logged-in User Details:
+            'current_user'      => $_SESSION['user']['name'] ?? 'Guest',
+            'current_user_role' => $_SESSION['user']['role'] ?? 'N/A',
+            // Idagdag ang Designation:
+            'current_user_designation' => $current_user_details->designation ?? 'N/A', 
+            'current_user_id'          => $current_user_details->staff_id ?? 'N/A',
+        ];
+
+        if (empty($data['reporter_name']) || empty($data['reporter_email']) || empty($data['subject']) || empty($data['message'])) {
+            echo json_encode(['ok' => false, 'message' => 'Please fill in all required fields.']);
+            return;
+        }
+
+        if (!filter_var($data['reporter_email'], FILTER_VALIDATE_EMAIL)) {
+            echo json_encode(['ok' => false, 'message' => 'Invalid email address format.']);
+            return;
+        }
+
+        if (!class_exists('EmailHelper')) {
+            require_once APPROOT . '/helpers/Email.php';
+        }
+
+        // Gamitin ang bagong email template
+        $body = $this->view('emails/developer_report_template', $data, true);
+        $subject = "[SYSTEM REPORT] {$data['subject']} - From {$data['reporter_name']}";
+        
+        $emailHelper = new EmailHelper();
+        // Ipadala sa developer email, gamit ang reporter name bilang recipient name (optional)
+        $email_ok = $emailHelper->sendEmail($data['developer_email'], 'System Developer', $subject, $body);
+
+        if ($email_ok === true) {
+            $this->logActivity('send_dev_report', "Sent report: {$data['subject']}");
+            echo json_encode(['ok' => true, 'message' => 'Report sent successfully to the development team. Thank you!']);
+        } else {
+            error_log("Developer Report Email Failed: " . $email_ok);
+            echo json_encode(['ok' => false, 'message' => 'Failed to send report. Mailer error.']);
         }
     }
 

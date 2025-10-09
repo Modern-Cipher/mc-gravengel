@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Forgot Password · Gravengel</title>
+  <title>Forgot Password | Gravengel</title>
   <script>window.URLROOT = '<?= URLROOT ?>';</script>
   <link rel="stylesheet" href="<?= URLROOT ?>/public/css/login.css?v=<?= time() ?>">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

@@ -19,10 +19,11 @@ class Map {
         $block = $this->db->single();
 
         if($block && isset($block->id)){
-            // CHANGE: pick the "best burial" per plot (active first, else latest archived)
+            // [MODIFIED] Added a subquery to get the active occupant count for each plot
             $this->db->query('
                 SELECT 
                     p.*,
+                    (SELECT COUNT(*) FROM burials WHERE plot_id = p.id AND is_active = 1) as occupant_count,
                     b.burial_id,
                     b.deceased_first_name,
                     b.deceased_middle_name,
@@ -34,8 +35,8 @@ class Map {
                         FROM burials bb
                         WHERE bb.plot_id = p.id
                         ORDER BY 
-                            bb.is_active DESC,   -- active first
-                            bb.burial_id DESC    -- then latest archived (by id)
+                            bb.is_active DESC,
+                            bb.burial_id DESC
                         LIMIT 1
                     )
                 WHERE p.map_block_id = :block_id 
@@ -48,7 +49,6 @@ class Map {
         }
         return $block;
     }
-
 // app/models/Map.php
 
 // app/models/Map.php

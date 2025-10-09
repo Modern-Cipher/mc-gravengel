@@ -1,5 +1,5 @@
 File Tree: mc-gravengel
-Generated on: 10/7/2025, 2:55:54 PM
+Generated on: 10/9/2025, 11:35:17 AM
 Root path: c:\xampp\htdocs\mc-gravengel
 
 ────────────────────────────────────────────────────────────────────────────────
@@ -26,6 +26,8 @@ Root path: c:\xampp\htdocs\mc-gravengel
 │   │   ├── Core.php
 │   │   └── Database.php
 │   ├── models/
+│   │   ├── ActivityLog.php
+│   │   ├── Audit.php
 │   │   ├── Burial.php
 │   │   ├── Map.php
 │   │   ├── Notification.php
@@ -35,18 +37,24 @@ Root path: c:\xampp\htdocs\mc-gravengel
 │   │   ├── admin/
 │   │   │   ├── add_burial.php
 │   │   │   ├── archived_burials.php
+│   │   │   ├── backup.php
 │   │   │   ├── burial_records.php
 │   │   │   ├── cemetery_map.php
 │   │   │   ├── contact_us.php
 │   │   │   ├── index.php
 │   │   │   ├── logs_reports.php
+│   │   │   ├── print_audit.php
 │   │   │   ├── print_burial_form.php
 │   │   │   ├── print_contract.php
+│   │   │   ├── print_my_activity.php
 │   │   │   ├── print_qr_ticket.php
+│   │   │   ├── print_renewals.php
 │   │   │   ├── profile.php
 │   │   │   ├── renewals.php
 │   │   │   └── user_accounts.php
 │   │   ├── emails/
+│   │   │   ├── contact_form_submission.php
+│   │   │   ├── developer_report_template.php
 │   │   │   ├── expired_today.php
 │   │   │   ├── expiry_30.php
 │   │   │   ├── renewal_confirmation.php
@@ -57,7 +65,7 @@ Root path: c:\xampp\htdocs\mc-gravengel
 │   │   ├── includes/
 │   │   │   ├── admin_footer.php
 │   │   │   ├── admin_header.php
-│   │   │   ├── footer.phpS
+│   │   │   ├── footer.php
 │   │   │   ├── header.php
 │   │   │   ├── header_min.php
 │   │   │   ├── navbar_main.php
@@ -83,7 +91,9 @@ Root path: c:\xampp\htdocs\mc-gravengel
 │   │   │   ├── logs_reports.php
 │   │   │   ├── print_burial_form.php
 │   │   │   ├── print_contract.php
+│   │   │   ├── print_my_activity.php
 │   │   │   ├── print_qr_ticket.php
+│   │   │   ├── print_renewals.php
 │   │   │   ├── profile.php
 │   │   │   └── renewals.php
 │   │   └── users/
@@ -110,8 +120,8 @@ Root path: c:\xampp\htdocs\mc-gravengel
 │   │   └── style.css
 │   ├── img/
 │   │   ├── profiles/
-│   │   │   ├── Screenshot_2025-07-17_004536_cc3528.png
-│   │   │   └── Screenshot_2025-10-01_114346_fd9043.png
+│   │   │   ├── Screenshot_2025-10-01_114346_fd9043.png
+│   │   │   └── cemeteryMap_ccdd3d.png
 │   │   ├── Althea.png
 │   │   ├── G.png
 │   │   ├── Juana.png

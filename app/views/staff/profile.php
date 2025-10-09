@@ -1,6 +1,41 @@
 <?php require APPROOT . '/views/includes/staff_header.php'; // Siguraduhing may staff_header.php ka ?>
 <script>window.URLROOT = "<?= URLROOT ?>";</script>
 
+<style>
+  :root {
+    --maroon: #800000;
+    --maroon-dark: #6a0000;
+  }
+  .btn-maroon {
+    background-color: var(--maroon);
+    color: #fff;
+    border-color: var(--maroon);
+  }
+  .btn-maroon:hover {
+    background-color: var(--maroon-dark);
+    border-color: var(--maroon-dark);
+    color: #fff;
+  }
+  .btn-outline-maroon {
+    color: var(--maroon);
+    border-color: var(--maroon);
+  }
+  .btn-outline-maroon:hover {
+    background-color: var(--maroon);
+    color: #fff;
+    border-color: var(--maroon);
+  }
+  .activity-card-body {
+    max-height: 50vh;
+    overflow-y: auto;
+    padding-right: 5px;
+  }
+  .activity-card-body::-webkit-scrollbar { width: 8px; }
+  .activity-card-body::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+  .activity-card-body::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+  .activity-card-body::-webkit-scrollbar-thumb:hover { background: #aaa; }
+</style>
+
 <div class="main-content-header mb-4">
   <h1>My Profile</h1>
 </div>
@@ -53,7 +88,7 @@
             <label class="form-label" for="confirm_password">Confirm New Password</label>
             <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
           </div>
-          <button type="submit" class="btn text-white" style="background-color: var(--maroon);" id="password-update-btn">
+          <button type="submit" class="btn btn-maroon" id="password-update-btn">
             Update Password
           </button>
         </form>
@@ -64,24 +99,23 @@
   <div class="col-lg-4">
     <div class="action-card structured-card">
       <div class="card-header">
-        <h3 class="card-title-strong"><i class="fas fa-history"></i> Recent Activity (Today)</h3>
+        <h3 class="card-title-strong"><i class="fas fa-history"></i> Recent Activity</h3>
       </div>
-      <div class="card-body">
+      <div class="card-body activity-card-body">
         <ul class="activity-list" id="my-activity-list">
           <li class="activity-item text-muted">Loading…</li>
         </ul>
       </div>
       <div class="card-footer d-flex justify-content-between align-items-center">
         <small class="text-muted" id="act-count"></small>
-        <button class="btn btn-outline-danger btn-sm" id="reset-recent-btn" title="Reload the list of activities">
-          <i class="fas fa-sync-alt"></i> Reload List
+        <button class="btn btn-outline-maroon btn-sm" id="print-activity-btn" title="Generate a printable report of your entire activity history">
+          <i class="fas fa-print"></i> Print Activity
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Edit Profile Modal -->
 <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
     <div class="modal-header" style="background: var(--maroon); color:#fff;">
@@ -154,11 +188,29 @@
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      <button type="button" class="btn text-white" style="background-color: var(--maroon);" id="edit-save-btn">
+      <button type="button" class="btn btn-maroon" id="edit-save-btn">
         Save Changes
       </button>
     </div>
   </div></div>
+</div>
+<style>
+    .scroll-spacer-dummy {
+   
+    height: 1200px; 
+    opacity: 0;             
+    visibility: hidden;    
+    pointer-events: none;  
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+</style>
+<div class="row">
+    <div class="col-12">
+        <div class="scroll-spacer-dummy">
+            </div>
+    </div>
 </div>
 
 <?php require APPROOT . '/views/includes/staff_footer.php'; // Siguraduhing may staff_footer.php ka ?>

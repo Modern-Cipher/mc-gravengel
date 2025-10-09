@@ -1,4 +1,119 @@
 <?php require APPROOT . '/views/includes/admin_header.php'; ?>
+<style>
+  /* General Styles */
+  .main-content-header { z-index: 10; }
+  .legend-card { z-index: 10; }
+  .stage { position: relative; }
+  .img-wrap { position: relative; overflow: auto; max-height: 80vh; border: 1px solid #ddd; }
+  #map-img { display: block; }
+  .hotspot { position: absolute; border: 2px solid rgba(255, 0, 0, .7); cursor: pointer; }
+  .hotspot:hover { background: rgba(255, 255, 0, .3); }
+  .map-tooltip { /* as is */ }
+
+  /* === CSS For Smaller & Responsive Grid === */
+  #blockInfoModal .modal-dialog {
+    /* Make modal width responsive, but not more than 950px */
+    max-width: min(950px, 95vw); 
+  }
+  #blockInfoModal .modal-body {
+    background-color: #f1f3f5;
+    padding: 0.75rem; /* Reduced padding */
+    overflow-x: auto;   /* ENABLE horizontal scrolling */
+    overflow-y: hidden; /* DISABLE vertical scrolling */
+    -webkit-overflow-scrolling: touch; /* Smoother scrolling on mobile */
+  }
+  .plot-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--cols, 8), 1fr);
+    gap: 8px; /* Reduced gap */
+    width: max-content; /* Allows the grid to be wider than the container */
+  }
+  .plot-cell {
+    border: 1px solid #ccc;
+    border-radius: .375rem;
+    padding: 5px; /* Reduced padding */
+    text-align: center;
+    cursor: default;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 75px; /* Reduced height */
+    min-width: 105px; /* Reduced width */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    font-size: 0.75rem; /* Reduced font size */
+    line-height: 1.3;
+    -webkit-user-select: none; /* Prevent text selection on mobile tap */
+    -ms-user-select: none;
+    user-select: none;
+  }
+  .plot-cell.occupied {
+    cursor: pointer;
+  }
+  .plot-cell.occupied:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,.1);
+  }
+  .plot-cell.vacant { background-color: #d4edda; color: #155724; border-color: #c3e6cb;}
+  .plot-cell.occupied { background-color: #dc3545; color: #fff; border-color: #dc3545;}
+  
+  .plot-number {
+    font-weight: 500;
+  }
+  .plot-details {
+      font-size: 0.7rem;
+      color: inherit;
+      opacity: 0.9;
+  }
+  .plot-status {
+      font-weight: normal;
+  }
+  .plot-cell.occupied .plot-status {
+      font-weight: bold;
+  }
+  
+  .modal-header-controls {
+    margin-left: auto;
+  }
+  .modal-header-controls .input-group {
+    max-width: 250px;
+  }
+
+  .plot-cell {
+    position: relative; /* This is needed for the count badge */
+    border: 1px solid #ccc;
+    border-radius: .375rem;
+    padding: 5px;
+    text-align: center;
+    cursor: default;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 75px;
+    min-width: 105px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    font-size: 0.75rem;
+    line-height: 1.3;
+    user-select: none;
+  }
+  
+  /* [NEW] Style for the occupant count badge */
+  .occupant-count {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: bold;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+</style>
 
 <div class="main-content-header mb-4 d-flex justify-content-between align-items-start">
     <h1 class="me-auto">Cemetery Map</h1>
@@ -17,8 +132,6 @@
     <div class="legend-items">
         <div class="legend-item"><span class="legend-color vacant"></span> Vacant</div>
         <div class="legend-item"><span class="legend-color occupied"></span> Occupied</div>
-        <!-- <div class="legend-item"><span class="legend-color reserved"></span> Reserved</div>
-        <div class="legend-item"><span class="legend-color bone"></span> Bone</div> -->
     </div>
 </div>
 
@@ -82,15 +195,17 @@
 </div>
 
 <div class="modal fade" id="manageModal" tabindex="-1">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <form id="manageForm">
+      <form id="manageForm" method="POST" action="<?php echo URLROOT; ?>/admin/updateBlock">
         <div class="modal-header">
           <h5 class="modal-title">Manage Block</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
             <input type="hidden" name="id" id="manage-block-id">
+            <input type="hidden" name="offset_x" id="manage-offset-x">
+            <input type="hidden" name="offset_y" id="manage-offset-y">
             <div class="mb-3">
                 <label for="manage-title" class="form-label">Title</label>
                 <input type="text" name="title" id="manage-title" class="form-control" required>
@@ -105,9 +220,6 @@
                    <input type="number" name="modal_cols" id="manage-cols" class="form-control" required>
                </div>
             </div>
-            <p class="text-muted small">
-                Note: Changing the rows and columns will reset all plots within this block.
-            </p>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -126,16 +238,28 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="burialDetailsModalBody">
-                <div class="text-center p-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 </div>
-
+<style>
+    .scroll-spacer-dummy {
+   
+    height: 1200px; 
+    opacity: 0;             
+    visibility: hidden;    
+    pointer-events: none;  
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+</style>
+<div class="row">
+    <div class="col-12">
+        <div class="scroll-spacer-dummy">
+            </div>
+    </div>
+</div>
 <script>
     window.CEMAP_BLOCKS = <?php echo json_encode($data['blocks'] ?? []); ?>;
 </script>

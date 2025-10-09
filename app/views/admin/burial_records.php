@@ -5,7 +5,6 @@
 
 <style>
   .records-wrap { margin-top:.25rem }
-  .search-input { max-width:300px; padding:.38rem .6rem; }
   .action-btn{
     display:inline-flex; align-items:center; justify-content:center;
     gap:.45rem; white-space:nowrap; min-width:130px;
@@ -13,8 +12,7 @@
   }
   .action-btn i{ font-size:15px }
   .action-btn .btn-text{ display:inline }
-  @media (max-width: 576px){
-    .search-input{ max-width:46vw }
+  @media (max-width: 768px){ /* Adjusted breakpoint for better responsiveness */
     .action-btn{ min-width:auto; padding:.42rem .58rem }
     .action-btn .btn-text{ display:none }
   }
@@ -40,34 +38,46 @@
   #termsModal .modal-body{ max-height:60vh; overflow:auto; }
   #editModal .modal-body{ max-height:80vh; overflow-y:auto; }
   #editModal .form-label .text-danger{ font-weight:bold; }
-
-  /* Print preview modal table */
-  #reportModal .table th, #reportModal .table td { font-size:.92rem; }
 </style>
-
 <div class="records-wrap">
-  <div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <h2 class="mb-0">Burial Records</h2>
-
-    <div class="d-flex align-items-center">
-      <input id="tableSearch" type="search" class="form-control form-control-sm search-input"
-             placeholder="Search name, burial id, plot, email…">
-
-      <button id="addBurialBtn" type="button" class="btn btn-danger btn-sm ms-2 action-btn">
+    <div class="d-flex align-items-center gap-2">
+      <button id="addBurialBtn" type="button" class="btn btn-danger btn-sm action-btn">
         <i class="fas fa-plus"></i><span class="btn-text">Add Burial</span>
       </button>
-
-      <a class="btn btn-warning btn-sm ms-2 action-btn" title="Archive"
-         href="<?= URLROOT ?>/admin/archivedBurials">
+      <a class="btn btn-warning btn-sm action-btn" title="Archive" href="<?= URLROOT ?>/admin/archivedBurials">
         <i class="fas fa-box-archive fa-archive"></i><span class="btn-text">Archive</span>
       </a>
-
-      <button id="genReportBtn" class="btn btn-info btn-sm text-white ms-2 action-btn">
+      <button id="genReportBtn" class="btn btn-info btn-sm text-white action-btn">
         <i class="fas fa-file-export"></i><span class="btn-text">Generate Report</span>
       </button>
     </div>
   </div>
 
+  <div class="card mb-3">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-lg-5 col-md-12">
+                <label for="tableSearch" class="form-label mb-1"><small>Search</small></label>
+                <input type="search" id="tableSearch" class="form-control form-control-sm" placeholder="Search name, burial id, plot, email…">
+            </div>
+            <div class="col-lg-2 col-md-3 col-sm-6">
+                <label for="dateFrom" class="form-label mb-1"><small>Rental Date From</small></label>
+                <input type="date" id="dateFrom" class="form-control form-control-sm">
+            </div>
+            <div class="col-lg-2 col-md-3 col-sm-6">
+                <label for="dateTo" class="form-label mb-1"><small>Rental Date To</small></label>
+                <input type="date" id="dateTo" class="form-control form-control-sm">
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <button id="resetFiltersBtn" class="btn btn-secondary btn-sm w-100">
+                    <i class="fas fa-sync-alt me-1"></i> Reset Filters
+                </button>
+            </div>
+        </div>
+    </div>
+  </div>
   <div class="card p-3">
     <div class="table-responsive">
       <table id="burialTable" class="table table-hover align-middle mb-0">
@@ -86,21 +96,19 @@
         </thead>
         <tbody>
         <?php if (!empty($data['records'])): ?>
-          <?php
-          $fmtHuman = function($dt){ return $dt ? date("D-F d, Y \\a\\t h:i A", strtotime($dt)) : ''; };
-          ?>
+          <?php $fmtHuman = function($dt){ return $dt ? date("M d, Y, h:i A", strtotime($dt)) : ''; }; ?>
           <?php foreach ($data['records'] as $r): ?>
             <?php
               $yearsTxt = '—';
               if (!empty($r->rental_date) && !empty($r->expiry_date)) {
-                try{ $yearsTxt = (new DateTime($r->rental_date))->diff(new DateTime($r->expiry_date))->y.' yr'; }
-                catch(Exception $e){ $yearsTxt = '5 yr'; }
+                try{ $yearsTxt = (new DateTime($r->rental_date))->diff(new DateTime($r->expiry_date))->y.' yr'; } catch(Exception $e){ $yearsTxt = '5 yr'; }
               } elseif (!empty($r->expiry_date)) { $yearsTxt = '5 yr'; }
               $expiryLabel = $fmtHuman($r->expiry_date ?? null);
               $email = $r->interment_email ?? '';
               $emailDisp = $email !== '' ? htmlspecialchars($email) : '<span class="text-muted">—</span>';
+              $rentalDateAttr = !empty($r->rental_date) ? date('Y-m-d', strtotime($r->rental_date)) : '';
             ?>
-            <tr data-burial-id="<?= htmlspecialchars($r->burial_id) ?>">
+            <tr data-burial-id="<?= htmlspecialchars($r->burial_id) ?>" data-rental-date="<?= $rentalDateAttr ?>">
               <td><span class="badge badge-soft"><?= htmlspecialchars($r->plot_number ?? '') ?></span></td>
               <td class="fw-semibold"><?= htmlspecialchars($r->burial_id) ?></td>
               <td><?= htmlspecialchars(trim(($r->deceased_first_name ?? '').' '.($r->deceased_last_name ?? ''))) ?></td>
@@ -115,17 +123,18 @@
               </td>
               <td title="<?= htmlspecialchars($email) ?>"><?= $emailDisp ?></td>
               <td class="text-center actions">
-                <i class="fas fa-eye i-view"           data-bs-toggle="tooltip" title="View"    data-action="view"></i>
-                <i class="fas fa-print i-print"         data-bs-toggle="tooltip" title="Print"   data-action="print"></i>
-                <i class="fas fa-qrcode i-qr"          data-bs-toggle="tooltip" title="QR"      data-action="qr"></i>
+                <i class="fas fa-eye i-view" data-bs-toggle="tooltip" title="View" data-action="view"></i>
+                <i class="fas fa-print i-print" data-bs-toggle="tooltip" title="Print" data-action="print"></i>
+                <i class="fas fa-qrcode i-qr" data-bs-toggle="tooltip" title="QR" data-action="qr"></i>
                 <i class="fas fa-box-archive fa-archive i-archive" data-bs-toggle="tooltip" title="Archive" data-action="archive"></i>
-                <i class="fas fa-trash-alt i-del"       data-bs-toggle="tooltip" title="Delete"  data-action="delete"></i>
+                <!-- <i class="fas fa-trash-alt i-del" data-bs-toggle="tooltip" title="Delete" data-action="delete"></i> -->
               </td>
             </tr>
           <?php endforeach; ?>
         <?php else: ?>
-          <tr><td colspan="9" class="text-center py-4 text-muted">No burial records found.</td></tr>
+          <tr id="no-records-row"><td colspan="9" class="text-center py-4 text-muted">No burial records found.</td></tr>
         <?php endif; ?>
+        <tr id="no-results-row" style="display: none;"><td colspan="9" class="text-center py-4 text-muted">No matching records found for the selected filters.</td></tr>
         </tbody>
       </table>
     </div>
@@ -414,7 +423,24 @@
     </div>
   </div>
 </div>
-
+<style>
+    .scroll-spacer-dummy {
+   
+    height: 1200px; 
+    opacity: 0;             
+    visibility: hidden;    
+    pointer-events: none;  
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+</style>
+<div class="row">
+    <div class="col-12">
+        <div class="scroll-spacer-dummy">
+            </div>
+    </div>
+</div>
 <script>
 (() => {
   // --- BAGONG CODE: SWEETALERT MAROON THEME ---
@@ -438,6 +464,58 @@
   const viewToEditBtn = document.getElementById('viewToEditBtn');
   const e = id => document.getElementById(id);
   let currentBurialId = '';
+
+
+// --- [START] NEW FILTERING AND PRINTING LOGIC ---
+  const searchInput = e('tableSearch');
+  const dateFromInput = e('dateFrom');
+  const dateToInput = e('dateTo');
+  const resetBtn = e('resetFiltersBtn');
+  const genReportBtn = e('genReportBtn');
+  const noResultsRow = e('no-results-row');
+  const noRecordsRow = e('no-records-row');
+
+  const debounce = (fn, ms = 300) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+  
+  function applyFilters() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const fromDate = dateFromInput.value;
+      const toDate = dateToInput.value;
+      let visibleRowCount = 0;
+
+      table.querySelectorAll('tbody tr:not(#no-results-row):not(#no-records-row)').forEach(tr => {
+          const textContent = tr.innerText.toLowerCase();
+          const rentalDate = tr.dataset.rentalDate;
+          const textMatch = searchTerm === '' || textContent.includes(searchTerm);
+          
+          let dateMatch = true;
+          if (fromDate && (!rentalDate || rentalDate < fromDate)) { dateMatch = false; }
+          if (toDate && (!rentalDate || rentalDate > toDate)) { dateMatch = false; }
+
+          if (textMatch && dateMatch) {
+              tr.style.display = '';
+              visibleRowCount++;
+          } else {
+              tr.style.display = 'none';
+          }
+      });
+      
+      const hasActiveFilters = searchTerm || fromDate || toDate;
+      if (noResultsRow) noResultsRow.style.display = (visibleRowCount === 0 && hasActiveFilters) ? '' : 'none';
+      if (noRecordsRow) noRecordsRow.style.display = (visibleRowCount === 0 && !hasActiveFilters) ? '' : 'none';
+  }
+
+  searchInput.addEventListener('input', debounce(applyFilters));
+  dateFromInput.addEventListener('change', applyFilters);
+  dateToInput.addEventListener('change', applyFilters);
+
+  resetBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      dateFromInput.value = '';
+      dateToInput.value = '';
+      applyFilters();
+  });
+
 
   const pad = n => String(n).padStart(2,'0');
   

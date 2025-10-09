@@ -12,11 +12,9 @@
       <a href="#about">About</a>
       <a href="#features">Features</a>
       <a href="#contact">Contact</a>
-      <!-- QR Scanner (desktop) -->
-<a href="<?= URLROOT ?>/pages/qr_scanner" class="qr-nav-btn">
-  <ion-icon name="qr-code-outline"></ion-icon> QR Scanner
-</a>
-
+      <a href="<?= URLROOT ?>/pages/qr_scanner" class="qr-nav-btn">
+        <ion-icon name="qr-code-outline"></ion-icon> QR Scanner
+      </a>
       <a href="<?php echo URLROOT; ?>/auth/login" class="login-button">
         <ion-icon name="log-in-outline"></ion-icon> Login
       </a>
@@ -42,18 +40,15 @@
   <a href="#about"><ion-icon name="information-circle-outline"></ion-icon><span>About</span></a>
   <a href="#features"><ion-icon name="grid-outline"></ion-icon><span>Features</span></a>
   <a href="#contact"><ion-icon name="mail-outline"></ion-icon><span>Contact</span></a>
-  <!-- QR Scanner (sidebar) -->
-<a href="<?= URLROOT ?>/pages/qr_scanner" class="qr-nav-item">
-  <ion-icon name="qr-code-outline"></ion-icon><span>QR Scanner</span>
-</a>
-
+  <a href="<?= URLROOT ?>/pages/qr_scanner" class="qr-nav-item">
+    <ion-icon name="qr-code-outline"></ion-icon><span>QR Scanner</span>
+  </a>
   <a href="<?php echo URLROOT; ?>/auth/login" class="login-button"><span>Login</span></a>
 </div>
 
 <section class="hero-section">
   <div class="hero-stack">
     <img src="<?php echo URLROOT; ?>/img/ggs.png" alt="Gravengel System Logo" class="hero-main-logo">
-    
     <p class="hero-tagline">Smart Records. Sacred Grounds.</p>
     <a href="#about" class="cta-button cta-button--light">Explore the System</a>
   </div>
@@ -125,7 +120,7 @@
       <h2>Contact Us</h2>
     </div>
     <div class="contact-grid">
-      <form class="contact-form" method="post" action="#">
+      <form class="contact-form" id="contact-form" method="post" action="<?= URLROOT ?>/pages/sendContactMessage">
         <div class="form-row">
           <div class="form-field">
             <label for="name">Full Name</label>
@@ -147,10 +142,63 @@
         <button type="submit" class="cta-button cta-button--light">Send Message</button>
       </form>
       <div class="contact-map">
-        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2964.7259579037627!2d120.85002063898197!3d14.886813688591243!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3396547d455fc33f%3A0x1e3b748eddaf0bb1!2sPlaridel%20Public%20Cemetery!5e1!3m2!1sen!2sph!4v1758296980591!5m2!1sen!2sph" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3851.696956627059!2d120.91619231535798!3d14.95471697087625!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3396555132386a5d%3A0x3e17448834a36f2e!2sPlaridel%20Public%20Cemetery!5e0!3m2!1sen!2sph!4v1668888888888!5m2!1sen!2sph" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
       </div>
     </div>
   </div>
 </section>
 
 <?php require APPROOT . '/views/includes/footer.php'; ?>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const contactForm = document.getElementById('contact-form');
+    if(contactForm) {
+        contactForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitButton = contactForm.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.textContent;
+            submitButton.textContent = 'Sending...';
+            submitButton.disabled = true;
+
+            const formData = new FormData(contactForm);
+
+            fetch(contactForm.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Message Sent!',
+                        text: data.message,
+                    });
+                    contactForm.reset();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: data.message || 'Something went wrong!',
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Request Error',
+                    text: 'Could not send message. Please try again later.',
+                });
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                submitButton.textContent = originalButtonText;
+                submitButton.disabled = false;
+            });
+        });
+    }
+});
+</script>

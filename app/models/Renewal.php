@@ -117,14 +117,29 @@ class Renewal {
         return $this->db->execute();
     }
 
-    public function vacatePlot($burialId, $plotId, $userId) {
+public function vacatePlot($burialId, $plotId, $userId) {
+        // Step 1: I-archive ang specific na burial record sa pamamagitan ng pag-set ng is_active = 0
         $this->db->query("UPDATE burials SET is_active = 0, updated_by_user_id = :user_id WHERE burial_id = :burial_id");
         $this->db->bind(':user_id', $userId);
         $this->db->bind(':burial_id', $burialId);
-        if (!$this->db->execute()) { return false; }
-        
-        $this->db->query("UPDATE plots SET status = 'vacant' WHERE id = :plot_id");
+        if (!$this->db->execute()) {
+            return false; // Huminto kung nabigo ang pag-archive
+        }
+
+        // Step 2: Bilangin kung may natitira pang active na libing sa parehong plot
+        $this->db->query("SELECT COUNT(*) as active_count FROM burials WHERE plot_id = :plot_id AND is_active = 1");
         $this->db->bind(':plot_id', $plotId);
-        return $this->db->execute();
+        $result = $this->db->single();
+        $activeCount = $result ? (int)$result->active_count : 0;
+
+        // Step 3: I-update lang ang status ng plot sa 'vacant' kung zero (0) na ang bilang ng active burials
+        if ($activeCount === 0) {
+            $this->db->query("UPDATE plots SET status = 'vacant' WHERE id = :plot_id");
+            $this->db->bind(':plot_id', $plotId);
+            return $this->db->execute(); // Ibalik ang resulta ng huling update
+        }
+
+        // Kung may natitira pang active burials, successful pa rin ang proseso pero hindi binabago ang status ng plot.
+        return true;
     }
 }

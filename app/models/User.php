@@ -322,4 +322,99 @@ public function getAdminsEmails(): array {
         return $this->db->execute();
     }
 
+       public function getLatestStaffIdNumber() {
+        // Tinitingnan lang ang mga staff_id na may format na 'S-'
+        $this->db->query("SELECT MAX(CAST(SUBSTRING(staff_id, 3) AS UNSIGNED)) as max_id 
+                         FROM staff_details 
+                         WHERE staff_id LIKE 'S-%'");
+        $row = $this->db->single();
+        // Kung may nahanap na max_id, ibalik ito. Kung wala (unang staff), ibalik ang 0.
+        return $row && $row->max_id ? (int)$row->max_id : 0;
+    }
+
+public function createRememberToken(array $data) {
+    $this->db->query('INSERT INTO remember_me_tokens 
+        (user_id, selector, validator_hash, expires_at, user_agent, ip_address)
+        VALUES (:user_id, :selector, :validator_hash, :expires_at, :user_agent, :ip_address)');
+    $this->db->bind(':user_id',        $data['user_id']);
+    $this->db->bind(':selector',       $data['selector']);
+    $this->db->bind(':validator_hash', $data['validator_hash']);
+    $this->db->bind(':expires_at',     $data['expires_at']);
+    $this->db->bind(':user_agent',     $data['user_agent']);
+    $this->db->bind(':ip_address',     $data['ip_address']);
+    return $this->db->execute();
+}
+
+/** Find token row by selector (returns object or false) */
+public function findRememberTokenBySelector(string $selector) {
+    $this->db->query('SELECT * FROM remember_me_tokens WHERE selector = :selector LIMIT 1');
+    $this->db->bind(':selector', $selector);
+    return $this->db->single(); // returns stdClass|false depending on your DB wrapper
+}
+
+/** Delete token by selector; if $userId provided, also scope to that user. */
+public function deleteRememberTokenBySelector(string $selector, ?int $userId = null) {
+    if ($userId) {
+        $this->db->query('DELETE FROM remember_me_tokens WHERE selector = :selector AND user_id = :uid');
+        $this->db->bind(':uid', $userId);
+    } else {
+        $this->db->query('DELETE FROM remember_me_tokens WHERE selector = :selector');
+    }
+    $this->db->bind(':selector', $selector);
+    return $this->db->execute();
+}
+
+/** (Helper) Delete expired tokens (optional—call from cron or login) */
+public function deleteExpiredRememberTokens(): bool {
+    $this->db->query('DELETE FROM remember_me_tokens WHERE expires_at < NOW()');
+    return $this->db->execute();
+}
+
+/** Get user row by id */
+public function getUserById(int $id) {
+    $this->db->query('SELECT * FROM users WHERE id = :id LIMIT 1');
+    $this->db->bind(':id', $id);
+    return $this->db->single();
+}
+
+/** Count active sessions for a user */
+public function countActiveSessions(int $userId): int {
+    $this->db->query('SELECT COUNT(*) AS c FROM user_sessions WHERE user_id = :uid AND is_active = 1');
+    $this->db->bind(':uid', $userId);
+    $row = $this->db->single();
+    return (int)($row->c ?? 0);
+}
+
+/** Get the most recent active session (optional, for email details) */
+public function getLatestActiveSession(int $userId) {
+    $this->db->query('SELECT * FROM user_sessions WHERE user_id = :uid AND is_active = 1 ORDER BY created_at DESC LIMIT 1');
+    $this->db->bind(':uid', $userId);
+    return $this->db->single(); // stdClass|false
+}
+
+
+
+// Close/remove ALL sessions for a user (strict + simple)
+public function closeAllSessions(int $userId): bool {
+    // If your schema uses a table like `user_sessions`
+    $this->db->query('DELETE FROM user_sessions WHERE user_id = :uid');
+    $this->db->bind(':uid', $userId);
+    return $this->db->execute();
+}
+
+// Delete all remember-me tokens for a user
+public function deleteRememberTokensForUser(int $userId): bool {
+    $this->db->query('DELETE FROM remember_me_tokens WHERE user_id = :uid');
+    $this->db->bind(':uid', $userId);
+    return $this->db->execute();
+}
+
+// Optional: clear must_change_pwd flag
+public function clearMustChangePwd(int $userId): bool {
+    $this->db->query('UPDATE users SET must_change_pwd = 0 WHERE id = :uid');
+    $this->db->bind(':uid', $userId);
+    return $this->db->execute();
+}
+
+
 }

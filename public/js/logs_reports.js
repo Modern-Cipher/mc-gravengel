@@ -1,284 +1,225 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const $  = (s, r = document) => r.querySelector(s);
-  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+    const $ = (s, r = document) => r.querySelector(s);
+    const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+    const MAROON_COLOR = '#800000';
 
-  const MAROON_COLOR = '#7b1d1d';
+    const debounce = (fn, ms = 350) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+    const fmtMoney = n => `₱${(Number(n||0)).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+    const fmtDateTime = s => s ? new Date(s.replace(' ', 'T')).toLocaleString('en-US', {dateStyle:'medium',timeStyle:'short'}) : '—';
+    const esc = v => v === null || v === undefined ? '—' : String(v).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
+    
+    // Initialize tooltips and modals
+    [...document.querySelectorAll('[data-bs-toggle="tooltip"]')].forEach(el => new bootstrap.Tooltip(el));
+    const activityDetailsModal = new bootstrap.Modal($('#activityDetailsModal'));
+    const transactionDetailsModal = new bootstrap.Modal($('#transactionDetailsModal'));
 
-  // ---------- helpers ----------
-  const fmtMoney = n =>
-    (Number(n || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-  const fmtDateTime = s => {
-    if (!s) return '—';
-    const d = new Date((s + '').replace(' ', 'T'));
-    return isNaN(d) ? s : d.toLocaleString();
-  };
-
-  const esc = v => {
-    if (v === null || v === undefined) return '—';
-    return String(v)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  };
-
-  const parseJSONSafe = async (res) => {
-    try { return await res.json(); }
-    catch (e) {
-      const txt = await res.text().catch(() => '');
-      console.error('Non-JSON response:', txt);
-      Swal.fire({
-        icon: 'error', 
-        title: 'Error', 
-        text: 'Server returned an unexpected response. Please check logs.',
-        confirmButtonColor: MAROON_COLOR
-      });
-      return { ok:false, rows:[] };
-    }
-  };
-
-  // tooltips on static icons
-  $$('.fa-gear, [data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
-
-  // ---------- Activity Logs ----------
-  async function loadActivity() {
-    const params = new URLSearchParams({
-      from: $('#act-from').value || '',
-      to:   $('#act-to').value || '',
-      q:    $('#act-search').value || ''
-    });
-
-    const res  = await fetch(`${window.URLROOT}/admin/fetchActivityLogs?` + params.toString(), { credentials:'same-origin' });
-    const data = await parseJSONSafe(res);
-
-    const tbody = $('#tbl-activity tbody');
-    tbody.innerHTML = '';
-
-    if (!data.ok || !Array.isArray(data.rows) || data.rows.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No data found</td></tr>`;
-      $('#act-count').textContent = '0 records';
-      return;
-    }
-
-    data.rows.forEach(r => {
-      const tr = document.createElement('tr');
-
-      const kindIcon =
-        r.kind === 'create_burial' ? 'fa-circle-plus text-success' :
-        r.kind === 'update_burial' ? 'fa-pen-to-square text-warning' :
-        r.kind === 'login'         ? 'fa-right-to-bracket text-primary' :
-        r.kind === 'logout'        ? 'fa-right-from-bracket text-danger' :
-                                     'fa-circle-info text-secondary';
-
-      const raw = btoa(unescape(encodeURIComponent(JSON.stringify(r))));
-
-      tr.innerHTML = `
-        <td><span class="badge bg-dark text-white">${esc(r.staff_id) || '—'}</span></td>
-        <td>${esc(r.username) || '—'}</td>
-        <td>${fmtDateTime(r.ts)}</td>
-        <td><i class="fa-solid ${kindIcon} me-2"></i>${esc(r.action_text)}</td>
-        <td class="text-center col-actions">
-          <button class="btn btn-sm btn-outline-primary"
-                  data-bs-toggle="tooltip" title="View details"
-                  data-raw="${raw}">
-            <i class="fa-solid fa-eye"></i>
-          </button>
-        </td>`;
-      tbody.appendChild(tr);
-    });
-
-    $$('#tbl-activity [data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
-    $$('#tbl-activity button[data-raw]').forEach(btn => {
-      btn.addEventListener('click', () => {
+    const fetchAndRender = async (url, params, tableBody, rowRenderer) => {
+        tableBody.innerHTML = `<tr><td colspan="100%" class="text-center text-muted py-5"><div class="spinner-border spinner-border-sm" role="status"></div></td></tr>`;
         try {
-          const obj = JSON.parse(decodeURIComponent(escape(atob(btn.dataset.raw))));
-          showActivityDetails(obj);
-        } catch (e) {
-          console.error('Decode error:', e);
-          Swal.fire({icon: 'error', title: 'Error', text: 'Unable to open details.', confirmButtonColor: MAROON_COLOR});
+            const res = await fetch(`${window.URLROOT}${url}?${params.toString()}`);
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+            const data = await res.json();
+            
+            tableBody.innerHTML = '';
+            if (!data.ok || !data.rows || data.rows.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="100%" class="text-center text-muted py-4">No data found for the selected filters.</td></tr>`;
+                return;
+            }
+            data.rows.forEach(row => {
+                const tr = rowRenderer(row);
+                tableBody.appendChild(tr);
+                $$('[data-bs-toggle="tooltip"]', tr).forEach(el => new bootstrap.Tooltip(el));
+            });
+        } catch (error) {
+            console.error('Fetch error:', error);
+            tableBody.innerHTML = `<tr><td colspan="100%" class="text-center text-danger py-4">Failed to load data. Please check connection.</td></tr>`;
         }
-      });
+    };
+
+    // --- Activity Logs ---
+    const actTbody = $('#tbl-activity tbody');
+    const renderActivityRow = r => {
+        const tr = document.createElement('tr');
+        const actionIcons = {
+            'create_burial': 'fa-circle-plus text-success', 'update_burial': 'fa-pen-to-square text-warning',
+            'process_renewal': 'fa-file-invoice-dollar text-primary', 'archive_burial': 'fa-box-archive text-secondary',
+            'restore_burial': 'fa-trash-can-arrow-up text-info', 'delete_burial': 'fa-trash-can text-danger',
+            'login': 'fa-right-to-bracket', 'logout': 'fa-right-from-bracket text-muted',
+            'vacate_plot': 'fa-person-walking-dashed-line-arrow-right text-danger'
+        };
+        const icon = actionIcons[r.action_type] || 'fa-circle-info';
+        
+        tr.innerHTML = `
+            <td>${esc(r.username)}</td>
+            <td><code><i class="fa-solid ${icon} fa-fw me-2"></i>${esc(r.action_type)}</code></td>
+            <td>${esc(r.details)}</td>
+            <td>${fmtDateTime(r.timestamp)}</td>
+            <td class="text-center">
+                <i class="fas fa-eye action-icon view-log-btn" data-bs-toggle="tooltip" title="View Details"></i>
+            </td>`;
+        
+        tr.querySelector('.view-log-btn').addEventListener('click', () => showActivityDetails(r));
+        return tr;
+    };
+    const loadActivity = debounce(() => {
+        const params = new URLSearchParams({ from: $('#act-from').value, to: $('#act-to').value, q: $('#act-search').value });
+        fetchAndRender('/admin/fetchActivityLogs', params, actTbody, renderActivityRow);
+    });
+    $('#act-from').addEventListener('change', loadActivity);
+    $('#act-to').addEventListener('change', loadActivity);
+    $('#act-search').addEventListener('input', loadActivity);
+    $('#act-reset').addEventListener('click', () => { 
+        $('#act-from').value=''; $('#act-to').value=''; $('#act-search').value=''; loadActivity(); 
     });
 
-    $('#act-count').textContent = `${data.rows.length} record(s)`;
-  }
-
-  function showActivityDetails(o = {}) {
-    const kindBadge =
-      o.kind === 'create_burial' ? `<span class="badge bg-success"><i class="fa-solid fa-circle-plus me-1"></i>Create Burial</span>` :
-      o.kind === 'update_burial' ? `<span class="badge bg-warning text-dark"><i class="fa-solid fa-pen-to-square me-1"></i>Update Burial</span>` :
-      o.kind === 'login'         ? `<span class="badge" style="background-color: ${MAROON_COLOR};"><i class="fa-solid fa-right-to-bracket me-1"></i>Login</span>` :
-      o.kind === 'logout'        ? `<span class="badge bg-secondary"><i class="fa-solid fa-right-from-bracket me-1"></i>Logout</span>` :
-                                   `<span class="badge bg-info text-dark"><i class="fa-solid fa-circle-info me-1"></i>Info</span>`;
-
-    const html = `<div class="container text-start" style="font-size: 14px;">...</div>`; // (content is the same, no changes needed here)
-
-    Swal.fire({
-      html: `
-        <div class="container text-start" style="font-size: 14px;">
-          <h5 class="mb-3 text-start" style="color: ${MAROON_COLOR};"><i class="fa-solid fa-clipboard-list me-2"></i>Activity Details</h5>
-          <hr class="mt-0 mb-3"/>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <ul class="list-group">
-                <li class="list-group-item d-flex justify-content-between"><span><i class="fa-solid fa-id-badge fa-fw me-2 text-muted"></i>Staff ID</span> <strong>${esc(o.staff_id) || '—'}</strong></li>
-                <li class="list-group-item d-flex justify-content-between"><span><i class="fa-solid fa-user fa-fw me-2 text-muted"></i>Username</span> <strong>${esc(o.username) || '—'}</strong></li>
-                <li class="list-group-item d-flex justify-content-between"><span><i class="fa-solid fa-clock fa-fw me-2 text-muted"></i>Timestamp</span> <strong>${fmtDateTime(o.ts)}</strong></li>
-              </ul>
-            </div>
-            <div class="col-md-6">
-              <ul class="list-group">
-                <li class="list-group-item">
-                  <div class="mb-1"><i class="fa-solid fa-align-left fa-fw me-2 text-muted"></i><strong>Action</strong></div>
-                  <div>${esc(o.action_text) || '—'}</div>
-                </li>
-                <li class="list-group-item d-flex justify-content-between"><span><i class="fa-solid fa-tag fa-fw me-2 text-muted"></i>Type</span> <span>${kindBadge}</span></li>
-              </ul>
-            </div>
-          </div>
-        </div>`,
-      width: 800,
-      showConfirmButton: true,
-      confirmButtonText: 'Close',
-      confirmButtonColor: MAROON_COLOR
-    });
-  }
-
-  // ---------- Transaction Reports ----------
-  async function loadTransactions() {
-    const params = new URLSearchParams({
-      from: $('#trx-from').value || '',
-      to:   $('#trx-to').value || '',
-      q:    $('#trx-search').value || ''
-    });
-
-    const res  = await fetch(`${window.URLROOT}/admin/fetchTransactionReports?` + params.toString(), { credentials:'same-origin' });
-    const data = await parseJSONSafe(res);
-
-    const tbody = $('#tbl-transactions tbody');
-    tbody.innerHTML = '';
-
-    if (!data.ok || !Array.isArray(data.rows) || data.rows.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="16" class="text-center text-muted py-4">No data found</td></tr>`;
-      $('#trx-count').textContent = '0 records';
-      return;
+    function showActivityDetails(log) {
+        const body = $('#activityDetailsBody');
+        body.innerHTML = `
+            <dl class="row">
+                <dt class="col-sm-3">User</dt><dd class="col-sm-9">${esc(log.username)}</dd>
+                <dt class="col-sm-3">Action Type</dt><dd class="col-sm-9"><code>${esc(log.action_type)}</code></dd>
+                <dt class="col-sm-3">Details</dt><dd class="col-sm-9">${esc(log.details)}</dd>
+                <dt class="col-sm-3">IP Address</dt><dd class="col-sm-9">${esc(log.ip_address)}</dd>
+                <dt class="col-sm-3">Timestamp</dt><dd class="col-sm-9">${fmtDateTime(log.timestamp)}</dd>
+            </dl>`;
+        activityDetailsModal.show();
     }
 
-    data.rows.forEach(row => {
-      const tr = document.createElement('tr');
-      const raw = btoa(unescape(encodeURIComponent(JSON.stringify(row))));
-      tr.innerHTML = `
-        <td><code>${esc(row.transaction_id) || '—'}</code></td>
-        <td>${esc(row.burial_id) || '—'}</td>
-        <td>${esc(row.block_title) || '—'}</td>
-        <td>${esc(row.plot_number) || '—'}</td>
-        <td>${esc(row.interment_full_name) || '—'} <small class="text-muted d-block">(${esc(row.interment_relationship) || '—'})</small></td>
-        <td>${esc(row.interment_address) || '—'}</td>
-        <td>${esc(row.interment_contact_number) || '—'}</td>
-        <td>${esc(row.interment_email) || '—'}</td>
-        <td class="text-end">₱ ${fmtMoney(row.payment_amount)}</td>
-        <td>${fmtDateTime(row.rental_date)}</td>
-        <td>${fmtDateTime(row.expiry_date)}</td>
-        <td>${esc(row.deceased_full_name) || '—'} <small class="text-muted d-block">(${esc(row.sex) || '—'}/${esc(row.age) || '—'})</small></td>
-        <td>${esc(row.grave_level) || '—'}/${esc(row.grave_type) || '—'}</td>
-        <td>${esc(row.created_by_staff_id) || '—'} <small class="text-muted d-block">(${esc(row.created_by_username) || '—'})</small></td>
-        <td>${fmtDateTime(row.created_at)}</td>
-        <td class="text-center col-actions">
-          <button class="btn btn-sm btn-outline-primary"
-                  data-bs-toggle="tooltip" title="View details"
-                  data-raw="${raw}">
-            <i class="fa-solid fa-eye"></i>
-          </button>
-        </td>`;
-      tbody.appendChild(tr);
+    // --- Transaction Reports ---
+    const trxTbody = $('#tbl-transactions tbody');
+    const renderTransactionRow = r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><code>${esc(r.transaction_id)}</code></td><td>${esc(r.burial_id)}</td>
+            <td>${esc(r.block_title)} - ${esc(r.plot_number)}</td>
+            <td>${esc(r.interment_full_name)}<small class="text-muted d-block">(${esc(r.interment_relationship)})</small></td>
+            <td>${esc(r.interment_contact_number)}</td><td>${esc(r.interment_email)}</td>
+            <td class="text-end">${fmtMoney(r.payment_amount)}</td><td>${fmtDateTime(r.rental_date)}</td>
+            <td>${fmtDateTime(r.expiry_date)}</td><td>${esc(r.deceased_full_name)}<small class="text-muted d-block">(${esc(r.sex)}/${esc(r.age)})</small></td>
+            <td>${esc(r.grave_level)}/${esc(r.grave_type)}</td><td>${esc(r.created_by_username)}</td>
+            <td class="text-center">
+                <i class="fas fa-eye action-icon view-trx-btn" data-bs-toggle="tooltip" title="View Details"></i>
+            </td>`;
+        
+        tr.querySelector('.view-trx-btn').addEventListener('click', () => showTransactionDetails(r));
+        return tr;
+    };
+    const loadTransactions = debounce(() => {
+        const params = new URLSearchParams({ from: $('#trx-from').value, to: $('#trx-to').value, q: $('#trx-search').value });
+        fetchAndRender('/admin/fetchTransactionReports', params, trxTbody, renderTransactionRow);
     });
+    $('#trx-from').addEventListener('change', loadTransactions);
+    $('#trx-to').addEventListener('change', loadTransactions);
+    $('#trx-search').addEventListener('input', loadTransactions);
+    $('#trx-reset').addEventListener('click', () => { 
+        $('#trx-from').value=''; $('#trx-to').value=''; $('#trx-search').value=''; loadTransactions(); 
+    });
+    
+    function showTransactionDetails(r) {
+        const body = $('#transactionDetailsBody');
+        body.innerHTML = `
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5>Deceased Information</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4 detail-modal-label">Full Name</dt><dd class="col-sm-8">${esc(r.deceased_full_name)}</dd>
+                        <dt class="col-sm-4 detail-modal-label">Age / Sex</dt><dd class="col-sm-8">${esc(r.age)} / ${esc(r.sex)}</dd>
+                    </dl>
+                    <hr>
+                    <h5>Plot Information</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4 detail-modal-label">Location</dt><dd class="col-sm-8">${esc(r.block_title)} - ${esc(r.plot_number)}</dd>
+                        <dt class="col-sm-4 detail-modal-label">Grave Details</dt><dd class="col-sm-8">${esc(r.grave_level)} / ${esc(r.grave_type)}</dd>
+                    </dl>
+                </div>
+                <div class="col-lg-6">
+                    <h5>Interment & Payment</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4 detail-modal-label">Responsible Head</dt><dd class="col-sm-8">${esc(r.interment_full_name)} (${esc(r.interment_relationship)})</dd>
+                        <dt class="col-sm-4 detail-modal-label">Contact</dt><dd class="col-sm-8">${esc(r.interment_contact_number)}</dd>
+                        <dt class="col-sm-4 detail-modal-label">Email</dt><dd class="col-sm-8">${esc(r.interment_email)}</dd>
+                        <dt class="col-sm-4 detail-modal-label">Payment Amount</dt><dd class="col-sm-8 fw-bold">${fmtMoney(r.payment_amount)}</dd>
+                    </dl>
+                </div>
+            </div>
+            <hr>
+            <h5>Transaction Details</h5>
+            <dl class="row">
+                <dt class="col-sm-3 detail-modal-label">Transaction ID</dt><dd class="col-sm-9"><code>${esc(r.transaction_id)}</code></dd>
+                <dt class="col-sm-3 detail-modal-label">Burial ID</dt><dd class="col-sm-9"><code>${esc(r.burial_id)}</code></dd>
+                <dt class="col-sm-3 detail-modal-label">Rental Date</dt><dd class="col-sm-9">${fmtDateTime(r.rental_date)}</dd>
+                <dt class="col-sm-3 detail-modal-label">Expiry Date</dt><dd class="col-sm-9">${fmtDateTime(r.expiry_date)}</dd>
+                <dt class="col-sm-3 detail-modal-label">Processed By</dt><dd class="col-sm-9">${esc(r.created_by_username)} (Staff ID: ${esc(r.created_by_staff_id)})</dd>
+                <dt class="col-sm-3 detail-modal-label">Recorded On</dt><dd class="col-sm-9">${fmtDateTime(r.created_at)}</dd>
+            </dl>`;
+        transactionDetailsModal.show();
+    }
 
-    $$('#tbl-transactions [data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
-    $$('#tbl-transactions button[data-raw]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        try {
-          const obj = JSON.parse(decodeURIComponent(escape(atob(btn.dataset.raw))));
-          showTransactionDetails(obj);
-        } catch (e) {
-          console.error('Decode error:', e);
-          Swal.fire({icon: 'error', title: 'Error', text: 'Unable to open details.', confirmButtonColor: MAROON_COLOR});
+    // --- [UPDATED] Professional Printing ---
+    $('#btn-print').addEventListener('click', () => {
+        const activeTab = $('.tab-pane.active');
+        const table = $('table', activeTab);
+        const title = $('button.nav-link.active').innerText.trim();
+        if (!table) return;
+
+        const visibleRows = $$('tbody tr', table).filter(tr => tr.style.display !== 'none' && !tr.querySelector('.spinner-border'));
+        if (visibleRows.length === 0 || table.querySelector('.text-danger')) {
+            Swal.fire({icon: 'info', title: 'No Data', text: 'There are no records to print for the current view.', confirmButtonColor: MAROON_COLOR});
+            return;
         }
-      });
+        
+        const clonedTable = table.cloneNode(true);
+        $$('thead th:last-child, tbody td:last-child', clonedTable).forEach(el => el.remove());
+
+        const reportHtml = clonedTable.outerHTML;
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:absolute;width:0;height:0;border:0;';
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(`
+            <html><head><title>${esc(title)} Report</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+            <style>
+                body { 
+                    font-family: sans-serif; 
+                    -webkit-print-color-adjust: exact; 
+                }
+                .table { 
+                    font-size: 8pt; /* Smaller font for print */
+                    width: 100%;
+                    border-collapse: collapse;
+                } 
+                .table th, .table td {
+                    padding: 4px 6px; /* Reduced padding */
+                    white-space: nowrap; /* CRITICAL: Prevents text wrapping */
+                    border: 1px solid #dee2e6;
+                }
+                .table thead th {
+                    background-color: #800000 !important; /* Maroon color */
+                    color: #fff !important;
+                }
+                .table small { display: none; } /* Hide small text in print */
+                @page { 
+                    size: landscape; 
+                    margin: 0.4in; /* Smaller margin */
+                }
+            </style></head><body>
+            <h4 class="mb-3">${esc(title)} Report</h4>
+            <p class="text-muted small">Generated on: ${new Date().toLocaleString()}</p>
+            ${reportHtml}
+            </body></html>`);
+        doc.close();
+        
+        iframe.onload = () => {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            setTimeout(() => document.body.removeChild(iframe), 1000);
+        };
     });
-
-    $('#trx-count').textContent = `${data.rows.length} record(s)`;
-  }
-
-  function showTransactionDetails(o = {}) {
-    Swal.fire({
-      html: `
-        <div class="container text-start" style="font-size: 14px;">
-          <h5 class="mb-3 text-start" style="color: ${MAROON_COLOR};"><i class="fa-solid fa-receipt me-2"></i>Transaction Details</h5>
-          <hr class="mt-0 mb-3"/>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <ul class="list-group">
-                <li class="list-group-item d-flex justify-content-between"><span><i class="fa-solid fa-hashtag fa-fw me-2 text-muted"></i>Transaction ID</span> <strong>${esc(o.transaction_id) || '—'}</strong></li>
-                <li class="list-group-item d-flex justify-content-between"><span><i class="fa-solid fa-id-card fa-fw me-2 text-muted"></i>Burial ID</span> <strong>${esc(o.burial_id) || '—'}</strong></li>
-                <li class="list-group-item d-flex justify-content-between"><span><i class="fa-solid fa-vihara fa-fw me-2 text-muted"></i>Plot</span> <strong>${esc(o.block_title) || '—'} / ${esc(o.plot_number) || '—'}</strong></li>
-                <li class="list-group-item d-flex justify-content-between"><span><i class="fa-solid fa-peso-sign fa-fw me-2 text-muted"></i>Payment</span> <strong>₱ ${fmtMoney(o.payment_amount)}</strong></li>
-                <li class="list-group-item d-flex justify-content-between"><span><i class="fa-solid fa-calendar-check fa-fw me-2 text-muted"></i>Rental Date</span> <strong>${fmtDateTime(o.rental_date)}</strong></li>
-                <li class="list-group-item d-flex justify-content-between"><span><i class="fa-solid fa-hourglass-end fa-fw me-2 text-muted"></i>Expiry Date</span> <strong>${fmtDateTime(o.expiry_date)}</strong></li>
-              </ul>
-            </div>
-            <div class="col-md-6">
-              <ul class="list-group">
-                <li class="list-group-item">
-                  <div class="mb-1"><i class="fa-solid fa-user fa-fw me-2 text-muted"></i><strong>Interment Right Holder</strong></div>
-                  <div>${esc(o.interment_full_name) || '—'} <small class="text-muted">(${esc(o.interment_relationship) || '—'})</small></div>
-                </li>
-                <li class="list-group-item">
-                  <div class="mb-1"><i class="fa-solid fa-location-dot fa-fw me-2 text-muted"></i><strong>Address</strong></div>
-                  <div>${esc(o.interment_address) || '—'}</div>
-                </li>
-                <li class="list-group-item d-flex justify-content-between"><span><i class="fa-solid fa-phone fa-fw me-2 text-muted"></i>Contact</span> <strong>${esc(o.interment_contact_number) || '—'}</strong></li>
-                <li class="list-group-item d-flex justify-content-between"><span><i class="fa-solid fa-envelope fa-fw me-2 text-muted"></i>Email</span> <strong>${esc(o.interment_email) || '—'}</strong></li>
-                <li class="list-group-item">
-                  <div class="mb-1"><i class="fa-solid fa-cross fa-fw me-2 text-muted"></i><strong>Deceased</strong></div>
-                  <div>${esc(o.deceased_full_name) || '—'} <small class="text-muted">(${esc(o.sex) || '—'}/${esc(o.age) || '—'})</small></div>
-                </li>
-                <li class="list-group-item d-flex justify-content-between"><span><i class="fa-solid fa-layer-group fa-fw me-2 text-muted"></i>Grave</span> <strong>${esc(o.grave_level) || '—'} / ${esc(o.grave_type) || '—'}</strong></li>
-                <li class="list-group-item d-flex justify-content-between"><span><i class="fa-solid fa-user-tie fa-fw me-2 text-muted"></i>Created By</span> <strong>${esc(o.created_by_staff_id) || '—'} <small class="text-muted">(${esc(o.created_by_username) || '—'})</small></strong></li>
-              </ul>
-            </div>
-          </div>
-        </div>`,
-      width: 900,
-      showConfirmButton: true,
-      confirmButtonText: 'Close',
-      confirmButtonColor: MAROON_COLOR
-    });
-  }
-
-  // ---------- filters + print ----------
-  $('#act-filter')?.addEventListener('click', loadActivity);
-  $('#act-reset')?.addEventListener('click', () => {
-    $('#act-from').value=''; $('#act-to').value=''; $('#act-search').value='';
+    
+    // Initial Load
     loadActivity();
-  });
-  $('#act-search')?.addEventListener('input', () => {
-    clearTimeout(window._act_t); window._act_t = setTimeout(loadActivity, 250);
-  });
-
-  $('#trx-filter')?.addEventListener('click', loadTransactions);
-  $('#trx-reset')?.addEventListener('click', () => {
-    $('#trx-from').value=''; $('#trx-to').value=''; $('#trx-search').value='';
     loadTransactions();
-  });
-  $('#trx-search')?.addEventListener('input', () => {
-    clearTimeout(window._trx_t); window._trx_t = setTimeout(loadTransactions, 250);
-  });
-
-  $('#btn-print')?.addEventListener('click', () => window.print());
-
-  // ---------- initial load ----------
-  loadActivity();
-  loadTransactions();
 });

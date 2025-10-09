@@ -140,6 +140,8 @@
   </div>
 </div>
 
+
+
 <!-- View Modal -->
 <div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -187,6 +189,25 @@
       </div>
     </div>
   </div>
+</div>
+
+<style>
+    .scroll-spacer-dummy {
+   
+    height: 1200px; 
+    opacity: 0;             
+    visibility: hidden;    
+    pointer-events: none;  
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+</style>
+<div class="row">
+    <div class="col-12">
+        <div class="scroll-spacer-dummy">
+            </div>
+    </div>
 </div>
 
 <script>

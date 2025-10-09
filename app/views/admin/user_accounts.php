@@ -26,7 +26,6 @@
     border-color: #adb5bd;
 }
 </style>
-
 <div class="main-content-header mb-4">
   <div class="d-flex justify-content-between align-items-center">
     <h1>User Accounts</h1>
@@ -99,7 +98,6 @@
   </div>
 </div>
 
-<!-- Add Staff Modal -->
 <div class="modal fade" id="addStaffModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -114,10 +112,18 @@
             <div class="col-md-6 mb-3"><label class="form-label">Last Name</label><input type="text" class="form-control" name="last_name" required></div>
           </div>
           <div class="mb-3"><label class="form-label">Username</label><input type="text" class="form-control" name="username" required><div class="form-text">Letters and numbers only. No spaces.</div></div>
-          <div class="mb-3"><label class="form-label">Email Address</label><input type="email" class="form-control" name="email" required></div>
-          <div class="mb-3"><label class="form-label">Phone</label><input type="text" class="form-control" name="phone" placeholder="e.g. 0912 345 6789" required></div>
+          <div class="mb-3">
+              <label class="form-label">Email Address</label>
+              <input type="email" class="form-control" name="email" required>
+              <div class="invalid-feedback">Please provide a valid email address.</div>
+          </div>
+          <div class="mb-3">
+              <label class="form-label">Phone</label>
+              <input type="tel" class="form-control" name="phone" placeholder="e.g. 0912 345 6789" required maxlength="13">
+              <div class="invalid-feedback">Please follow the format: 0912 345 6789.</div>
+          </div>
           <div class="mb-3"><label class="form-label">Designation</label><input type="text" class="form-control" name="designation" required></div>
-          <div class="alert alert-secondary" role="alert"><i class="fas fa-info-circle me-2"></i>Staff ID will be auto-generated upon creation.</div>
+          <div class="alert alert-secondary" role="alert"><i class="fas fa-info-circle me-2"></i>Staff ID will be auto-generated.</div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -128,7 +134,6 @@
   </div>
 </div>
 
-<!-- Edit User Modal -->
 <div class="modal fade" id="editUserModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -146,8 +151,16 @@
             <div class="col-md-6 mb-3"><label class="form-label">First Name</label><input type="text" class="form-control" id="edit-first_name" name="first_name" required></div>
             <div class="col-md-6 mb-3"><label class="form-label">Last Name</label><input type="text" class="form-control" id="edit-last_name" name="last_name" required></div>
           </div>
-          <div class="mb-3"><label class="form-label">Email Address</label><input type="email" class="form-control" id="edit-email" name="email" required></div>
-          <div class="mb-3"><label class="form-label">Phone</label><input type="text" class="form-control" id="edit-phone" name="phone" placeholder="e.g. 0912 345 6789" required></div>
+          <div class="mb-3">
+              <label class="form-label">Email Address</label>
+              <input type="email" class="form-control" id="edit-email" name="email" required>
+              <div class="invalid-feedback">Please provide a valid email address.</div>
+          </div>
+          <div class="mb-3">
+              <label class="form-label">Phone</label>
+              <input type="tel" class="form-control" id="edit-phone" name="phone" placeholder="e.g. 0912 345 6789" required maxlength="13">
+              <div class="invalid-feedback">Please follow the format: 0912 345 6789.</div>
+          </div>
           <div class="mb-3"><label class="form-label">Designation</label><input type="text" class="form-control" id="edit-designation" name="designation" required></div>
         </div>
         <div class="modal-footer">
@@ -158,6 +171,23 @@
     </div>
   </div>
 </div>
-
+<style>
+    .scroll-spacer-dummy {
+   
+    height: 1200px; 
+    opacity: 0;             
+    visibility: hidden;    
+    pointer-events: none;  
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+</style>
+<div class="row">
+    <div class="col-12">
+        <div class="scroll-spacer-dummy">
+            </div>
+    </div>
+</div>
 <script src="<?php echo URLROOT; ?>/js/user_accounts.js?v=<?php echo time(); ?>"></script>
 <?php require APPROOT . '/views/includes/admin_footer.php'; ?>

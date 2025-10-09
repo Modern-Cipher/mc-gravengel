@@ -218,17 +218,17 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  const needsChange = (document.body.dataset.mustChangePwd === '1');
-  if (needsChange && !sessionStorage.getItem('passwordPrompted')) {
-    Swal.fire({
-      title:'Update Password?', text:'For security, please update your password.',
-      icon:'warning', showCancelButton:true, confirmButtonText:'Update Now',
-      confirmButtonColor:'#800000'
-    }).then(res=>{
-      sessionStorage.setItem('passwordPrompted','true');
-      if(res.isConfirmed) location.href=`${window.URLROOT}/auth/force_change`;
-    });
-  }
+  // const needsChange = (document.body.dataset.mustChangePwd === '1');
+  // if (needsChange && !sessionStorage.getItem('passwordPrompted')) {
+  //   Swal.fire({
+  //     title:'Update Password?', text:'For security, please update your password.',
+  //     icon:'warning', showCancelButton:true, confirmButtonText:'Update Now',
+  //     confirmButtonColor:'#800000'
+  //   }).then(res=>{
+  //     sessionStorage.setItem('passwordPrompted','true');
+  //     if(res.isConfirmed) location.href=`${window.URLROOT}/auth/force_change`;
+  //   });
+  // }
 
   const tgl=document.querySelector('.sidebar-toggle'), sb=document.querySelector('#sidebar');
   if(tgl && sb){ tgl.addEventListener('click', ()=> sb.classList.toggle('open')); }
